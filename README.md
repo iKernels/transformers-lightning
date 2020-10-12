@@ -7,15 +7,16 @@ A collection of `models`, `datasets`, `defaults`, `callbacks`, `loggers`, `metri
 **[1. Install](#install)**
 
 **[2. Documentation](#doc)**
-
-  * [2.1. Dataset](#dataset)
+  
+  * [2.1. Datasets](#datasets)
+  * [2.2. Datamodules](#datamodules)
 
 
 <a name="install"></a>
 ## Install
 Install the last stable release with
 ```
-pip install git+https://github.com/lucadiliello/transformers-lightning.git
+pip install git+https://github.com/lucadiliello/transformers-lightning.git --upgrade
 ```
 
 
@@ -25,63 +26,46 @@ pip install git+https://github.com/lucadiliello/transformers-lightning.git
 <a name="dataset"></a>
 ### Dataset
 
-Dataset are read by an universal parser that only required a `yaml` file containing the format specs.
+Dataset are read by an universal `*sv` (tsv, csv, ...) parser that only required a `yaml` file containing the format specifications.
 The config file should be like the following:
 ```yaml
 # for wikipedia example
-filepath: wikipedia_eng/large.tsv # path refers to the defaults.dataset_dir folder
-headers: [label, sentence]
+filepath: wikipedia_eng.tsv # path refers to the defaults.dataset_dir folder
+names: [label, sentence]
 delimiter: '\t'
 quoting: minimal # one of none, minimal, nonnumeric, all
 quotechar: '"'
 x: [sentence]   # columns that will be parsed together with the tokenizer
 y: [label]      # columns that will be used as labels
 ```
+Put all `yaml` files with respect to your datasets in the `defaults.config_dir/datasets` folder.
+Notice: all dataset files should be header-free, i.e. header names are specified in the `yaml` file with the `names` parameter.
 
-The dataset should be used in the following way
-```python
 
-parser = argsparse.ArgumentParser()
-...
-# add arguments to the argument parser
-parser = DynamicLightningDataModule.add_datamodule_specific_args(parser)
-...
+<a name="datamodules"></a>
+### Datamodules
 
-hparams = parser.parse_args()
+`LightningDataModules` are an easy way to collect some dataset together and to allow reusability.
+By default this library loads a `train`, `val` and `test` dataset. All three datasets are optional.
 
-model = ...
-trainer = ...
+Example:
+```
+from transformers_lightning.datamodules import SuperDataModule
 
-# instantiate the LightningDataModule
-datamodule = getDynamicLightningDataModule(hparams)(
-    hparams, trainer, model, print_data_preview=True
-)
+class QuoraDataModule(SuperDataModule):
 
-# apply some hacks to remove errors and warnings
-utils.hacks(hparams, datamodule)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
-# Train!
-if datamodule.do_train():
-    # train function, for example:
-    trainer.fit(model, datamodule=datamodule)
+        self.train_config = "quora_train.yaml"
+        self.val = "quora_valid.yaml"
+        self.test_config = "quora_test.yaml"
 
-# Test!
-if datamodule.do_test():
-    # test function, for example:
-    trainer.test(model, datamodule=datamodule)
+    train_dataloader = SuperDataModule.default_train_dataloader
+    val_dataloader = SuperDataModule.default_val_dataloader
+    test_dataloader = SuperDataModule.default_test_dataloader
 ```
 
-`getDynamicLightningDataModule` adds the following arguments to the argument parser:
-- `--batch_size <int>`: training batch size, default `32`
-- `--val_and_test_batch_size <int>`: validation and test batch size, default `256`
-- `--num_workers <int>`: number of threads to use when loading data in training/dev/test,
-default `multiprocessing.cpu_count()` (number of cpus n the machine)
-- `--train_ds <str>`: path of training dataset config with respect to directory `conf/datasets`, default `None`
-- `--valid_ds <str>`: path of validation dataset config with respect to directory `conf/datasets`, default `None`
-- `--test_ds <str>`: path of test dataset config with respect to directory `conf/datasets`, default `None`
-- `--shuffle_train_ds <bool>`: whether the training dataset should be shuffled, default `<true>`
-- `--shuffle_valid_ds <bool>`: whether the validation dataset should be shuffled, default `<false>`
-- `--shuffle_test_ds <bool>`: whether the test dataset should be shuffled, default `<false>`
-- `--chunksize <int>`: whether input file should be read in more chunks of size `<int>` to save memory. We suggest to use this parameter only for dataset larger than `1GB` or `1.000.000` lines. Shuffle will operate only on chunks, no shuffle between different chunks, default `10.000.000`
-
-Notice: all dataset files should be header-free, i.e. header names are specified in the `yaml` file.
+By default, all dataset are loaded with a `TransformersMapDataset`, this means that each dataset is
+completely loaded in memory and shuffled. If you don't want to load all dataset completely in memory,
+use the argument `--dataset_style 'iter'`.
