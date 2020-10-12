@@ -1,0 +1,8 @@
+# for wikipedia example
+filepath: wikipedia_eng/large.tsv # path refer to the dataet_dir folder
+headers: [label, sentence]
+delimiter: '\t'
+quoting: minimal
+quotechar: '"'
+x: [sentence]
+y: [label]
