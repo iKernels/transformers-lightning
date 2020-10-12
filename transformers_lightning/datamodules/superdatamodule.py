@@ -139,7 +139,7 @@ class SuperDataModule(pl.LightningDataModule):
         return self.default_dataloader(self.test_dataset, self.hparams.test_batch_size)
 
     @staticmethod
-    def add_datamodule_specific_arguments(parser):
+    def add_datamodule_specific_args(parser):
 
         parser.add_argument('--num_workers', required=False, default=multiprocessing.cpu_count(), type=int,
                             help='Number of workers to be used to load datasets')
