@@ -3,4 +3,4 @@ import transformers_lightning.defaults
 import transformers_lightning.callbacks
 import transformers_lightning.utils
 import transformers_lightning.models
-import transformers_lightning.datamodels
+import transformers_lightning.datamodules

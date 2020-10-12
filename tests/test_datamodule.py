@@ -51,34 +51,14 @@ class SimpleTransformerLikeModel(transformers_lightning.models.SuperModel):
         return results.loss
 
 
-class ExampleDataModule(transformers_lightning.datamodels.SuperDataModule):
+class ExampleDataModule(transformers_lightning.datamodules.SuperDataModule):
 
     def __init__(self, *args, ds_type=None, **kwargs):
         super().__init__(*args, **kwargs)
-        self.ds_type = ds_type
 
         self.train_config = "dataset.yaml"
  
-    # Optional, called for every GPU/machine (assigning state is OK)
-    def setup(self, stage):
-        if self.ds_type == 'iter':
-            dataset_class = transformers_lightning.datasets.TransformersIterableDataset
-        elif self.ds_type == 'map':
-            dataset_class = transformers_lightning.datasets.TransformersMapDataset
-        else:
-            raise ValueError(f"ds_type {self.ds_type} not recognized")
-
-        self.train_dataset = dataset_class(
-            self.hparams, self.tokenizer, self.train_config
-        )
-
-    def train_dataloader(self):
-        dataset = DataLoader(self.train_dataset,
-                             batch_size=self.hparams.batch_size,
-                             num_workers=self.hparams.num_workers,
-                             pin_memory=True,
-                             collate_fn=transformers_lightning.utils.collate_single_fn)
-        return dataset
+    train_dataloader = transformers_lightning.datamodules.SuperDataModule.default_train_dataloader
 
 
 # Test iter dataset work correctly
@@ -178,7 +158,8 @@ def test_0(ds_type, num_workers, distributed_backend, gpus, epochs):
         max_epochs=epochs,
         max_steps=None,
         max_sequence_length=10,
-        gpus=gpus
+        gpus=gpus,
+        dataset_style=ds_type
     )
 
     if distributed_backend is not None:
@@ -196,7 +177,7 @@ def test_0(ds_type, num_workers, distributed_backend, gpus, epochs):
     model = SimpleTransformerLikeModel(hparams)    
 
     # Datasets
-    datamodule = ExampleDataModule(hparams, model, trainer, ds_type=ds_type)
+    datamodule = ExampleDataModule(hparams, model, trainer)
     
     model.datamodule = datamodule
     # Train!

@@ -1,16 +1,15 @@
+import copy
 import csv
 import os
 from argparse import Namespace
-import copy
 
 import numpy as np
 import torch
+from pytorch_lightning import _logger as logger
 from torch.utils.data import IterableDataset
 from transformers import PreTrainedTokenizer
 from transformers_lightning import utils
 from transformers_lightning.datasets import QUOTING_MAP
-
-from pytorch_lightning import _logger as logger
 
 
 class SuperTransformersDataset:

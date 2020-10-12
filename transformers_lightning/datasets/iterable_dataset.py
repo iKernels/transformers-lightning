@@ -5,13 +5,11 @@ from argparse import Namespace
 import numpy as np
 import pandas as pd
 import torch
+from pytorch_lightning import _logger as logger
 from torch.utils.data import IterableDataset
 from transformers import PreTrainedTokenizer
-
 from transformers_lightning import utils
 from transformers_lightning.datasets import SuperTransformersDataset
-
-from pytorch_lightning import _logger as logger
 
 
 class TransformersIterableDataset(SuperTransformersDataset, IterableDataset):
