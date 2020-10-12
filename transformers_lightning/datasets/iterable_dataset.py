@@ -58,9 +58,7 @@ class TransformersIterableDataset(SuperTransformersDataset, IterableDataset):
         if hasattr(self, 'worker_info'):
             delattr(self, 'worker_info') # it may be necessary to reload info after every epoch...
 
-        # debugging
         self.counter = 0
-        self.elements = []
 
         if self.is_distributed():
             self.jump_forward(steps=self.get_distributed_id())
@@ -102,9 +100,8 @@ class TransformersIterableDataset(SuperTransformersDataset, IterableDataset):
             row = self.jump_forward(steps=1)
 
         row_dict = self.get_data_as_dict(row)
-        row_dict = self.prepare(row_dict)
+        row_dict = self.prepare(row_dict, idx=self.counter)
 
         self.counter += 1
-        self.elements.append(row_dict['ids'])
 
         return row_dict
