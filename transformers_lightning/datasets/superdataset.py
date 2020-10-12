@@ -77,8 +77,6 @@ class SuperTransformersDataset:
         for param in ['delimiter', 'quoting', 'quotechar']:
             if hasattr(specs, param): kwargs[param] = getattr(specs, param)
 
-        logger.info(f"Reading with dataset specs: {specs}")
-
         with open(specs.filepath, "r") as fi:
             # use utils.strip_lines to emulate skip_blank_lines of pd.DataFrame
             reader = csv.reader(utils.strip_lines(fi), **kwargs)
