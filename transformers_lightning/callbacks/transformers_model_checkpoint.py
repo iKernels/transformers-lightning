@@ -24,7 +24,6 @@ class TransformersModelCheckpointCallback(Callback):
         super().__init__(*args, **kwargs)
         self.hparams = hparams
         self.destination = os.path.join(hparams.output_dir, hparams.pre_trained_dir, hparams.name)
-        self.intra_epoch = False
 
         if not os.path.isdir(self.destination):
             os.makedirs(self.destination)
@@ -70,29 +69,13 @@ class TransformersModelCheckpointCallback(Callback):
         if trainer.global_rank != 0:
             return
 
-        # if transformers_checkpoint_interval is expresses as float (percentage) convert it to integer
-        # max_steps should be not None thanks to the fix in datamodule.fix_max_steps
-        if isinstance(self.hparams.transformers_checkpoint_interval, float):
-            if trainer.steps_per_epoch is None:
-                raise ValueError("trainer.steps_per_epoch must not be None to use transformers_model_checkpoint")
-            
-            # if greater than 1, the user gave directly the number of steps
-            if self.hparams.transformers_checkpoint_interval > 1.0:
-                self.hparams.transformers_checkpoint_interval = int(self.hparams.transformers_checkpoint_interval)
-            # otherwise we have to convert the percentage in steps
-            else:
-                self.intra_epoch = True
-                self.hparams.transformers_checkpoint_interval = int(
-                    self.hparams.transformers_checkpoint_interval * trainer.steps_per_epoch
-                )
-
         step = pl_module.global_step
         epoch = trainer.current_epoch
 
         if (self.hparams.transformers_checkpoint_interval is not None
             and (step > 0)
             and (
-                ((step % trainer.steps_per_epoch) if self.intra_epoch else step) % self.hparams.transformers_checkpoint_interval
+                step % self.hparams.transformers_checkpoint_interval
             ) == 0
         ):
             # first compute the steps in this epoch and then if it is checkpoint time
@@ -128,7 +111,6 @@ class TransformersModelCheckpointCallback(Callback):
     @staticmethod
     def add_callback_specific_args(parser):
         """ Add callback_specific arguments to parser. """
-        parser.add_argument('--transformers_checkpoint_interval', type=float, required=False, default=1.0,
-                            help="Save pre_trained models every steps. If float is passed, "
-                                "this parameter is intended as a percentage for intra-epoch checkpointing")
+        parser.add_argument('--transformers_checkpoint_interval', type=int, required=False, default=None,
+                            help="Save pre_trained models every steps. A None value means save only at the end of each epoch.")
         return parser
