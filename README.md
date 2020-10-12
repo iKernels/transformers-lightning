@@ -49,7 +49,7 @@ Notice: all dataset files should be header-free, i.e. header names are specified
 By default this library loads a `train`, `val` and `test` dataset. All three datasets are optional.
 
 Example:
-```
+```python
 from transformers_lightning.datamodules import SuperDataModule
 
 class QuoraDataModule(SuperDataModule):
