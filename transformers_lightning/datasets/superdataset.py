@@ -19,13 +19,16 @@ class SuperTransformersDataset:
     """
 
     @staticmethod
-    def process_line(line):
+    def process_line(line, specs):
         """ Convert fields in list to int, float or bool if possible. """
         res = []
-        for entry in line:
-            try:
-                res.append(eval(entry))
-            except:
+        for name, entry in zip(specs.names, line):
+            if name not in specs.x:
+                try:
+                    res.append(eval(entry))
+                except:
+                    res.append(entry)
+            else:
                 res.append(entry)
         return res
 
@@ -81,7 +84,7 @@ class SuperTransformersDataset:
             # use utils.strip_lines to emulate skip_blank_lines of pd.DataFrame
             reader = csv.reader(utils.strip_lines(fi), **kwargs)
             for line in reader:
-                yield SuperTransformersDataset.process_line(line)
+                yield SuperTransformersDataset.process_line(line, specs)
 
     def __init__(self,
         hparams: Namespace,
