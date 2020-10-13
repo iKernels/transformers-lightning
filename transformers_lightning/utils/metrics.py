@@ -2,7 +2,11 @@ import torch
 import numpy as np
 
 
-def _get_mini_groups(idx: torch.Tensor) -> list:
+def get_mini_groups(idx: torch.Tensor) -> list:
+    """
+    Return a list of lists where each sub-list contains the indexes of some group of `idx`
+    [0, 0, 0, 1, 1, 1, 1] -> [[0, 1, 2], [3, 4, 5, 6]]
+    """
     indexes = dict()
     for i, _id in enumerate(idx):
         _id = _id.item()
@@ -12,7 +16,7 @@ def _get_mini_groups(idx: torch.Tensor) -> list:
             indexes[_id] = [i]
     return indexes.values()
 
-def _prepare(x: torch.Tensor, do_softmax: bool = False, do_argmax: bool = False) -> torch.Tensor:
+def normalize(x: torch.Tensor, do_softmax: bool = False, do_argmax: bool = False) -> torch.Tensor:
     # softmax and argmax to obtain discrete predictions probabilities
     if do_softmax:
         x = torch.nn.functional.softmax(x, dim=-1)
@@ -20,29 +24,37 @@ def _prepare(x: torch.Tensor, do_softmax: bool = False, do_argmax: bool = False)
         x = torch.argmax(x, dim=-1)
     return x
 
-def _rr(preds: torch.Tensor, labels: torch.Tensor):
-    # reciprocal rank over a single group
+def reciprocal_rank(preds: torch.Tensor, labels: torch.Tensor):
+    """
+    RR over a single group. See `get_mini_groups` for details about groups
+    """
     labels = labels[torch.argsort(preds, dim=-1, descending=True)]
     position = torch.where(labels == 1)[0]
     return 1.0 / (position[0] + 1) if (len(position.shape) > 0) and (position.shape[0] > 0) else torch.tensor([0.0])
 
-def _ap(preds: torch.Tensor, labels: torch.Tensor):
-    # average precision over a single group
+def average_precision(preds: torch.Tensor, labels: torch.Tensor):
+    """
+    AP over a single group. See `get_mini_groups` for details about groups
+    """
     labels = labels[torch.argsort(preds, dim=-1, descending=True)]
     positions = (torch.arange(len(labels), device=labels.device) + 1) * labels
     denominators = positions[torch.where(positions > 0)[0]]
     res = torch.true_divide((torch.arange(len(denominators), device=denominators.device) + 1), denominators).mean()
     return res
 
-def _patk(preds: torch.Tensor, labels: torch.Tensor, precision_at: int):
-    # prediction at k over a single group
+def hit_rate_at_k(preds: torch.Tensor, labels: torch.Tensor, k: int = 1):
+    """
+    HR@k over a single group. See `get_mini_groups` for details about groups
+    """
     if labels.sum() == 0:
         return torch.Tensor(1).type_as(preds)
-    return torch.true_divide(labels[torch.argsort(preds, descending=True)][:precision_at].sum(), labels.sum())
+    return torch.true_divide(labels[torch.argsort(preds, dim=-1, descending=True)][:k].sum(), labels.sum())
 
-def _true_and_false_positives(preds: torch.Tensor, labels: torch.Tensor, threshold: float):
-    # tp and fp
-    indexes = np.argsort(preds)[::-1]
+def get_tp_and_fp(preds: torch.Tensor, labels: torch.Tensor, threshold: float):
+    """
+    Compute number of true and false positives
+    """
+    indexes = np.argsort(preds, dim=-1, descending=True)
     labels = labels[indexes]
     preds = preds[indexes]
     return [
@@ -50,8 +62,11 @@ def _true_and_false_positives(preds: torch.Tensor, labels: torch.Tensor, thresho
         int(labels[0] == 0 and preds[0] >= threshold) # FP
     ]
 
-def _true_positive_and_false_negative(preds: torch.Tensor, labels: torch.Tensor, threshold: float):
-    indexes = np.argsort(preds)[::-1]
+def get_tp_and_fn(preds: torch.Tensor, labels: torch.Tensor, threshold: float):
+    """
+    Compute number of true positives and false negatives
+    """
+    indexes = np.argsort(preds, dim=-1, descending=True)
     labels = labels[indexes]
     preds = preds[indexes]
     return [
