@@ -61,7 +61,7 @@ def recall(preds: torch.Tensor, labels: torch.Tensor, k: int = 1):
         f"Predicions and labels must have the same shape, found {preds.shape} and {labels.shape} instead"
     )
     if labels.sum() == 0:
-        return torch.Tensor(1).to(preds)
+        return torch.tensor(1).to(preds)
     return torch.true_divide(labels[torch.argsort(preds, dim=-1, descending=True)][:k].sum(), labels.sum())
 
 def hit_rate(preds: torch.Tensor, labels: torch.Tensor, k: int = 1):
