@@ -42,13 +42,37 @@ def average_precision(preds: torch.Tensor, labels: torch.Tensor):
     res = torch.true_divide((torch.arange(len(denominators), device=denominators.device) + 1), denominators).mean()
     return res
 
-def hit_rate_at_k(preds: torch.Tensor, labels: torch.Tensor, k: int = 1):
+def precision(preds: torch.Tensor, labels: torch.Tensor, k: int = 1):
     """
-    HR@k over a single group. See `get_mini_groups` for details about groups
+    Precision@k over a single group. See `get_mini_groups` for details about groups.
+    Precision@k = (# of recommended items @k that are relevant) / (# of recommended items @k)
     """
+    assert preds.shape == labels.shape, (
+        f"Predicions and labels must have the same shape, found {preds.shape} and {labels.shape} instead"
+    )
+    return torch.true_divide(labels[torch.argsort(preds, dim=-1, descending=True)][:k].sum(), k)
+
+def recall(preds: torch.Tensor, labels: torch.Tensor, k: int = 1):
+    """
+    Recall@k over a single group. See `get_mini_groups` for details about groups
+    Recall@k = (# of recommended items @k that are relevant) / (total # of relevant items)
+    """
+    assert preds.shape == labels.shape, (
+        f"Predicions and labels must have the same shape, found {preds.shape} and {labels.shape} instead"
+    )
     if labels.sum() == 0:
-        return torch.Tensor(1).type_as(preds)
+        return torch.Tensor(1, dtype=torch.float32)
     return torch.true_divide(labels[torch.argsort(preds, dim=-1, descending=True)][:k].sum(), labels.sum())
+
+def hit_rate(preds: torch.Tensor, labels: torch.Tensor, k: int = 1):
+    """
+    HitRate@k over a single group. See `get_mini_groups` for details about groups
+    HitRate@k = (# of recommended items @k that are relevant) > 0 ? 1 else 0
+    """
+    assert preds.shape == labels.shape, (
+        f"Predicions and labels must have the same shape, found {preds.shape} and {labels.shape} instead"
+    )
+    return torch.tensor(labels[torch.argsort(preds, dim=-1, descending=True)][:k].sum() > 0).to(dtype=torch.float32)
 
 def get_tp_and_fp(preds: torch.Tensor, labels: torch.Tensor, threshold: float):
     """
