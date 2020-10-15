@@ -72,7 +72,7 @@ def hit_rate(preds: torch.Tensor, labels: torch.Tensor, k: int = 1):
     assert preds.shape == labels.shape, (
         f"Predicions and labels must have the same shape, found {preds.shape} and {labels.shape} instead"
     )
-    return torch.tensor(labels[torch.argsort(preds, dim=-1, descending=True)][:k].sum() > 0).to(dtype=torch.float32)
+    return (labels[torch.argsort(preds, dim=-1, descending=True)][:k].sum() > 0).to(dtype=torch.float32)
 
 def get_tp_and_fp(preds: torch.Tensor, labels: torch.Tensor, threshold: float):
     """
