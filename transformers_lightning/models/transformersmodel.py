@@ -45,11 +45,11 @@ class TransformersModel(models.SuperModel):
         parser.add_argument('--do_lower_case', action='store_true')
         parser.add_argument('--learning_rate', type=float, default=1e-4)
         parser.add_argument('--max_sequence_length', type=int, default=128)
-        parser.add_argument('--weight_decay', type=float, default=0.01)
+        parser.add_argument('--weight_decay', type=float, default=0.0)
         parser.add_argument('--adam_epsilon', type=float, default=1e-8)
         parser.add_argument('--adam_betas', nargs=2, type=float, default=[0.9, 0.999])
         parser.add_argument('--max_grad_norm', type=float, default=1e-8)
-        parser.add_argument('--warmup_steps', type=int, default=10000)
+        parser.add_argument('--warmup_steps', type=int, default=0)
 
         tmp_args, extra = parser.parse_known_args()
         if tmp_args.learning_rate > 1:
