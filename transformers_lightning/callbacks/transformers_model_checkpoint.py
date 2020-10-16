@@ -12,6 +12,7 @@ from transformers_lightning.utils import (dump_json, get_version, is_simple,
 
 PARAMS_FILENAME = "hparams.js"
 
+
 class TransformersModelCheckpointCallback(Callback):
     r"""
         This class allow transformer-based models (inherited from the huggingface lib)
