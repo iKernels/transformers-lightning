@@ -67,5 +67,9 @@ class SuperModel(LightningModule):
         training_batches_per_epoch = num_training_batches // total_devices
         steps_per_epoch = math.ceil(training_batches_per_epoch / self.hparams.accumulate_grad_batches)
         steps = self.hparams.max_epochs * steps_per_epoch
-    
+
+        logger.warning(
+            f"Automatically computed max_steps={steps}. If it appears to be OK, ignore this warning"
+        )
+
         return steps
