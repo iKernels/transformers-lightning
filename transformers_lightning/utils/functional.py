@@ -160,3 +160,18 @@ def normalization(x, dim=-1):
         x.std(dim=dim).unsqueeze(1)
     )
 
+def concat_dict_tensors(*args, dim=0):
+    """ Concat dictionaries containing tensors on `dim` dimension. """
+    if (len(args) == 1) and isinstance(args[0], list):
+        args = args[0]
+
+    res = {}
+    for dictionary in args:
+        for key in dictionary.keys():
+            if key in res:
+                res[key].append(dictionary[key])
+            else:
+                res[key] = [dictionary[key]]
+
+    res = {k: torch.cat(v, dim=dim) for k, v in res.items()}
+    return res

@@ -10,6 +10,10 @@ class TransformersModel(models.SuperModel):
         Instantiate an optimizer on the parameters of self.model.
         A linear scheduler is also instantiated to manage the learning rate.
         """
+
+        # fix max number of steps
+        max_steps = self.max_steps_anyway()
+
         # get all parameters with names
         all_named_parameters = self.model.named_parameters()
         
@@ -35,7 +39,7 @@ class TransformersModel(models.SuperModel):
         # init scheduler after optional fp16 to get rid of strange warning about optimizer and scheduler steps order
         scheduler = get_linear_schedule_with_warmup(optimizer,
                                                     num_warmup_steps=self.hparams.warmup_steps,
-                                                    num_training_steps=self.hparams.max_steps)
+                                                    num_training_steps=max_steps)
 
         return [optimizer], [scheduler]
 

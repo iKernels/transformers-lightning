@@ -60,6 +60,7 @@ class ExampleDataModule(transformers_lightning.datamodules.SuperDataModule):
  
     train_dataloader = transformers_lightning.datamodules.SuperDataModule.default_train_dataloader
 
+    
 
 # Test iter dataset work correctly
 @pytest.mark.parametrize(
@@ -82,6 +83,76 @@ class ExampleDataModule(transformers_lightning.datamodules.SuperDataModule):
     ['iter',     2,             None,                   0,   4],
     ['iter',     2,             None,                   0,   10],
 
+    # MAP dataset
+    # test different num_workers in single node on cpu
+    ['map',     0,             None,                   0,   1],
+    ['map',     1,             None,                   0,   1],
+    ['map',     2,             None,                   0,   1],
+    ['map',     n_cpus,        None,                   0,   1],
+    
+    # num_workers through epochs
+    ['map',     0,             None,                   0,   1],
+    ['map',     0,             None,                   0,   2],
+    ['map',     0,             None,                   0,   4],
+    ['map',     0,             None,                   0,   10],
+    ['map',     2,             None,                   0,   1],
+    ['map',     2,             None,                   0,   2],
+    ['map',     2,             None,                   0,   4],
+    ['map',     2,             None,                   0,   10]
+])
+def test_datamodule_cpu(ds_type, num_workers, distributed_backend, gpus, epochs):
+    
+    hparams = Namespace(
+        batch_size=4,
+        val_batch_size=4,
+        test_batch_size=4,
+        accumulate_grad_batches=3,
+        num_workers=num_workers,
+        dataset_dir='tests/test_data',
+        config_dir='tests/test_data',
+        cache_dir='cache',
+        output_dir='output',
+        max_epochs=epochs,
+        max_steps=None,
+        max_sequence_length=10,
+        gpus=gpus,
+        dataset_style=ds_type,
+        accumulate_samples=False
+    )
+
+    if distributed_backend is not None:
+        hparams.distributed_backend = distributed_backend
+
+    # instantiate PL trainer
+    trainer = pl.Trainer.from_argparse_args(
+        hparams,
+        profiler=True,
+        logger=None,
+        callbacks=[],
+    )
+
+    # instantiate PL model
+    model = SimpleTransformerLikeModel(hparams)    
+
+    # Datasets
+    datamodule = ExampleDataModule(hparams, model, trainer)
+
+    model.datamodule = datamodule
+    # Train!
+    if datamodule.do_train():
+        trainer.fit(model, datamodule=datamodule)
+
+    # Test!
+    if datamodule.do_test():
+        trainer.test(model, datamodule=datamodule)
+
+
+# Test iter dataset work correctly
+@pytest.mark.skipif(torch.cuda.device_count() < 2, reason="test requires multi-GPU machine")
+@pytest.mark.parametrize(
+    ["ds_type", "num_workers", "distributed_backend", "gpus", "epochs"], [
+    
+    # ITER dataset
     # num_workers with dp
     ['iter',     0,             'dp',                   2,      2],
     ['iter',     1,             'dp',                   2,      2],
@@ -105,22 +176,6 @@ class ExampleDataModule(transformers_lightning.datamodules.SuperDataModule):
 #    ['iter',     n_cpus,        'ddp',                  2,      10],
 
     # MAP dataset
-    # test different num_workers in single node on cpu
-    ['map',     0,             None,                   0,   1],
-    ['map',     1,             None,                   0,   1],
-    ['map',     2,             None,                   0,   1],
-    ['map',     n_cpus,        None,                   0,   1],
-    
-    # num_workers through epochs
-    ['map',     0,             None,                   0,   1],
-    ['map',     0,             None,                   0,   2],
-    ['map',     0,             None,                   0,   4],
-    ['map',     0,             None,                   0,   10],
-    ['map',     2,             None,                   0,   1],
-    ['map',     2,             None,                   0,   2],
-    ['map',     2,             None,                   0,   4],
-    ['map',     2,             None,                   0,   10],
-
     # num_workers with dp
    ['map',     0,             'dp',                   2,      2],
    ['map',     1,             'dp',                   2,      2],
@@ -143,8 +198,8 @@ class ExampleDataModule(transformers_lightning.datamodules.SuperDataModule):
 #   ['map',     2,             'ddp',                  2,      4],
 #   ['map',     n_cpus,        'ddp',                  2,      10],
 ])
-def test_0(ds_type, num_workers, distributed_backend, gpus, epochs):
-
+def test_datamodule_gpu(ds_type, num_workers, distributed_backend, gpus, epochs):
+    
     hparams = Namespace(
         batch_size=4,
         val_batch_size=4,
@@ -159,7 +214,8 @@ def test_0(ds_type, num_workers, distributed_backend, gpus, epochs):
         max_steps=None,
         max_sequence_length=10,
         gpus=gpus,
-        dataset_style=ds_type
+        dataset_style=ds_type,
+        accumulate_samples=False
     )
 
     if distributed_backend is not None:
