@@ -42,16 +42,6 @@ class SuperModel(LightningModule):
             )
             return None
 
-        if (
-            hasattr(self.trainer.datamodule.train_dataset, 'length') and
-            hasattr(self.hparams, "accumulate_samples") and
-            self.hparams.accumulate_samples
-        ):
-            logger.warning(
-                "Using --accumulate_samples could reduce real max_steps value wrt"
-                " the one computed in this function"
-            )
-
         dataset_len = len(self.trainer.datamodule.train_dataset)
 
         if self.trainer.on_gpu:
