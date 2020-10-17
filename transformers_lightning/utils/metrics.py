@@ -99,11 +99,11 @@ def get_tp_and_fn(preds: torch.Tensor, labels: torch.Tensor, threshold: float):
     ]
 
 
-from pytorch_lightning.metrics.functional import accuracy
-def masked_accuracy(labels=None, predictions=None, logits=None, exclude=-100):
+def masked_metric(labels=None, predictions=None, logits=None, exclude=-100, metric=None):
     """
-    Compute accuracy when there are labels that should not be considered.
+    Compute a metric only not taking into account labels that should not be considered.
     """
+    assert metric is not None, "A non-None metric to compute on predictions and labels should be provided"
     assert labels is not None, "labels should be provided to compute accuracy"
     assert (predictions is None) != (logits is None), \
         "only one between `predictions` and `logits` should be provided"
@@ -116,4 +116,4 @@ def masked_accuracy(labels=None, predictions=None, logits=None, exclude=-100):
     predictions = predictions[valid_indexes]
     labels = labels[valid_indexes]
 
-    return accuracy(predictions.view(-1), labels.view(-1))
+    return metric(predictions.view(-1), labels.view(-1))
