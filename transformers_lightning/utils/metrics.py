@@ -99,7 +99,7 @@ def get_tp_and_fn(preds: torch.Tensor, labels: torch.Tensor, threshold: float):
     ]
 
 
-def masked_metric(labels=None, predictions=None, logits=None, exclude=-100, metric=None):
+def masked_metric(labels=None, predictions=None, logits=None, exclude=-100, metric=None, **kwargs):
     """
     Compute a metric only not taking into account labels that should not be considered.
     """
@@ -116,4 +116,4 @@ def masked_metric(labels=None, predictions=None, logits=None, exclude=-100, metr
     predictions = predictions[valid_indexes]
     labels = labels[valid_indexes]
 
-    return metric(predictions.view(-1), labels.view(-1))
+    return metric(predictions.view(-1), labels.view(-1), **kwargs)
