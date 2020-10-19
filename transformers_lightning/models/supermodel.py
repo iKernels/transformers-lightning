@@ -42,7 +42,10 @@ class SuperModel(LightningModule):
             )
             return None
 
-        dataset_len = len(self.trainer.datamodule.train_dataset)
+        try:
+            dataset_len = len(self.trainer.datamodule.train_dataset)
+        except:
+            dataset_len = self.trainer.datamodule.train_dataset.length
 
         if self.trainer.on_gpu:
             total_devices = self.trainer.num_nodes * self.trainer.num_processes
