@@ -134,7 +134,8 @@ def random_token_substutition(
     inputs: torch.Tensor,
     tokenizer: transformers.PreTrainedTokenizer,
     rts_probability: float = 0.15,
-    do_not_touch_input_ids=False
+    do_not_touch_input_ids=False,
+    weights: torch.Tensor = None
 ) -> tuple:
     """
     Prepare tokens inputs/labels for random token substutition modeling.
@@ -165,14 +166,25 @@ def random_token_substutition(
         'labels': tensor([[-100, 0, 1, 0, 1, 1, 0, 1, -100]])
     }
 
-    If `do_not_touch_input_ids` is True, input ids are not modified and only labels are created
+    If `do_not_touch_input_ids` is True, input ids are not modified and only labels are created.
+    If `weights` if not None, the probability matrix will be initialized giving each token a probability
+    proportional to the weight. `weights` should be a vector on length `vocab_size`.
     """
 
     # creating tensor directly on right device is more efficient
     device = inputs.device
 
+    # We sample a few tokens in each sequence for masked-LM training (with probability args.rts_probability defaults to 0.15 in Bert/RoBERTa)
+    if weights is None:
+        probability_matrix = torch.full(inputs.shape, fill_value=rts_probability, dtype=torch.float32, device=device)
+    else:
+        weights = weights.to(device=device)
+
+        probability_matrix = torch.softmax(weights[inputs], dim=-1)
+        # now probability matrix sums to 1 on sequence axis. Need to rescale to rts_prob * seq_len
+        probability_matrix = probability_matrix * probability_matrix.shape[-1] * rts_probability
+
     # probability matrix containts the probability of each token to be randomly substituted
-    probability_matrix = torch.full(inputs.shape, fill_value=rts_probability, dtype=torch.float32, device=device)
     labels = torch.full(inputs.shape, fill_value=0, dtype=torch.long, device=device)
 
     # not going to substitute special tokens of the LM (bert, roby, ...)
