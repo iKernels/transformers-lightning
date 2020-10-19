@@ -38,7 +38,7 @@ class SimpleTransformerLikeModel(transformers_lightning.models.SuperModel):
 
 class ExampleDataModule(transformers_lightning.datamodules.SuperDataModule):
 
-    def __init__(self, *args, ds_type=None, **kwargs):
+    def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         self.train_config = "dataset.yaml"
@@ -49,15 +49,20 @@ class ExampleDataModule(transformers_lightning.datamodules.SuperDataModule):
 
 # Test if max_steps fix works correctly
 @pytest.mark.parametrize(
-    ["max_epochs", "accumulate_grad_batches", "batch_size", "distributed_backend", "gpus", "expected_max_steps"], [
+    ["max_epochs", "accumulate_grad_batches", "batch_size", "distributed_backend", "gpus", "expected_max_steps", "dataset_style"], [
 
-    [1,             1,                         4,            None,                  None,   10],
-    [1,             3,                         8,            None,                  None,   2],
-    [4,             2,                         12,           None,                  None,   8],
-    [4,             4,                         16,           None,                  None,   4],
+    [1,             1,                         4,            None,                  None,   10,         'map'],
+    [1,             3,                         8,            None,                  None,   2,          'map'],
+    [4,             2,                         12,           None,                  None,   8,          'map'],
+    [4,             4,                         16,           None,                  None,   4,          'map'],
+
+    [1,             1,                         4,            None,                  None,   10,         'iter'],
+    [1,             3,                         8,            None,                  None,   2,          'iter'],
+    [4,             2,                         12,           None,                  None,   8,          'iter'],
+    [4,             4,                         16,           None,                  None,   4,          'iter'],
 
 ])
-def test_fix_max_steps_cpu(max_epochs, accumulate_grad_batches, batch_size, distributed_backend, gpus, expected_max_steps):
+def test_fix_max_steps_cpu(max_epochs, accumulate_grad_batches, batch_size, distributed_backend, gpus, expected_max_steps, dataset_style):
 
     hparams = Namespace(
         batch_size=batch_size,
@@ -71,7 +76,7 @@ def test_fix_max_steps_cpu(max_epochs, accumulate_grad_batches, batch_size, dist
         max_steps=None,
         max_sequence_length=10,
         gpus=gpus,
-        dataset_style='map'
+        dataset_style=dataset_style
     )
 
     if distributed_backend is not None:
