@@ -2,7 +2,7 @@ import csv
 import json
 import math
 import os
-from argparse import ArgumentParser
+from argparse import Action, ArgumentParser
 from typing import Union
 
 from pytorch_lightning.callbacks.base import Callback
@@ -109,9 +109,30 @@ class TransformersModelCheckpointCallback(Callback):
 
         self.save_model(pl_module, step, epoch, final=True)
 
+    @rank_zero_only
+    def on_validation_end(self, trainer, pl_module):
+        """
+        Called when the validation ends. Here models trained in the
+        LightningModule will be saved to disk to be re-used.
+        """
+        # only run on main process
+        if trainer.global_rank != 0:
+            return
+
+        # not validation checkpointing if it is disabled
+        if self.hparams.disable_val_checkpointing:
+            return 
+
+        step = pl_module.global_step
+        epoch = trainer.current_epoch
+
+        self.save_model(pl_module, step, epoch, final=True)
+
     @staticmethod
     def add_callback_specific_args(parser):
         """ Add callback_specific arguments to parser. """
         parser.add_argument('--transformers_checkpoint_interval', type=int, required=False, default=None,
                             help="Save pre_trained models every steps. A None value means save only at the end of each epoch.")
+        parser.add_argument('--disable_val_checkpointing', action="store_true",
+                            help="Disable transformers checkpointing at each validation end.")
         return parser
