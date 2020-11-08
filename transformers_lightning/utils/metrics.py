@@ -42,37 +42,44 @@ def average_precision(preds: torch.Tensor, labels: torch.Tensor):
     res = torch.true_divide((torch.arange(len(denominators), device=denominators.device) + 1), denominators).mean()
     return res
 
-def precision(preds: torch.Tensor, labels: torch.Tensor, k: int = 1):
+def precision(preds: torch.Tensor, labels: torch.Tensor, k: int = 1, empty_document=1.0):
     """
     Precision@k over a single group. See `get_mini_groups` for details about groups.
     Precision@k = (# of recommended items @k that are relevant) / (# of recommended items @k)
-    """
-    assert preds.shape == labels.shape, (
-        f"Predicions and labels must have the same shape, found {preds.shape} and {labels.shape} instead"
-    )
-    return torch.true_divide(labels[torch.argsort(preds, dim=-1, descending=True)][:k].sum(), k)
-
-def recall(preds: torch.Tensor, labels: torch.Tensor, k: int = 1):
-    """
-    Recall@k over a single group. See `get_mini_groups` for details about groups
-    Recall@k = (# of recommended items @k that are relevant) / (total # of relevant items)
+    :param empty_document: what should be returned if document has no positive labels
     """
     assert preds.shape == labels.shape, (
         f"Predicions and labels must have the same shape, found {preds.shape} and {labels.shape} instead"
     )
     if labels.sum() == 0:
-        return torch.tensor(1).to(preds)
-    return torch.true_divide(labels[torch.argsort(preds, dim=-1, descending=True)][:k].sum(), labels.sum())
+        return torch.tensor(empty_document).to(preds)
+    return torch.true_divide(labels[torch.argsort(preds, dim=-1, descending=True)][:k].sum(), k).to(preds)
 
-def hit_rate(preds: torch.Tensor, labels: torch.Tensor, k: int = 1):
+def recall(preds: torch.Tensor, labels: torch.Tensor, k: int = 1, empty_document=1.0):
     """
-    HitRate@k over a single group. See `get_mini_groups` for details about groups
-    HitRate@k = (# of recommended items @k that are relevant) > 0 ? 1 else 0
+    Recall@k over a single group. See `get_mini_groups` for details about groups
+    Recall@k = (# of recommended items @k that are relevant) / (total # of relevant items)
+    :param empty_document: what should be returned if document has no positive labels
     """
     assert preds.shape == labels.shape, (
         f"Predicions and labels must have the same shape, found {preds.shape} and {labels.shape} instead"
     )
-    return (labels[torch.argsort(preds, dim=-1, descending=True)][:k].sum() > 0).to(dtype=torch.float32)
+    if labels.sum() == 0:
+        return torch.tensor(empty_document).to(preds)
+    return torch.true_divide(labels[torch.argsort(preds, dim=-1, descending=True)][:k].sum(), labels.sum()).to(preds)
+
+def hit_rate(preds: torch.Tensor, labels: torch.Tensor, k: int = 1, empty_document=1.0):
+    """
+    HitRate@k over a single group. See `get_mini_groups` for details about groups
+    HitRate@k = (# of recommended items @k that are relevant) > 0 ? 1 else 0
+    :param empty_document: what should be returned if document has no positive labels
+    """
+    assert preds.shape == labels.shape, (
+        f"Predicions and labels must have the same shape, found {preds.shape} and {labels.shape} instead"
+    )
+    if labels.sum() == 0:
+        return torch.tensor(empty_document).to(preds)
+    return (labels[torch.argsort(preds, dim=-1, descending=True)][:k].sum() > 0).to(preds)
 
 def get_tp_and_fp(preds: torch.Tensor, labels: torch.Tensor, threshold: float):
     """
@@ -81,10 +88,10 @@ def get_tp_and_fp(preds: torch.Tensor, labels: torch.Tensor, threshold: float):
     indexes = np.argsort(preds, dim=-1, descending=True)
     labels = labels[indexes]
     preds = preds[indexes]
-    return [
+    return (
         int(labels[0] == 1 and preds[0] >= threshold), # TP
         int(labels[0] == 0 and preds[0] >= threshold) # FP
-    ]
+    )
 
 def get_tp_and_fn(preds: torch.Tensor, labels: torch.Tensor, threshold: float):
     """
@@ -93,10 +100,10 @@ def get_tp_and_fn(preds: torch.Tensor, labels: torch.Tensor, threshold: float):
     indexes = np.argsort(preds, dim=-1, descending=True)
     labels = labels[indexes]
     preds = preds[indexes]
-    return [
+    return (
         int(labels[0] == 1 and preds[0] >= threshold), # TP
         int(preds[0] < threshold) # FN
-    ]
+    )
 
 
 def masked_metric(labels=None, predictions=None, logits=None, exclude=-100, metric=None, **kwargs):
