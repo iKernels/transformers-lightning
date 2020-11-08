@@ -1,3 +1,2 @@
 from transformers_lightning.callbacks.transformers_model_checkpoint import TransformersModelCheckpointCallback
 from transformers_lightning.callbacks.save_results import SaveTestResultsCallback
-from transformers_lightning.callbacks.advanced_model_checkpoint import AdvancedModelCheckpointCallback
