@@ -3,6 +3,7 @@ import json
 import math
 import os
 from argparse import Action, ArgumentParser
+from transformers_lightning.utils.initializations import init_folders
 from typing import Union
 
 from pytorch_lightning.callbacks.base import Callback
@@ -26,6 +27,7 @@ class TransformersModelCheckpointCallback(Callback):
         self.hparams = hparams
         self.destination = os.path.join(hparams.output_dir, hparams.pre_trained_dir, hparams.name)
 
+    def init_folders(self):
         if not os.path.isdir(self.destination):
             os.makedirs(self.destination)
 
@@ -60,6 +62,10 @@ class TransformersModelCheckpointCallback(Callback):
     @rank_zero_only
     def on_train_start(self, trainer, pl_module):
         """ Check model can be saved and save hparams to understand what kind of experiment it was. """
+        if trainer.global_rank != 0:
+            return
+
+        self.init_folders()
         self.checkup(pl_module)
         self.save_params()
 
