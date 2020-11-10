@@ -177,7 +177,7 @@ def test_datamodule_cpu(ds_type, num_workers, distributed_backend, gpus, epochs)
     ['map',     2,             'dp',                   2,      4],
     ['map',     n_cpus,        'dp',                   2,      10]
 ])
-def test_datamodule_gpu(ds_type, num_workers, distributed_backend, gpus, epochs):
+def test_datamodule_gpu_dp(ds_type, num_workers, distributed_backend, gpus, epochs):
     
     hparams = Namespace(
         batch_size=4,
@@ -255,7 +255,7 @@ def test_datamodule_gpu(ds_type, num_workers, distributed_backend, gpus, epochs)
 #    ['map',     2,             'ddp',                  2,      4],
 #    ['map',     n_cpus,        'ddp',                  2,      10],
 ])
-def test_datamodule_gpu(ds_type, num_workers, distributed_backend, gpus, epochs):
+def test_datamodule_gpu_ddp(ds_type, num_workers, distributed_backend, gpus, epochs):
     
     hparams = Namespace(
         batch_size=4,
