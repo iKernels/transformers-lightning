@@ -86,7 +86,6 @@ class ExampleDataset(Dataset):
 
 
 
-'''
 class ExampleIterableDataset(IterableDataset):
 
     def __init__(self, n):
@@ -100,11 +99,12 @@ class ExampleIterableDataset(IterableDataset):
         """ Move reader forward and return last extracted element. """
         row = None
         for i in range(steps):
-            row = next(self.reader)
+            next(self.reader)
+            row = torch.zeros(10)
         return row
 
     def __iter__(self):
-        self.reader = range(100)
+        self.reader = range(self.n)
         self.is_first = True
         if hasattr(self, 'worker_info'):
             delattr(self, 'worker_info') # it may be necessary to reload info after every epoch...
@@ -113,8 +113,6 @@ class ExampleIterableDataset(IterableDataset):
 
         if self.is_distributed():
             self.jump_forward(steps=self.get_distributed_id())
-
-        print(self.get_distributed_id(), self.get_worker_info()); exit()
 
         return self
 
@@ -158,7 +156,7 @@ class ExampleIterableDataset(IterableDataset):
         self.counter += 1
 
         return row_dict
-'''
+
 
 
 
