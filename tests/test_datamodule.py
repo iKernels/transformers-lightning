@@ -38,7 +38,15 @@ class SimpleTransformerLikeModel(transformers_lightning.models.SuperModel):
         except TypeError:
             received = torch.zeros((self.datamodule.train_dataset.length,))
         received[ids] = True
-        assert all(received), f"({self.trainer.max_steps}) Received not all {len(received)} ids: {received}"
+
+        # assert no duplicate element received
+        assert len(set(ids.tolist())) == len(ids.tolist()), (
+            f"Received {len(ids.tolist())} ids but only {len(set(ids.tolist()))} are unique: {ids}"
+        )
+        # assert all elements received
+        assert all(received), (
+            f"({self.trainer.max_steps}) Received not all {len(received)} ids: {received}"
+        )
 
     def validation_step(self, batch, batch_idx):
         kwargs = {k: batch[k] for k in ["input_ids", "attention_mask", "token_type_ids", "labels"]}
@@ -234,7 +242,7 @@ def test_datamodule_gpu_dp(ds_type, num_workers, distributed_backend, gpus, epoc
     # ITER dataset
     # num_workers with ddp
     ['iter',     0,             'ddp',                  2,      2],
-#    ['iter',     1,             'ddp',                  2,      2],
+    ['iter',     1,             'ddp',                  2,      2],
 #    ['iter',     2,             'ddp',                  2,      2],
 #    ['iter',     n_cpus,        'ddp',                  2,      2],
 
