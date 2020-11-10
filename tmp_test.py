@@ -192,7 +192,7 @@ hparams = Namespace(
     max_steps=None,
     max_sequence_length=10,
     gpus=2,
-    dataset_style='map',
+    dataset_style='iter',
     distributed_backend='ddp'
 )
 
