@@ -249,14 +249,12 @@ def test_datamodule_gpu_dp(ds_type, num_workers, distributed_backend, gpus, epoc
 
     # MAP dataset
     # num_workers with ddp
-#    ['map',     0,             'ddp',                  2,      2],
-#    ['map',     1,             'ddp',                  2,      2],
-#    ['map',     2,             'ddp',                  2,      2],
-#    ['map',     n_cpus,        'ddp',                  2,      2],
-
-#    ['map',     0,             'ddp',                  2,      1],
-#    ['map',     2,             'ddp',                  2,      4],
-#    ['map',     n_cpus,        'ddp',                  2,      10],
+    ['map',     0,             'ddp',                  2,      2],
+    ['map',     1,             'ddp',                  2,      2],
+    ['map',     2,             'ddp',                  2,      2],
+    ['map',     0,             'ddp',                  2,      1],
+    ['map',     2,             'ddp',                  2,      4],
+    ['map',     n_cpus,        'ddp',                  2,      10],
 ])
 def test_datamodule_gpu_ddp(ds_type, num_workers, distributed_backend, gpus, epochs):
     
