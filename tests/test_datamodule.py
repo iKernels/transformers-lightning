@@ -60,7 +60,7 @@ class ExampleDataModule(transformers_lightning.datamodules.SuperDataModule):
  
     train_dataloader = transformers_lightning.datamodules.SuperDataModule.default_train_dataloader
 
-    
+
 
 # Test iter dataset work correctly
 @pytest.mark.parametrize(
@@ -116,8 +116,7 @@ def test_datamodule_cpu(ds_type, num_workers, distributed_backend, gpus, epochs)
         max_steps=None,
         max_sequence_length=10,
         gpus=gpus,
-        dataset_style=ds_type,
-        accumulate_samples=False
+        dataset_style=ds_type
     )
 
     if distributed_backend is not None:
@@ -145,6 +144,7 @@ def test_datamodule_cpu(ds_type, num_workers, distributed_backend, gpus, epochs)
     # Test!
     if datamodule.do_test():
         trainer.test(model, datamodule=datamodule)
+
 
 
 # Test iter dataset work correctly
@@ -189,7 +189,7 @@ def test_datamodule_cpu(ds_type, num_workers, distributed_backend, gpus, epochs)
     ['map',     n_cpus,        'dp',                   2,      10],
 
     # num_workers with ddp
-    ['map',     0,             'ddp',                  2,      2],
+#    ['map',     0,             'ddp',                  2,      2],
 #    ['map',     1,             'ddp',                  2,      2],
 #    ['map',     2,             'ddp',                  2,      2],
 #    ['map',     n_cpus,        'ddp',                  2,      2],
@@ -215,8 +215,7 @@ def test_datamodule_gpu(ds_type, num_workers, distributed_backend, gpus, epochs)
         max_steps=None,
         max_sequence_length=10,
         gpus=gpus,
-        dataset_style=ds_type,
-        accumulate_samples=False
+        dataset_style=ds_type
     )
 
     if distributed_backend is not None:
