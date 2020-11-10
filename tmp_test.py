@@ -62,6 +62,8 @@ class SimpleTransformerLikeModel(transformers_lightning.models.SuperModel):
         return results.loss
 
 
+
+"""
 class ExampleDataset(Dataset):
 
     def __init__(self, n):
@@ -78,7 +80,7 @@ class ExampleDataset(Dataset):
             "id": idx,
             "data": torch.zeros(10)
         }
-
+"""
 
 
 
@@ -91,7 +93,7 @@ class ExampleIterableDataset(IterableDataset):
 
     @property
     def length(self):
-        return N
+        return self.n
 
     def jump_forward(self, steps: int = 1):
         """ Move reader forward and return last extracted element. """
@@ -99,8 +101,6 @@ class ExampleIterableDataset(IterableDataset):
         for i in range(steps):
             row = next(self.reader)
         return row
-
-    """ Init is the same as super class """
 
     def __iter__(self):
         self.reader = range(100)
@@ -175,7 +175,7 @@ class ExampleDataModule(LightningDataModule):
         self.dataset = ExampleIterableDataset(N)
 
     def train_dataloader(self):
-        return DataLoader(self.dataset, batch_size=self.hparams.batch_size)
+        return DataLoader(self.dataset, batch_size=self.hparams.batch_size, num_workers=self.hparams.n_cpus)
 
 
 
