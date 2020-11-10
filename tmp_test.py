@@ -104,7 +104,7 @@ class ExampleIterableDataset(IterableDataset):
         return row
 
     def __iter__(self):
-        self.reader = range(self.n)
+        self.reader = iter(range(self.n))
         self.is_first = True
         if hasattr(self, 'worker_info'):
             delattr(self, 'worker_info') # it may be necessary to reload info after every epoch...
