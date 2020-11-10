@@ -108,25 +108,21 @@ class SuperTransformersDataset:
         """
         Prepare data to be returned. Should return a tuple of lists.
         """
-        try:
-            # get columns of interest and tokenizer them in pairs
-            sentences = [row_dict[x] for x in self.specs.x]
-            results = self.tokenizer.encode_plus(*sentences,
-                                                truncation=True,
-                                                add_special_tokens=True,
-                                                padding='max_length',
-                                                max_length=self.hparams.max_sequence_length)
-            # add ids field
-            if 'ids' not in row_dict and idx is not None:
-                results["ids"] = idx
-            else:
-                results["ids"] = row_dict["ids"]
+        # get columns of interest and tokenizer them in pairs
+        sentences = [row_dict[x] for x in self.specs.x]
+        results = self.tokenizer.encode_plus(*sentences,
+                                            truncation=True,
+                                            add_special_tokens=True,
+                                            padding='max_length',
+                                            max_length=self.hparams.max_sequence_length)
+        # add ids field
+        if 'ids' not in row_dict and idx is not None:
+            results["ids"] = idx
+        else:
+            results["ids"] = row_dict["ids"]
 
-            # add label fields
-            for label in self.specs.y:
-                results[label] = np.array([row_dict[label]], dtype=np.int64)
-        except:
-            print(f"Cannot parse row_dict: {row_dict}")
-            exit(1)
+        # add label fields
+        for label in self.specs.y:
+            results[label] = np.array([row_dict[label]], dtype=np.int64)
 
         return results
