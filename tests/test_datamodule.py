@@ -246,7 +246,7 @@ def test_datamodule_gpu_dp(ds_type, num_workers, distributed_backend, gpus, epoc
 #    ['iter',     2,             'ddp',                  2,      2],
 #    ['iter',     n_cpus,        'ddp',                  2,      2],
 
-#    ['iter',     0,             'ddp',                  2,      1],
+    ['iter',     0,             'ddp',                  2,      1],
     ['iter',     2,             'ddp',                  2,      4],
     ['iter',     n_cpus,        'ddp',                  2,      10],
 
