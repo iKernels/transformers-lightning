@@ -114,6 +114,8 @@ class ExampleIterableDataset(IterableDataset):
         if self.is_distributed():
             self.jump_forward(steps=self.get_distributed_id())
 
+        print(self.get_worker_info(self))
+
         return self
 
     # worker info
@@ -156,6 +158,7 @@ class ExampleIterableDataset(IterableDataset):
         }
 
         self.counter += 1
+        print(row_dict)
 
         return row_dict
 
