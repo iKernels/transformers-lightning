@@ -1,5 +1,5 @@
 """
-Build config, models and tokenizers of the transformers library
+Build config, models and tokenizers of the transformers library. Automatically manage only cache_dir parameter
 """
 
 def get_config(config_class, hparams, pre_trained_name=None, **kwargs):
@@ -30,5 +30,4 @@ def get_tokenizer(tokenizer_class, hparams, pre_trained_name=None, **kwargs):
         kwargs['cache_dir'] = hparams.cache_dir
         return tokenizer_class.from_pretrained(pre_trained_name, **kwargs)
     else:
-        kwargs['do_lower_case'] = hparams.do_lower_case
         return tokenizer_class(**kwargs)
