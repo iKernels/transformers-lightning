@@ -63,7 +63,7 @@ class SimpleTransformerLikeModel(transformers_lightning.models.SuperModel):
 
 
 
-"""
+
 class ExampleDataset(Dataset):
 
     def __init__(self, n):
@@ -80,12 +80,12 @@ class ExampleDataset(Dataset):
             "id": idx,
             "data": torch.zeros(10)
         }
-"""
 
 
 
 
 
+'''
 class ExampleIterableDataset(IterableDataset):
 
     def __init__(self, n):
@@ -157,7 +157,7 @@ class ExampleIterableDataset(IterableDataset):
         self.counter += 1
 
         return row_dict
-
+'''
 
 
 
@@ -172,7 +172,7 @@ class ExampleDataModule(LightningDataModule):
         self.hparams = hparams
 
     def setup(self, stage=None):
-        self.dataset = ExampleIterableDataset(N)
+        self.dataset = ExampleDataset(N)
 
     def train_dataloader(self):
         return DataLoader(self.dataset, batch_size=self.hparams.batch_size, num_workers=self.hparams.n_cpus)
