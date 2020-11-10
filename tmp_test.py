@@ -175,7 +175,7 @@ class ExampleDataModule(LightningDataModule):
         self.dataset = ExampleDataset(N)
 
     def train_dataloader(self):
-        return DataLoader(self.dataset, batch_size=self.hparams.batch_size, num_workers=self.hparams.n_cpus)
+        return DataLoader(self.dataset, batch_size=self.hparams.batch_size, num_workers=self.hparams.num_workers)
 
 
 
