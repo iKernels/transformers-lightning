@@ -86,6 +86,9 @@ class ExampleDataset(Dataset):
 
 class ExampleIterableDataset(IterableDataset):
 
+    def __init__(self, n):
+        self.n = n
+
     @property
     def length(self):
         return N
