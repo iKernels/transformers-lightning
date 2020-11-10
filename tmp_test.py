@@ -30,6 +30,7 @@ class SimpleTransformerLikeModel(transformers_lightning.models.SuperModel):
 
     def training_epoch_end(self, outputs):
         ids = torch.cat([o['ids'] for o in outputs], dim=0)
+        print("ids: ", ids); return
 
         try:
             received = torch.zeros((len(self.datamodule.train_dataset),))
@@ -46,7 +47,7 @@ class SimpleTransformerLikeModel(transformers_lightning.models.SuperModel):
             f"({self.trainer.max_steps}) Received not all {len(received)} ids: {received}"
         )
 
-        print("ids: ", ids)
+        
 
     def training_end(self):
         pass
