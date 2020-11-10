@@ -150,8 +150,10 @@ class ExampleIterableDataset(IterableDataset):
         else:
             row = self.jump_forward(steps=1)
 
-        row_dict = self.get_data_as_dict(row)
-        row_dict = self.prepare(row_dict, idx=self.counter)
+        row_dict = {
+            "data": row,
+            "id": self.counter
+        }
 
         self.counter += 1
 
