@@ -65,17 +65,17 @@ class TransformersIterableDataset(SuperTransformersDataset, IterableDataset):
         # add counter middlelayer
         self.reader = self.counter_generator(self.reader)
 
+        # add distributed training middlelayer
         if torch.distributed.is_initialized():
-            # add distributed training middlelayer
             self.reader = utils.filter_generator(
                 self.reader,
                 step=torch.distributed.get_world_size(),
                 offset=torch.distributed.get_rank()
             )
 
+        # add parallel processing middlelayer
         worker_info = torch.utils.data.get_worker_info()
         if worker_info is not None:
-            # add parallel processing middlelayer
             self.reader = utils.filter_generator(
                 self.reader,
                 step=worker_info.num_workers,
