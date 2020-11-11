@@ -76,51 +76,6 @@ class ExampleDataModule(transformers_lightning.datamodules.SuperDataModule):
 """
 
 
-
-class IterDataset(IterableDataset):
-
-    def __init__(self, n):
-        self.n = n
-
-    def counter_generator(self, generator_in):
-        """ Counter over total number of elements extracted by the generator. """
-        for x in generator_in:
-            self.global_counter += 1
-            yield x
-
-    def __iter__(self):
-        self.reader = iter(range(20))
-
-        self.global_counter = 0
-
-        # add counter middlelayer
-        self.reader = self.counter_generator(self.reader)
-
-        if torch.distributed.is_initialized():
-            # add distributed training middlelayer
-            self.reader = utils.filter_generator(
-                self.reader,
-                step=torch.distributed.get_world_size(),
-                offset=torch.distributed.get_rank()
-            )
-
-        worker_info = torch.utils.data.get_worker_info()
-        if worker_info is not None:
-            # add parallel processing middlelayer
-            self.reader = utils.filter_generator(
-                self.reader,
-                step=worker_info.num_workers,
-                offset=worker_info.id
-            )
-
-        return self
-
-    def __next__(self):
-        return {
-            "ids": next(self.reader),
-            "input_ids": torch.zeros(10)
-        }
-
 class ExampleDataModule(pl.LightningDataModule):
 
     def get_config(self, config_file):
@@ -136,17 +91,16 @@ class ExampleDataModule(pl.LightningDataModule):
         self.tokenizer = BertTokenizer.from_pretrained("bert-base-cased")
 
     def setup(self, stage=None):
-        #self.train_dataset = TransformersIterableDataset(
-        #    self.hparams, self.tokenizer, self.train_config
-        #)
-        self.train_dataset = IterDataset(N)
+        self.train_dataset = TransformersIterableDataset(
+            self.hparams, self.tokenizer, self.train_config
+        )
 
     def train_dataloader(self):
         return DataLoader(self.train_dataset,
                           batch_size=self.hparams.batch_size,
                           num_workers=self.hparams.num_workers,
-                          pin_memory=True,)
-                          #collate_fn=utils.collate_single_fn)
+                          pin_memory=True,
+                          collate_fn=utils.collate_single_fn)
 
 hparams = Namespace(
     batch_size=4,
