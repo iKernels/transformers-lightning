@@ -91,6 +91,7 @@ class TransformersIterableDataset(SuperTransformersDataset, IterableDataset):
         """
         # automagically receive correct element in distributed training and multi worker loading
         row = next(self.reader)
+        print(f"Returning {self.global_counter, row}")
 
         row_dict = self.get_data_as_dict(row)
         row_dict = self.prepare(row_dict, idx=self.global_counter)
