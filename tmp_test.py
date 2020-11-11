@@ -108,8 +108,7 @@ class ExampleDataModule(pl.LightningDataModule):
         return DataLoader(self.train_dataset,
                           batch_size=self.hparams.batch_size,
                           num_workers=self.hparams.num_workers,
-                          pin_memory=True,
-                          collate_fn=utils.collate_single_fn)
+                          pin_memory=True)
 
 hparams = Namespace(
     batch_size=4,
