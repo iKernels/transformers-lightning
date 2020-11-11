@@ -26,7 +26,7 @@ class SimpleTransformerLikeModel(transformers_lightning.models.SuperModel):
         self.lin = torch.nn.Linear(10, 1)
 
     def training_step(self, batch, batch_idx):
-        return { 'loss': self.lin(batch["input_ids"].to(dtype=float)).mean(), 'ids': batch['ids'] }
+        return { 'loss': self.lin(batch["input_ids"].to(dtype=torch.float32)).mean(), 'ids': batch['ids'] }
 
     def training_epoch_end(self, outputs):
         ids = torch.cat([o['ids'] for o in outputs], dim=0)
