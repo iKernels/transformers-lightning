@@ -59,7 +59,9 @@ class TransformersIterableDataset(SuperTransformersDataset, IterableDataset):
             yield x
 
     def __iter__(self):
-        self.reader = self.__class__.read_csv_file(self.specs, self.hparams)
+        self.reader = SuperTransformersDataset.read_csv_file(
+            self.specs, self.hparams
+        )
         self.global_counter = 0
 
         # add counter middlelayer
