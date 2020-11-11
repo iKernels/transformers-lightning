@@ -39,7 +39,7 @@ class SimpleTransformerLikeModel(transformers_lightning.models.SuperModel):
         received = torch.zeros(N).to(dtype=bool)
         received[ids] = True
 
-        print(f"Worker {torch.distributed.get_rank()} collected all {ids}")
+        print(f"Worker {torch.distributed.get_rank()} collected all {ids} and received vector is {received}")
 
         # assert no duplicate element received
         assert len(set(ids.tolist())) == len(ids.tolist()), (
@@ -49,11 +49,6 @@ class SimpleTransformerLikeModel(transformers_lightning.models.SuperModel):
         assert all(received), (
             f"({self.trainer.max_steps}) Received not all {len(received)} ids: {received}"
         )
-
-        
-
-    def training_end(self):
-        pass
 
     def validation_step(self, batch, batch_idx):
         kwargs = {k: batch[k] for k in ["input_ids", "attention_mask", "token_type_ids", "labels"]}

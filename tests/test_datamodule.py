@@ -33,10 +33,18 @@ class SimpleTransformerLikeModel(transformers_lightning.models.SuperModel):
 
     def training_epoch_end(self, outputs):
         ids = torch.cat([o['ids'] for o in outputs], dim=0)
+
+        # in distributed mode collect ids from every process (gpu)
+        if torch.distributed.is_initialized():
+            gather_ids = [torch.ones_like(ids) for _ in range(torch.distributed.get_world_size())]
+            torch.distributed.all_gather(gather_ids, ids)
+            
+            ids = torch.cat([x.to(ids) for x  in gather_ids], dim=0)
+
         try:
-            received = torch.zeros((len(self.datamodule.train_dataset),))
+            received = torch.zeros((len(self.datamodule.train_dataset),)).to(dtype=bool)
         except TypeError:
-            received = torch.zeros((self.datamodule.train_dataset.length,))
+            received = torch.zeros((self.datamodule.train_dataset.length,)).to(dtype=bool)
         received[ids] = True
 
         # assert no duplicate element received
