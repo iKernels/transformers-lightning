@@ -74,7 +74,7 @@ class ExampleDataModule(transformers_lightning.datamodules.SuperDataModule):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.train_config = "dataset2.yaml"
+        self.train_config = "dataset3.yaml"
  
     train_dataloader = transformers_lightning.datamodules.SuperDataModule.default_train_dataloader
 
