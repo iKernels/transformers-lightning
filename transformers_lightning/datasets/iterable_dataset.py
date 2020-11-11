@@ -64,6 +64,7 @@ class TransformersIterableDataset(SuperTransformersDataset, IterableDataset):
         self.global_counter = 0
         self.reader = self.counter_generator(self.reader)
 
+        print(f"Diacane: {torch.distributed.is_initialized()} {torch.utils.data.get_worker_info()}")
         if torch.distributed.is_initialized():
             print(f"############## ID {torch.distributed.get_rank()} is distrib")
             self.reader = utils.filter_generator(
