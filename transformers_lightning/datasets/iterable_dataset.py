@@ -7,8 +7,8 @@ from transformers_lightning.datasets import SuperTransformersDataset
 
 class TransformersIterableDataset(SuperTransformersDataset, IterableDataset):
     """
-    Superclass of all fly datasets. Tokenization is performed on the fly.
-    Dataset is split in chunks to save memory using the relative dataframe function.
+    Superclass of all iterable datasets. Tokenization is performed on the fly.
+    Dataset is read on the fly from disk to save memory.
 
     Example
     no distributed training (idx)
