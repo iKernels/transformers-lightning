@@ -70,10 +70,13 @@ class SimpleTransformerLikeModel(transformers_lightning.models.SuperModel):
 
 class ExampleDataModule(transformers_lightning.datamodules.SuperDataModule):
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, train_config=None, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.train_config = "dataset.yaml"
+        if train_config is None:
+            self.train_config = "dataset1.yaml"
+        else:
+            self.train_config = train_config
  
     train_dataloader = transformers_lightning.datamodules.SuperDataModule.default_train_dataloader
 
@@ -299,6 +302,67 @@ def test_datamodule_gpu_ddp(ds_type, num_workers, distributed_backend, gpus, epo
     datamodule = ExampleDataModule(hparams, model, trainer)
 
     model.datamodule = datamodule
+    # Train!
+    if datamodule.do_train():
+        trainer.fit(model, datamodule=datamodule)
+
+    # Test!
+    if datamodule.do_test():
+        trainer.test(model, datamodule=datamodule)
+
+
+
+
+# Test iter dataset work correctly with dp
+@pytest.mark.skipif(torch.cuda.device_count() < 2, reason="test requires multi-GPU machine")
+@pytest.mark.parametrize(
+    ["ds_type", "dataset"], [
+    
+    # ITER dataset
+    # num_workers with ddp
+    ['iter',     1],
+    ['iter',     2],
+    ['iter',     3],
+    ['map',      1],
+    ['map',      2],
+    ['map',      3],
+
+])
+def test_datamodule_gpu_ddp_different_ds(ds_type, ds_number):
+    
+    hparams = Namespace(
+        batch_size=4,
+        val_batch_size=4,
+        test_batch_size=4,
+        accumulate_grad_batches=3,
+        num_workers=4,
+        dataset_dir='tests/test_data',
+        config_dir='tests/test_data',
+        cache_dir='cache',
+        output_dir='output',
+        max_epochs=3,
+        max_steps=None,
+        max_sequence_length=10,
+        gpus=2,
+        dataset_style=ds_type,
+        distributed_backend='ddp'
+    )
+
+    # instantiate PL trainer
+    trainer = pl.Trainer.from_argparse_args(
+        hparams,
+        profiler='simple',
+        logger=None,
+        callbacks=[],
+    )
+
+    # instantiate PL model
+    model = SimpleTransformerLikeModel(hparams)    
+
+    # Datasets
+    datamodule = ExampleDataModule(hparams, model, trainer, train_config=f"dataset{ds_number}.yaml")
+    model.datamodule = datamodule
+    
     # Train!
     if datamodule.do_train():
         trainer.fit(model, datamodule=datamodule)
