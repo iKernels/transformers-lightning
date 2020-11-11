@@ -117,7 +117,7 @@ class IterDataset(IterableDataset):
 
     def __next__(self):
         return {
-            "ids": next(self.gen),
+            "ids": next(self.reader),
             "input_ids": torch.zeros(10)
         }
 
