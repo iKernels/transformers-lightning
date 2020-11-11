@@ -186,18 +186,21 @@ def filter_generator(generator_in, step=None, offset=None):
     assert offset is None or offset >= 0, f"offset must be non-negative, found {offset}"
     assert (step is None) == (offset is None), f"step and offset must be both defined or both None"
 
-    # counter will contain total element extracted from the generator to get a the next hit
-    if (step is None) or (offset is None):
-        for x in generator_in:
-            yield x
-    else:
-        # advance to the target offset and return first element
-        for _ in range(offset):
-            next(generator_in)
-        yield next(generator_in)
-
-        while True:
-            # consume world_size - 1 inputs
-            for _ in range(step - 1):
+    try:
+        # counter will contain total element extracted from the generator to get a the next hit
+        if (step is None) or (offset is None):
+            for x in generator_in:
+                yield x
+        else:
+            # advance to the target offset and return first element
+            for _ in range(offset):
                 next(generator_in)
             yield next(generator_in)
+
+            while True:
+                # consume world_size - 1 inputs
+                for _ in range(step - 1):
+                    next(generator_in)
+                yield next(generator_in)
+    except StopIteration:
+        raise StopIteration
