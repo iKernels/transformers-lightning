@@ -114,7 +114,7 @@ class ExampleIterableDataset(IterableDataset):
         if self.is_distributed():
             self.jump_forward(steps=self.get_distributed_id())
 
-        print(self.get_worker_info(self))
+        print(self.get_worker_info())
 
         return self
 
