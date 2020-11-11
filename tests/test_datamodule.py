@@ -277,12 +277,12 @@ def test_datamodule_gpu_ddp(ds_type, num_workers, distributed_backend, gpus, epo
         max_epochs=epochs,
         max_steps=None,
         max_sequence_length=10,
-        gpus=gpus,
+        gpus=0,
         dataset_style=ds_type
     )
 
-    if distributed_backend is not None:
-        hparams.distributed_backend = distributed_backend
+    #if distributed_backend is not None:
+    #    hparams.distributed_backend = distributed_backend
 
     # instantiate PL trainer
     trainer = pl.Trainer.from_argparse_args(
