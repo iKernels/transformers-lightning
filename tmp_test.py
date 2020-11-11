@@ -101,7 +101,7 @@ class ExampleDataModule(LightningDataModule):
         self.hparams = hparams
 
     def setup(self, stage=None):
-        self.dataset = ExampleIterableDataset(N)
+        self.dataset = ExampleDataset(N)
 
     def train_dataloader(self):
         return DataLoader(self.dataset, batch_size=self.hparams.batch_size, num_workers=self.hparams.num_workers)
