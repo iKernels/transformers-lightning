@@ -1,12 +1,8 @@
 import torch
-import os
 
 from torch.utils.data import IterableDataset
 from transformers_lightning import utils
 from transformers_lightning.datasets import SuperTransformersDataset
-
-import sys
-sys.stdout = open(str(os.getpid()) + ".out", "w")
 
 
 class TransformersIterableDataset(SuperTransformersDataset, IterableDataset):
@@ -70,6 +66,8 @@ class TransformersIterableDataset(SuperTransformersDataset, IterableDataset):
 
         # add counter middlelayer
         self.reader = self.counter_generator(self.reader)
+
+        print(f"Starting iterdataset: {torch.distributed.get_rank()}")
 
         # add distributed training middlelayer
         if torch.distributed.is_initialized():
