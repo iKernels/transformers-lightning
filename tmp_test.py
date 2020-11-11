@@ -41,6 +41,7 @@ class SimpleTransformerLikeModel(transformers_lightning.models.SuperModel):
             torch.distributed.all_gather(gather_ids, ids)
             
             ids = torch.cat(gather_ids, dim=0)
+            print(f"ID {torch.distributed.get_rank()}/{torch.distributed.get_world_size()} ALL ids: {ids}")
 
         try:
             received = torch.zeros((len(self.datamodule.train_dataset),)).to(dtype=bool)
