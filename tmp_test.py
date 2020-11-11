@@ -1,7 +1,7 @@
 import multiprocessing
 from argparse import Namespace
 from transformers_lightning.datasets.iterable_dataset import TransformersIterableDataset
-
+import os
 import pytest
 import pytorch_lightning as pl
 import torch
@@ -97,6 +97,12 @@ class IterDataset(IterableDataset):
         }
 
 class ExampleDataModule(pl.LightningDataModule):
+
+    def get_config(self, config_file):
+        """ Load a config file from standard directory and check that file exists! """
+        config_path = os.path.join(self.hparams.config_dir, "datasets", config_file)
+        assert os.path.isfile(config_path), f"Specified config {config_path} does not exist!"
+        return utils.load_yaml(config_path)
 
     def __init__(self, hparams, *args, **kwargs):
         super().__init__(*args, **kwargs)
