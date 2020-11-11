@@ -101,7 +101,7 @@ class ExampleDataModule(pl.LightningDataModule):
     def __init__(self, hparams, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.hparams = hparams
-        self.train_config = "dataset.yaml"
+        self.train_config = self.get_config("dataset.yaml")
         self.tokenizer = BertTokenizer.from_pretrained("bert-base-cased")
 
     def setup(self, stage=None):
