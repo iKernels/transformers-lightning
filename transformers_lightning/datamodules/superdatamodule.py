@@ -95,6 +95,9 @@ class SuperDataModule(pl.LightningDataModule):
         dataset_class = (
             TransformersMapDataset if self.hparams.dataset_style == 'map' else TransformersIterableDataset
         )
+        if self.trainer.distributed_backend in ["ddp", "ddp2"]:
+            local_rank = self.trainer
+            print("QUA", vars(self.trainer)); exit()
 
         if stage == 'fit' or stage is None:
             if self.train_config is not None:
