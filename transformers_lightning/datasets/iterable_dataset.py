@@ -60,8 +60,6 @@ class TransformersIterableDataset(SuperTransformersDataset, IterableDataset):
 
         self.counter = 0
 
-        print("DISTRIB: ", torch.distributed.rank, torch.distributed.local_rank, torch.distributed.world_size); exit()
-
         if self.is_distributed():
             self.jump_forward(steps=self.get_distributed_id())
 

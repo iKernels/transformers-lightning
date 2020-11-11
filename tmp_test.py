@@ -114,7 +114,7 @@ class ExampleIterableDataset(IterableDataset):
         if self.is_distributed():
             self.jump_forward(steps=self.get_distributed_id())
 
-        print(self.get_worker_info())
+        print("DISTRIB: ", torch.distributed.rank, torch.distributed.local_rank, torch.distributed.world_size); exit()
 
         return self
 
