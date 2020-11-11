@@ -4,42 +4,48 @@ from argparse import Namespace
 import pytest
 import pytorch_lightning as pl
 import torch
-from pytorch_lightning.core.datamodule import LightningDataModule
-from torch.utils.data import DataLoader
-from torch.utils.data.dataset import Dataset, IterableDataset
-from transformers import AdamW, BertTokenizer
+import transformers_lightning
+from transformers import BertTokenizer
 from transformers.modeling_bert import (BertConfig,
                                         BertForSequenceClassification)
 
-import transformers_lightning
-
 n_cpus = multiprocessing.cpu_count()
-N = 20
 
 class SimpleTransformerLikeModel(transformers_lightning.models.SuperModel):
 
     def __init__(self, hparams):
         super().__init__(hparams)
-        self.lin = torch.nn.Linear(10, 1)
+
+        # super light BERT model
+        config = BertConfig(hidden_size=12, num_hidden_layers=1, num_attention_heads=1, intermediate_size=12)
+        self.model = BertForSequenceClassification(config)
+        self.tokenizer = BertTokenizer.from_pretrained("bert-base-cased", config=config, cache_dir=hparams.cache_dir)
 
     def training_step(self, batch, batch_idx):
-        return {
-            "ids": batch['id'],
-            "loss": self.lin(batch["data"]).mean()
-        }
+        kwargs = {k: batch[k] for k in ["input_ids", "attention_mask", "token_type_ids", "labels"]}
+        results = self(**kwargs, return_dict=True)
+        return { 'loss': results.loss, 'ids': batch['ids'] }
+
+    def training_step_end(self, batch_parts):
+        batch_parts['loss'] = torch.sum(batch_parts['loss'])
+        return batch_parts
 
     def training_epoch_end(self, outputs):
         ids = torch.cat([o['ids'] for o in outputs], dim=0)
-        
-        gather_ids = [torch.ones_like(ids) for _ in range(torch.distributed.get_world_size())]
-        torch.distributed.all_gather(gather_ids, ids)
-        
-        ids = torch.cat([x.to(ids) for x  in gather_ids], dim=0)
 
-        received = torch.zeros(N).to(dtype=bool)
+        print(f"ID {torch.distributed.get_rank()}/{torch.distributed.get_world_size()} returned ids: {ids}")
+        # in distributed mode collect ids from every process (gpu)
+        if torch.distributed.is_initialized():
+            gather_ids = [torch.ones_like(ids) for _ in range(torch.distributed.get_world_size())]
+            torch.distributed.all_gather(gather_ids, ids)
+            
+            ids = torch.cat([x.to(ids) for x  in gather_ids], dim=0)
+
+        try:
+            received = torch.zeros((len(self.datamodule.train_dataset),)).to(dtype=bool)
+        except TypeError:
+            received = torch.zeros((self.datamodule.train_dataset.length,)).to(dtype=bool)
         received[ids] = True
-
-        print(f"Worker {torch.distributed.get_rank()} collected all {ids} and received vector is {received}")
 
         # assert no duplicate element received
         assert len(set(ids.tolist())) == len(ids.tolist()), (
@@ -61,45 +67,14 @@ class SimpleTransformerLikeModel(transformers_lightning.models.SuperModel):
         return results.loss
 
 
+class ExampleDataModule(transformers_lightning.datamodules.SuperDataModule):
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
-class ExampleDataset(Dataset):
-
-    def __init__(self, n):
-        self.n = n
-
-    def __len__(self):
-        return self.n
-
-    def __iter__(self):
-        return self
-
-    def __getitem__(self, idx):
-        return {
-            "id": idx,
-            "data": torch.zeros(10)
-        }
-
-
-
-
-
-
-
-
-
-class ExampleDataModule(LightningDataModule):
-
-    def __init__(self, hparams):
-        super().__init__()
-        self.hparams = hparams
-
-    def setup(self, stage=None):
-        self.dataset = ExampleDataset(N)
-
-    def train_dataloader(self):
-        return DataLoader(self.dataset, batch_size=self.hparams.batch_size, num_workers=self.hparams.num_workers)
-
+        self.train_config = "dataset.yaml"
+ 
+    train_dataloader = transformers_lightning.datamodules.SuperDataModule.default_train_dataloader
 
 
 hparams = Namespace(
@@ -112,13 +87,13 @@ hparams = Namespace(
     config_dir='tests/test_data',
     cache_dir='cache',
     output_dir='output',
-    max_epochs=3,
+    max_epochs=2,
     max_steps=None,
     max_sequence_length=10,
     gpus=2,
-    distributed_backend='ddp'
+    distributed_backend='ddp',
+    dataset_style='iter'
 )
-
 
 # instantiate PL trainer
 trainer = pl.Trainer.from_argparse_args(
@@ -132,6 +107,13 @@ trainer = pl.Trainer.from_argparse_args(
 model = SimpleTransformerLikeModel(hparams)    
 
 # Datasets
-datamodule = ExampleDataModule(hparams)
+datamodule = ExampleDataModule(hparams, model, trainer)
 
-trainer.fit(model, datamodule=datamodule)
+model.datamodule = datamodule
+# Train!
+if datamodule.do_train():
+    trainer.fit(model, datamodule=datamodule)
+
+# Test!
+if datamodule.do_test():
+    trainer.test(model, datamodule=datamodule)
