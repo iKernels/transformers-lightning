@@ -73,7 +73,6 @@ class ExampleDataModule(transformers_lightning.datamodules.SuperDataModule):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
         self.train_config = "dataset3.yaml"
  
     train_dataloader = transformers_lightning.datamodules.SuperDataModule.default_train_dataloader
@@ -89,7 +88,7 @@ hparams = Namespace(
     config_dir='tests/test_data',
     cache_dir='cache',
     output_dir='output',
-    max_epochs=2,
+    max_epochs=1,
     max_steps=None,
     max_sequence_length=10,
     gpus=2,
