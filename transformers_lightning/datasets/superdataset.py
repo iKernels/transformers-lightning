@@ -4,7 +4,7 @@ import os
 from argparse import Namespace
 
 import numpy as np
-import torch
+import pytorch_lightning as pl
 from pytorch_lightning import _logger as logger
 from torch.utils.data import IterableDataset
 from transformers import PreTrainedTokenizer
@@ -89,6 +89,7 @@ class SuperTransformersDataset:
 
     def __init__(self,
         hparams: Namespace,
+        trainer: pl.Trainer,
         tokenizer: PreTrainedTokenizer,
         specs,
         *args,
@@ -97,6 +98,7 @@ class SuperTransformersDataset:
         super().__init__(*args, **kwargs)
 
         self.hparams = hparams
+        self.trainer = trainer
         self.tokenizer = tokenizer
         # clean specs
         self.specs = self.__class__.check_and_prepare_dataset_specs(specs, hparams)
