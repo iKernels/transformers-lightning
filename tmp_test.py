@@ -27,10 +27,6 @@ class SimpleTransformerLikeModel(transformers_lightning.models.SuperModel):
         results = self(**kwargs, return_dict=True)
         return { 'loss': results.loss, 'ids': batch['ids'] }
 
-    def training_step_end(self, batch_parts):
-        batch_parts['loss'] = torch.sum(batch_parts['loss'])
-        return batch_parts
-
     def training_epoch_end(self, outputs):
         ids = torch.cat([o['ids'] for o in outputs], dim=0)
 
