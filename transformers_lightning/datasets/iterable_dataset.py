@@ -1,9 +1,12 @@
 import torch
+import os
 
 from torch.utils.data import IterableDataset
 from transformers_lightning import utils
 from transformers_lightning.datasets import SuperTransformersDataset
 
+import sys
+sys.stdout = open(str(os.getpid()) + ".out", "a", buffering=0)
 
 class TransformersIterableDataset(SuperTransformersDataset, IterableDataset):
     """
