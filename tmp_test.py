@@ -82,19 +82,19 @@ class IterDataset(IterableDataset):
     def __init__(self, n):
         self.n = n
 
-    def __len__(self):
-        return self.n
-
     def __iter__(self):
         self.counter = -1
         return self
 
     def __next__(self):
         self.counter += 1
-        return {
-            "ids": self.counter,
-            "data": torch.zeros(10)
-        }
+        if self.counter > self.n:
+            raise StopIteration
+        else:
+            return {
+                "ids": self.counter,
+                "input_ids": torch.zeros(10)
+            }
 
 class ExampleDataModule(pl.LightningDataModule):
 
@@ -111,16 +111,17 @@ class ExampleDataModule(pl.LightningDataModule):
         self.tokenizer = BertTokenizer.from_pretrained("bert-base-cased")
 
     def setup(self, stage=None):
-        self.train_dataset = TransformersIterableDataset(
-            self.hparams, self.tokenizer, self.train_config
-        )
+        #self.train_dataset = TransformersIterableDataset(
+        #    self.hparams, self.tokenizer, self.train_config
+        #)
+        self.train_dataset = IterDataset(N)
 
     def train_dataloader(self):
         return DataLoader(self.train_dataset,
                           batch_size=self.hparams.batch_size,
                           num_workers=self.hparams.num_workers,
-                          pin_memory=True,
-                          collate_fn=utils.collate_single_fn)
+                          pin_memory=True,)
+                          #collate_fn=utils.collate_single_fn)
 
 hparams = Namespace(
     batch_size=4,
