@@ -4,12 +4,17 @@ from argparse import Namespace
 import pytest
 import pytorch_lightning as pl
 import torch
+from torch.utils.data import DataLoader
+from torch import tensor
+from torch.utils.data.dataset import IterableDataset
 import transformers_lightning
 from transformers import BertTokenizer
+from transformers_lightning import utils
 from transformers.modeling_bert import (BertConfig,
                                         BertForSequenceClassification)
 
 n_cpus = multiprocessing.cpu_count()
+N = 20
 
 class SimpleTransformerLikeModel(transformers_lightning.models.SuperModel):
 
@@ -17,18 +22,10 @@ class SimpleTransformerLikeModel(transformers_lightning.models.SuperModel):
         super().__init__(hparams)
 
         # super light BERT model
-        config = BertConfig(hidden_size=12, num_hidden_layers=1, num_attention_heads=1, intermediate_size=12)
-        self.model = BertForSequenceClassification(config)
-        self.tokenizer = BertTokenizer.from_pretrained("bert-base-cased", config=config, cache_dir=hparams.cache_dir)
+        self.lin = torch.nn.Linear(10, 1)
 
     def training_step(self, batch, batch_idx):
-        kwargs = {k: batch[k] for k in ["input_ids", "attention_mask", "token_type_ids", "labels"]}
-        results = self(**kwargs, return_dict=True)
-        return { 'loss': results.loss, 'ids': batch['ids'] }
-
-    def training_step_end(self, batch_parts):
-        batch_parts['loss'] = torch.sum(batch_parts['loss'])
-        return batch_parts
+        return { 'loss': self.lin(batch["data"]).mean(), 'ids': batch['ids'] }
 
     def training_epoch_end(self, outputs):
         ids = torch.cat([o['ids'] for o in outputs], dim=0)
@@ -66,7 +63,7 @@ class SimpleTransformerLikeModel(transformers_lightning.models.SuperModel):
         results = self(**kwargs, return_dict=True)
         return results.loss
 
-
+"""
 class ExampleDataModule(transformers_lightning.datamodules.SuperDataModule):
 
     def __init__(self, *args, **kwargs):
@@ -75,7 +72,44 @@ class ExampleDataModule(transformers_lightning.datamodules.SuperDataModule):
         self.train_config = "dataset.yaml"
  
     train_dataloader = transformers_lightning.datamodules.SuperDataModule.default_train_dataloader
+"""
 
+
+
+class IterDataset(IterableDataset):
+
+    def __init__(self, n):
+        self.n = n
+
+    def __len__(self):
+        return self.n
+
+    def __iter__(self):
+        self.counter = -1
+        return self
+
+    def __next__(self):
+        self.counter += 1
+        return {
+            "ids": self.counter,
+            "data": torch.zeros(10)
+        }
+
+class ExampleDataModule(transformers_lightning.datamodules.SuperDataModule):
+
+    def __init__(self, hparams, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.hparams = hparams
+
+    def setup(self, stage=None):
+        self.train_dataset = IterDataset(N)
+
+    def train_dataloader(self):
+        return DataLoader(self.train_dataset,
+                          batch_size=self.hparams.batch_size,
+                          num_workers=self.hparams.num_workers,
+                          pin_memory=True,
+                          collate_fn=utils.collate_single_fn)
 
 hparams = Namespace(
     batch_size=4,
