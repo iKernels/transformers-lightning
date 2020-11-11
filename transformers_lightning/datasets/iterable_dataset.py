@@ -71,7 +71,7 @@ class TransformersIterableDataset(SuperTransformersDataset, IterableDataset):
             # add distributed training middlelayer
             self.reader = utils.filter_generator(
                 self.reader,
-                step=torch.distributed.world_size(),
+                step=torch.distributed.get_world_size(),
                 offset=torch.distributed.get_rank()
             )
 
