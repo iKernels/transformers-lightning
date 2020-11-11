@@ -114,7 +114,7 @@ class ExampleIterableDataset(IterableDataset):
         if self.is_distributed():
             self.jump_forward(steps=self.get_distributed_id())
 
-        #print(self.get_worker_info())
+        print(self.get_worker_info())
 
         return self
 
@@ -196,8 +196,8 @@ hparams = Namespace(
     max_epochs=3,
     max_steps=None,
     max_sequence_length=10,
-    num_processes=2,
-    distributed_backend='ddp_cpu'
+    gpus=2,
+    distributed_backend='ddp'
 )
 
 
