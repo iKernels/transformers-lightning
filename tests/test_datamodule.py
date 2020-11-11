@@ -70,7 +70,7 @@ class SimpleTransformerLikeModel(transformers_lightning.models.SuperModel):
 
 class ExampleDataModule(transformers_lightning.datamodules.SuperDataModule):
 
-    def __init__(self, *args, ds_type=None, **kwargs):
+    def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         self.train_config = "dataset.yaml"
@@ -269,7 +269,7 @@ def test_datamodule_gpu_ddp(ds_type, num_workers, distributed_backend, gpus, epo
         val_batch_size=4,
         test_batch_size=4,
         accumulate_grad_batches=3,
-        num_workers=0,
+        num_workers=num_workers,
         dataset_dir='tests/test_data',
         config_dir='tests/test_data',
         cache_dir='cache',
