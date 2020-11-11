@@ -114,7 +114,7 @@ class ExampleIterableDataset(IterableDataset):
         if self.is_distributed():
             self.jump_forward(steps=self.get_distributed_id())
 
-        print(self.get_worker_info())
+        #print(self.get_worker_info())
 
         return self
 
@@ -158,7 +158,7 @@ class ExampleIterableDataset(IterableDataset):
         }
 
         self.counter += 1
-        print(row_dict)
+        #print(row_dict)
 
         return row_dict
 
@@ -188,7 +188,7 @@ hparams = Namespace(
     val_batch_size=4,
     test_batch_size=4,
     accumulate_grad_batches=3,
-    num_workers=n_cpus,
+    num_workers=2,
     dataset_dir='tests/test_data',
     config_dir='tests/test_data',
     cache_dir='cache',
