@@ -34,6 +34,7 @@ class SimpleTransformerLikeModel(transformers_lightning.models.SuperModel):
     def training_epoch_end(self, outputs):
         ids = torch.cat([o['ids'] for o in outputs], dim=0)
 
+        print(f"ID {torch.distributed.get_rank()} returned ids: {ids}")
         # in distributed mode collect ids from every process (gpu)
         if torch.distributed.is_initialized():
             gather_ids = [torch.ones_like(ids) for _ in range(torch.distributed.get_world_size())]
