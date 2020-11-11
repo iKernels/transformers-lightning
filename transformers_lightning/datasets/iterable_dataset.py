@@ -59,8 +59,8 @@ class TransformersIterableDataset(SuperTransformersDataset, IterableDataset):
     def counter_generator(self, generator_in):
         """ Counter over total number of elements extracted by the generator. """
         for x in generator_in:
-            self.global_counter += 1
             yield x
+            self.global_counter += 1
 
     def __iter__(self):
         self.reader = SuperTransformersDataset.read_csv_file(
@@ -75,8 +75,8 @@ class TransformersIterableDataset(SuperTransformersDataset, IterableDataset):
         if torch.distributed.is_initialized():
             self.reader = utils.filter_generator(
                 self.reader,
-                step=torch.distributed.get_world_size(),
-                offset=torch.distributed.get_rank()
+                torch.distributed.get_world_size(),
+                torch.distributed.get_rank()
             )
 
         # add parallel processing middlelayer
@@ -84,8 +84,8 @@ class TransformersIterableDataset(SuperTransformersDataset, IterableDataset):
         if worker_info is not None:
             self.reader = utils.filter_generator(
                 self.reader,
-                step=worker_info.num_workers,
-                offset=worker_info.id
+                worker_info.num_workers,
+                worker_info.id
             )
 
         for row in self.reader:
