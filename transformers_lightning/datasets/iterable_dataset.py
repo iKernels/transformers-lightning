@@ -68,16 +68,18 @@ class TransformersIterableDataset(SuperTransformersDataset, IterableDataset):
         self.reader = self.counter_generator(self.reader)
 
         print(f"Starting iterdataset: {torch.distributed.get_rank()}")
-
+        x = torch.distributed.is_initialized()
+        print(f"Status distrib iterdataset: {x}")
+        
         # add distributed training middlelayer
-        if torch.distributed.is_initialized():
+        if x:
             self.reader = utils.filter_generator(
                 self.reader,
                 torch.distributed.get_world_size(),
                 torch.distributed.get_rank()
             )
 
-            print(f"Init distrib iterdataset: {torch.distributed.get_rank()}")
+            
 
         # add parallel processing middlelayer
         worker_info = torch.utils.data.get_worker_info()
