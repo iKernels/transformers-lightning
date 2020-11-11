@@ -82,6 +82,12 @@ class IterDataset(IterableDataset):
     def __init__(self, n):
         self.n = n
 
+    def counter_generator(self, generator_in):
+        """ Counter over total number of elements extracted by the generator. """
+        for x in generator_in:
+            self.global_counter += 1
+            yield x
+
     def __iter__(self):
         self.reader = iter(range(20))
 
