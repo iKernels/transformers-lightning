@@ -82,22 +82,9 @@ class TransformersIterableDataset(SuperTransformersDataset, IterableDataset):
                 offset=worker_info.id
             )
 
-        return self
+        for row in self.reader:
+            row_dict = self.get_data_as_dict(row)
+            row_dict = self.prepare(row_dict, idx=self.global_counter)
+            yield row_dict
 
-    def __next__(self):
-        """
-        Get next element.
-        Behaves differently based on whether distributed training is used.
-        """
-        # automagically receive correct element in distributed training and multi worker loading
-        try:
-            row = next(self.reader)
-        except:
-            return
         
-        print(f"Returning {self.global_counter, row}")
-
-        row_dict = self.get_data_as_dict(row)
-        row_dict = self.prepare(row_dict, idx=self.global_counter)
-
-        return row_dict
