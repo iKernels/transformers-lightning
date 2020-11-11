@@ -33,14 +33,13 @@ class SimpleTransformerLikeModel(transformers_lightning.models.SuperModel):
         
         gather_ids = [torch.ones_like(ids) for _ in range(torch.distributed.get_world_size())]
         torch.distributed.all_gather(gather_ids, ids)
-        print(torch.distributed.get_rank(), ids, gather_ids)
-        exit()
+        
+        ids = torch.cat([x.to(ids) for x  in gather_ids], dim=0)
 
-        try:
-            received = torch.zeros((len(self.datamodule.train_dataset),))
-        except TypeError:
-            received = torch.zeros((self.datamodule.train_dataset.length,))
+        received = torch.zeros(N).to(dtype=bool)
         received[ids] = True
+
+        print(f"Worker {torch.distributed.get_rank()} collected all {ids}")
 
         # assert no duplicate element received
         assert len(set(ids.tolist())) == len(ids.tolist()), (
