@@ -77,6 +77,8 @@ class TransformersIterableDataset(SuperTransformersDataset, IterableDataset):
                 torch.distributed.get_rank()
             )
 
+            print(f"Init distrib iterdataset: {torch.distributed.get_rank()}")
+
         # add parallel processing middlelayer
         worker_info = torch.utils.data.get_worker_info()
         if worker_info is not None:
