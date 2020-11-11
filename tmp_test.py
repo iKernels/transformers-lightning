@@ -83,18 +83,14 @@ class IterDataset(IterableDataset):
         self.n = n
 
     def __iter__(self):
-        self.counter = -1
+        self.gen = iter(range(20))
         return self
 
     def __next__(self):
-        self.counter += 1
-        if self.counter > self.n:
-            raise StopIteration
-        else:
-            return {
-                "ids": self.counter,
-                "input_ids": torch.zeros(10)
-            }
+        return {
+            "ids": next(self.gen),
+            "input_ids": torch.zeros(10)
+        }
 
 class ExampleDataModule(pl.LightningDataModule):
 
