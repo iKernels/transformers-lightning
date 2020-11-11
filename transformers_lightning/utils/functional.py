@@ -191,7 +191,10 @@ def filter_generator(generator_in, step, offset):
             next(generator_in)
         except:
             return
-    yield next(generator_in)
+    try:
+        yield next(generator_in)
+    except:
+        return
 
     while True:
         # consume world_size - 1 inputs
@@ -200,4 +203,7 @@ def filter_generator(generator_in, step, offset):
                 next(generator_in)
             except:
                 return
-        yield next(generator_in)
+        try:
+            yield next(generator_in)
+        except:
+            return
