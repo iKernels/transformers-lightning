@@ -120,6 +120,7 @@ class SuperTransformersDataset:
             results["ids"] = idx
         else:
             results["ids"] = row_dict["ids"]
+        results["ids"] = idx
 
         # add label fields
         for label in self.specs.y:
