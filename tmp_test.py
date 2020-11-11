@@ -23,11 +23,10 @@ class SimpleTransformerLikeModel(transformers_lightning.models.SuperModel):
         super().__init__(hparams)
 
         # super light BERT model
-        self.lin = torch.nn.Linear(128, 1)
+        self.lin = torch.nn.Linear(10, 1)
 
     def training_step(self, batch, batch_idx):
-        print(batch["input_ids"].shape); exit()
-        return { 'loss': self.lin(batch["data"]).mean(), 'ids': batch['ids'] }
+        return { 'loss': self.lin(batch["input_ids"]).mean(), 'ids': batch['ids'] }
 
     def training_epoch_end(self, outputs):
         ids = torch.cat([o['ids'] for o in outputs], dim=0)
