@@ -144,10 +144,4 @@ model = SimpleTransformerLikeModel(hparams)
 datamodule = ExampleDataModule(hparams, model, trainer)
 
 model.datamodule = datamodule
-# Train!
-if datamodule.do_train():
-    trainer.fit(model, datamodule=datamodule)
-
-# Test!
-if datamodule.do_test():
-    trainer.test(model, datamodule=datamodule)
+trainer.fit(model, datamodule=datamodule)
