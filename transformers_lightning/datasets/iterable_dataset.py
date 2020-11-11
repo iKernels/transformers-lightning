@@ -1,13 +1,6 @@
-import csv
-import os
-from argparse import Namespace
-
-import numpy as np
-import pandas as pd
 import torch
-from pytorch_lightning import _logger as logger
+
 from torch.utils.data import IterableDataset
-from transformers import PreTrainedTokenizer
 from transformers_lightning import utils
 from transformers_lightning.datasets import SuperTransformersDataset
 
@@ -21,15 +14,33 @@ class TransformersIterableDataset(SuperTransformersDataset, IterableDataset):
     no distributed training (idx)
     pid default: 0, 1, 2, 3, 4, 5, ..., get_length-1
 
-    distributed training (idx) num_workers=4
+    with num_workers > 0: example with num_workers=4
     pid 0: 0, 4, 8, 12, ...
     pid 1: 1, 5, 9, 13, ...
     pid 2: 2, 6, 10, 14, ...
     pid 3: 3, 7, 11, 15, ...
+
+    in distributed training with world_size=2 and num_workers=4
+    proc 0: 0, 2, 4, 6, 8, 10, ...
+    proc 0, worker_pid 0: 0, 8, 16, 24, ...
+    proc 0, worker_pid 1: 2, 10, 18, 26, ...
+    proc 0, worker_pid 2: 4, 12, 20, 28, ...
+    proc 0, worker_pid 3: 6, 14, 22, 30, ...
+
+    proc 1: 1, 3, 5, 7, 9, 11, ...
+    proc 1, worker_pid 0: 1, 9, 17, 25, ...
+    proc 1, worker_pid 1: 3, 11, 19, 27, ...
+    proc 1, worker_pid 2: 5, 13, 21, 29, ...
+    proc 1, worker_pid 3: 7, 15, 23, 31, ...
     """
 
     @property
     def length(self):
+        """
+        Even if this is an IterableDataset, length may be computed by scrolling the document
+        without pre-processing in a fast way. However, this cannot set in __len__ method because
+        in that way it may be misleaded for a normal index-based MapDataset
+        """
         if not hasattr(self, '_length'):
             self._length = self._get_length()
         return self._length
@@ -39,69 +50,46 @@ class TransformersIterableDataset(SuperTransformersDataset, IterableDataset):
         reader = SuperTransformersDataset.read_csv_file(
             self.specs, self.hparams
         )
-        res = 0
-        for row in reader: res += 1
-        return res
+        return sum(1 for _ in reader)
 
-    def jump_forward(self, steps: int = 1):
-        """ Move reader forward and return last extracted element. """
-        row = None
-        for i in range(steps):
-            row = next(self.reader)
-        return row
-
-    """ Init is the same as super class """
+    def counter_generator(self, generator_in):
+        """ Counter over total number of elements extracted by the generator. """
+        for x in generator_in:
+            self.global_counter += 1
+            yield x
 
     def __iter__(self):
         self.reader = self.__class__.read_csv_file(self.specs, self.hparams)
-        self.is_first = True
-        if hasattr(self, 'worker_info'):
-            delattr(self, 'worker_info') # it may be necessary to reload info after every epoch...
 
-        self.counter = 0
+        self.global_counter = 0
+        self.reader = self.counter_generator(self.reader)
 
-        if self.is_distributed():
-            self.jump_forward(steps=self.get_distributed_id())
+        if torch.distributed.is_initialized():
+            self.reader = utils.filter_generator(
+                self.reader,
+                step=torch.distributed.world_size(),
+                offset=torch.distributed.get_rank()
+            )
+
+        worker_info = torch.utils.data.get_worker_info()
+        if worker_info is not None:
+            self.reader = utils.filter_generator(
+                self.reader,
+                step=worker_info.num_workers,
+                offset=worker_info.id
+            )
 
         return self
-
-    # worker info
-    def get_worker_info(self):
-        if not hasattr(self, 'worker_info'):
-            self.worker_info = torch.utils.data.get_worker_info()
-        return self.worker_info
-
-    def is_distributed(self):
-        """ Return process id in [0, num_workers-1]! """
-        return self.get_worker_info() is not None
-
-    def get_distributed_id(self):
-        return self.get_worker_info().id
-    
-    def get_num_workers(self):
-        return self.get_worker_info().num_workers
 
     def __next__(self):
         """
         Get next element.
         Behaves differently based on whether distributed training is used.
         """
-        if self.is_distributed():
-            # first step in distributed
-            if self.is_first:
-                self.is_first = False
-                row = self.jump_forward(steps=1)
-            # normal step in distributed
-            else:
-                row = self.jump_forward(steps=self.get_num_workers())
-
-        # normal step in single worker mode
-        else:
-            row = self.jump_forward(steps=1)
+        # automagically receive correct element in distributed training and multi worker loading
+        row = next(self.reader)
 
         row_dict = self.get_data_as_dict(row)
-        row_dict = self.prepare(row_dict, idx=self.counter)
-
-        self.counter += 1
+        row_dict = self.prepare(row_dict, idx=self.global_counter)
 
         return row_dict

@@ -89,7 +89,6 @@ class SuperTransformersDataset:
 
     def __init__(self,
         hparams: Namespace,
-        trainer: pl.Trainer,
         tokenizer: PreTrainedTokenizer,
         specs,
         *args,
@@ -98,7 +97,6 @@ class SuperTransformersDataset:
         super().__init__(*args, **kwargs)
 
         self.hparams = hparams
-        self.trainer = trainer
         self.tokenizer = tokenizer
         # clean specs
         self.specs = self.__class__.check_and_prepare_dataset_specs(specs, hparams)

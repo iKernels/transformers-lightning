@@ -4,7 +4,6 @@ from transformers_lightning.utils.inspectors import *
 from transformers_lightning.utils.metrics import *
 from transformers_lightning.utils.models import *
 from transformers_lightning.utils.parameters import *
-from transformers_lightning.utils.initializations import *
 from transformers_lightning.utils.versioning import *
 from transformers_lightning.utils.dataset import *
 from transformers_lightning.utils.readers import *

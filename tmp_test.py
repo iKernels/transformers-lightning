@@ -30,7 +30,11 @@ class SimpleTransformerLikeModel(transformers_lightning.models.SuperModel):
 
     def training_epoch_end(self, outputs):
         ids = torch.cat([o['ids'] for o in outputs], dim=0)
-        print("ids: ", ids); return
+        
+        gather_ids = [torch.ones_like(ids) for _ in range(torch.distributed.get_world_size())]
+        torch.distributed.all_gather(gather_ids, ids)
+        print(torch.distributed.get_rank(), ids, gather_ids)
+        exit()
 
         try:
             received = torch.zeros((len(self.datamodule.train_dataset),))
@@ -64,7 +68,7 @@ class SimpleTransformerLikeModel(transformers_lightning.models.SuperModel):
 
 
 
-"""
+
 class ExampleDataset(Dataset):
 
     def __init__(self, n):
@@ -81,86 +85,7 @@ class ExampleDataset(Dataset):
             "id": idx,
             "data": torch.zeros(10)
         }
-"""
 
-
-
-
-class ExampleIterableDataset(IterableDataset):
-
-    def __init__(self, n):
-        self.n = n
-
-    @property
-    def length(self):
-        return self.n
-
-    def jump_forward(self, steps: int = 1):
-        """ Move reader forward and return last extracted element. """
-        row = None
-        for i in range(steps):
-            next(self.reader)
-            row = torch.zeros(10)
-        return row
-
-    def __iter__(self):
-        self.reader = iter(range(self.n))
-        self.is_first = True
-        if hasattr(self, 'worker_info'):
-            delattr(self, 'worker_info') # it may be necessary to reload info after every epoch...
-
-        self.counter = 0
-
-        if self.is_distributed():
-            self.jump_forward(steps=self.get_distributed_id())
-
-        print("DISTRIB: ", torch.distributed.get_world_size(), torch.distributed.get_rank()); exit()
-
-        return self
-
-    # worker info
-    def get_worker_info(self):
-        if not hasattr(self, 'worker_info'):
-            self.worker_info = torch.utils.data.get_worker_info()
-        return self.worker_info
-
-    def is_distributed(self):
-        """ Return process id in [0, num_workers-1]! """
-        return self.get_worker_info() is not None
-
-    def get_distributed_id(self):
-        return self.get_worker_info().id
-    
-    def get_num_workers(self):
-        return self.get_worker_info().num_workers
-
-    def __next__(self):
-        """
-        Get next element.
-        Behaves differently based on whether distributed training is used.
-        """
-        if self.is_distributed():
-            # first step in distributed
-            if self.is_first:
-                self.is_first = False
-                row = self.jump_forward(steps=1)
-            # normal step in distributed
-            else:
-                row = self.jump_forward(steps=self.get_num_workers())
-
-        # normal step in single worker mode
-        else:
-            row = self.jump_forward(steps=1)
-
-        row_dict = {
-            "data": row,
-            "id": self.counter
-        }
-
-        self.counter += 1
-        #print(row_dict)
-
-        return row_dict
 
 
 

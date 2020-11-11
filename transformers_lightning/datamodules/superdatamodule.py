@@ -99,17 +99,17 @@ class SuperDataModule(pl.LightningDataModule):
         if stage == 'fit' or stage is None:
             if self.train_config is not None:
                 self.train_dataset = dataset_class(
-                    self.hparams, self.trainer, self.tokenizer, self.train_config
+                    self.hparams, self.tokenizer, self.train_config
                 )
             if self.val_config is not None:
                 self.val_dataset = dataset_class(
-                    self.hparams, self.trainer, self.tokenizer, self.val_config
+                    self.hparams, self.tokenizer, self.val_config
                 )
 
         elif stage == 'test' or stage is None:
             if self.test_config is not None:
                 self.test_dataset = dataset_class(
-                    self.hparams, self.trainer, self.tokenizer, self.test_config
+                    self.hparams, self.tokenizer, self.test_config
                 )
 
     def do_train(self):
