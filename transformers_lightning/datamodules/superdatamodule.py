@@ -89,12 +89,13 @@ class SuperDataModule(pl.LightningDataModule):
     def setup(self, stage=None):
         """
         Load dataloaders only when needed. 
-        This implementation should be enough for all subclasses.
+        This implementation should be enough for most subclasses.
         """
 
         dataset_class = (
             TransformersMapDataset if self.hparams.dataset_style == 'map' else TransformersIterableDataset
         )
+        print(dataset_class)
         if stage == 'fit' or stage is None:
             if self.train_config is not None:
                 self.train_dataset = dataset_class(

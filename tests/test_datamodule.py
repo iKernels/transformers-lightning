@@ -299,7 +299,8 @@ def test_datamodule_gpu_ddp(ds_type, num_workers, distributed_backend, gpus, epo
 
     # Datasets
     datamodule = ExampleDataModule(hparams, model, trainer)
-    
+    print(vars(datamodule)); exit()
+
     model.datamodule = datamodule
     # Train!
     if datamodule.do_train():
