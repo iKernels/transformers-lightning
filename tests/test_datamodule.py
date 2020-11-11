@@ -40,7 +40,7 @@ class SimpleTransformerLikeModel(transformers_lightning.models.SuperModel):
             gather_ids = [torch.ones_like(ids) for _ in range(torch.distributed.get_world_size())]
             torch.distributed.all_gather(gather_ids, ids)
             
-            ids = torch.cat([x.to(ids) for x  in gather_ids], dim=0)
+            ids = torch.cat(gather_ids, dim=0)
 
         try:
             received = torch.zeros((len(self.datamodule.train_dataset),)).to(dtype=bool)
