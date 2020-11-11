@@ -83,7 +83,30 @@ class IterDataset(IterableDataset):
         self.n = n
 
     def __iter__(self):
-        self.gen = iter(range(20))
+        self.reader = iter(range(20))
+
+        self.global_counter = 0
+
+        # add counter middlelayer
+        self.reader = self.counter_generator(self.reader)
+
+        if torch.distributed.is_initialized():
+            # add distributed training middlelayer
+            self.reader = utils.filter_generator(
+                self.reader,
+                step=torch.distributed.get_world_size(),
+                offset=torch.distributed.get_rank()
+            )
+
+        worker_info = torch.utils.data.get_worker_info()
+        if worker_info is not None:
+            # add parallel processing middlelayer
+            self.reader = utils.filter_generator(
+                self.reader,
+                step=worker_info.num_workers,
+                offset=worker_info.id
+            )
+
         return self
 
     def __next__(self):
