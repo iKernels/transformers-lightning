@@ -90,7 +90,11 @@ class TransformersIterableDataset(SuperTransformersDataset, IterableDataset):
         Behaves differently based on whether distributed training is used.
         """
         # automagically receive correct element in distributed training and multi worker loading
-        row = next(self.reader)
+        try:
+            row = next(self.reader)
+        except:
+            return
+        
         print(f"Returning {self.global_counter, row}")
 
         row_dict = self.get_data_as_dict(row)
