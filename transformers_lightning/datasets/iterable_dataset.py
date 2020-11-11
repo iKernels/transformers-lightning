@@ -65,9 +65,7 @@ class TransformersIterableDataset(SuperTransformersDataset, IterableDataset):
         # add counter middlelayer
         self.reader = self.counter_generator(self.reader)
 
-        print(f"Diacane: {torch.distributed.is_initialized()} {torch.utils.data.get_worker_info()}")
         if torch.distributed.is_initialized():
-            print(f"############## ID {torch.distributed.get_rank()} is distrib")
             # add distributed training middlelayer
             self.reader = utils.filter_generator(
                 self.reader,
@@ -77,14 +75,12 @@ class TransformersIterableDataset(SuperTransformersDataset, IterableDataset):
 
         worker_info = torch.utils.data.get_worker_info()
         if worker_info is not None:
-            print(f"############## ID {torch.distributed.get_rank()} is parallel")
             # add parallel processing middlelayer
             self.reader = utils.filter_generator(
                 self.reader,
                 step=worker_info.num_workers,
                 offset=worker_info.id
             )
-        assert False
 
         return self
 
