@@ -284,6 +284,8 @@ def test_datamodule_gpu_ddp(ds_type, num_workers, distributed_backend, gpus, epo
     if distributed_backend is not None:
         hparams.distributed_backend = distributed_backend
 
+    print(hparams)
+
     # instantiate PL trainer
     trainer = pl.Trainer.from_argparse_args(
         hparams,
