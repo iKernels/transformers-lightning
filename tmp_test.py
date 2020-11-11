@@ -114,7 +114,7 @@ class ExampleIterableDataset(IterableDataset):
         if self.is_distributed():
             self.jump_forward(steps=self.get_distributed_id())
 
-        print("DISTRIB: ", vars(torch.distributed)); exit()
+        print("DISTRIB: ", torch.distributed.get_world_size(), torch.distributed.get_rank()); exit()
 
         return self
 
