@@ -98,7 +98,7 @@ hparams = Namespace(
 # instantiate PL trainer
 trainer = pl.Trainer.from_argparse_args(
     hparams,
-    profiler='simple',
+    profiler=True,
     logger=None,
     callbacks=[],
 )
