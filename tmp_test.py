@@ -95,7 +95,7 @@ class IterDataset(IterableDataset):
             "data": torch.zeros(10)
         }
 
-class ExampleDataModule(transformers_lightning.datamodules.SuperDataModule):
+class ExampleDataModule(pl.LightningDataModule):
 
     def __init__(self, hparams, *args, **kwargs):
         super().__init__(*args, **kwargs)
