@@ -269,7 +269,7 @@ def test_datamodule_gpu_ddp(ds_type, num_workers, distributed_backend, gpus, epo
         val_batch_size=4,
         test_batch_size=4,
         accumulate_grad_batches=3,
-        num_workers=num_workers,
+        num_workers=0,
         dataset_dir='tests/test_data',
         config_dir='tests/test_data',
         cache_dir='cache',
@@ -284,8 +284,6 @@ def test_datamodule_gpu_ddp(ds_type, num_workers, distributed_backend, gpus, epo
     if distributed_backend is not None:
         hparams.distributed_backend = distributed_backend
 
-    print(hparams)
-
     # instantiate PL trainer
     trainer = pl.Trainer.from_argparse_args(
         hparams,
@@ -299,7 +297,6 @@ def test_datamodule_gpu_ddp(ds_type, num_workers, distributed_backend, gpus, epo
 
     # Datasets
     datamodule = ExampleDataModule(hparams, model, trainer)
-    print(vars(datamodule)); exit()
 
     model.datamodule = datamodule
     # Train!

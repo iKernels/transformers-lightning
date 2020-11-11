@@ -95,7 +95,7 @@ class SuperDataModule(pl.LightningDataModule):
         dataset_class = (
             TransformersMapDataset if self.hparams.dataset_style == 'map' else TransformersIterableDataset
         )
-        print(dataset_class)
+        print("DS class", dataset_class)
         if stage == 'fit' or stage is None:
             if self.train_config is not None:
                 self.train_dataset = dataset_class(
