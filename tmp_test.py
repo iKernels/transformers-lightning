@@ -1,5 +1,6 @@
 import multiprocessing
 from argparse import Namespace
+from transformers_lightning.datasets.iterable_dataset import TransformersIterableDataset
 
 import pytest
 import pytorch_lightning as pl
@@ -69,7 +70,7 @@ class ExampleDataModule(transformers_lightning.datamodules.SuperDataModule):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.train_config = "dataset.yaml"
+        
  
     train_dataloader = transformers_lightning.datamodules.SuperDataModule.default_train_dataloader
 """
@@ -100,15 +101,20 @@ class ExampleDataModule(pl.LightningDataModule):
     def __init__(self, hparams, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.hparams = hparams
+        self.train_config = "dataset.yaml"
+        self.tokenizer = BertTokenizer.from_pretrained("bert-base-cased")
 
     def setup(self, stage=None):
-        self.train_dataset = IterDataset(N)
+        self.train_dataset = TransformersIterableDataset(
+            self.hparams, self.tokenizer, self.train_config
+        )
 
     def train_dataloader(self):
         return DataLoader(self.train_dataset,
                           batch_size=self.hparams.batch_size,
                           num_workers=self.hparams.num_workers,
-                          pin_memory=True)
+                          pin_memory=True,
+                          collate_fn=utils.collate_single_fn)
 
 hparams = Namespace(
     batch_size=4,
