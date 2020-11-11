@@ -65,6 +65,7 @@ class TransformersIterableDataset(SuperTransformersDataset, IterableDataset):
         self.reader = self.counter_generator(self.reader)
 
         if torch.distributed.is_initialized():
+            print(f"############## ID {torch.distributed.get_rank()} is distrib")
             self.reader = utils.filter_generator(
                 self.reader,
                 step=torch.distributed.world_size(),
@@ -73,6 +74,7 @@ class TransformersIterableDataset(SuperTransformersDataset, IterableDataset):
 
         worker_info = torch.utils.data.get_worker_info()
         if worker_info is not None:
+            print(f"############## ID {torch.distributed.get_rank()} is parallel")
             self.reader = utils.filter_generator(
                 self.reader,
                 step=worker_info.num_workers,
