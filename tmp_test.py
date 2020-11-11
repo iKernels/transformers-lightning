@@ -196,8 +196,8 @@ hparams = Namespace(
     max_epochs=3,
     max_steps=None,
     max_sequence_length=10,
-    gpus=2,
-    distributed_backend='ddp'
+    num_processes=2,
+    distributed_backend='ddp_cpu'
 )
 
 
