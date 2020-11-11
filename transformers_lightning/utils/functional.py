@@ -202,5 +202,5 @@ def filter_generator(generator_in, step=None, offset=None):
                 for _ in range(step - 1):
                     next(generator_in)
                 yield next(generator_in)
-    except StopIteration:
+    except RuntimeError:
         raise StopIteration
