@@ -1,12 +1,10 @@
 import multiprocessing
 from argparse import Namespace
-import sys
-sys.path.append('..')
 
 import pytest
 import pytorch_lightning as pl
 import torch
-from ..transformers_lightning import models, datamodules
+from transformers_lightning import models, datamodules
 from torch.utils.data import DataLoader
 from transformers import AdamW, BertTokenizer
 from transformers.modeling_bert import (BertConfig,
