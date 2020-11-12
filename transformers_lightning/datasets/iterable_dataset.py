@@ -41,11 +41,9 @@ class TransformersIterableDataset(SuperTransformersDataset, IterableDataset):
         without pre-processing in a fast way. However, this cannot set in __len__ method because
         in that way it may be misleaded for a normal index-based MapDataset
         """
-        if not hasattr(self, '_length'):
-            self._length = self._get_length()
         return self._length
 
-    def _get_length(self):
+    def parse_and_return_length(self):
         """ Get length by doing a fast scan of the input file. """
         reader = SuperTransformersDataset.read_csv_file(
             self.specs, self.hparams
@@ -58,6 +56,10 @@ class TransformersIterableDataset(SuperTransformersDataset, IterableDataset):
             yield x
             self.global_counter += 1
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._length = self.parse_and_return_length()
+
     def __iter__(self):
         self.reader = SuperTransformersDataset.read_csv_file(
             self.specs, self.hparams
@@ -67,19 +69,16 @@ class TransformersIterableDataset(SuperTransformersDataset, IterableDataset):
         # add counter middlelayer
         self.reader = self.counter_generator(self.reader)
 
-        print(f"Starting iterdataset: {torch.distributed.get_rank()}")
-        x = torch.distributed.is_initialized()
-        print(f"Status distrib iterdataset: {x}")
-        
         # add distributed training middlelayer
-        if x:
+        if torch.distributed.is_initialized():
+            # each node must receive exactly the same data! we must skip something in the end
+            if (self._length % torch.distributed.get_world_size()) != 0:
+
             self.reader = utils.filter_generator(
                 self.reader,
                 torch.distributed.get_world_size(),
                 torch.distributed.get_rank()
             )
-
-            
 
         # add parallel processing middlelayer
         worker_info = torch.utils.data.get_worker_info()
