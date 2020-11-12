@@ -62,8 +62,8 @@ def test_datamodule_gpu_ddp_only(ds_type, num_workers, distributed_backend, gpus
     trainer.fit(model, datamodule=datamodule)
 
 
-for t in tests:
+for test in tests:
     print("\n\n*********************")
-    print(f"Testing with {t}")
+    print(f"Testing with {test}")
     print("*********************\n\n")
     test_datamodule_gpu_ddp_only(*test)
