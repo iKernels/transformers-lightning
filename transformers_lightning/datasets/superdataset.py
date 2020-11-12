@@ -6,7 +6,6 @@ from argparse import Namespace
 import numpy as np
 import pytorch_lightning as pl
 from pytorch_lightning import _logger as logger
-from torch.utils.data import IterableDataset
 from transformers import PreTrainedTokenizer
 from transformers_lightning import utils
 from transformers_lightning.datasets import QUOTING_MAP
@@ -22,20 +21,15 @@ class SuperTransformersDataset:
     def process_line(line, specs):
         """ Convert fields in list to int, float or bool if possible. """
         res = []
-        try:
-            for name, entry in zip(specs.names, line):
-                if name not in specs.x:
-                    try:
-                        res.append(eval(entry))
-                    except:
-                        res.append(entry)
-                else:
+        for name, entry in zip(specs.names, line):
+            if name not in specs.x:
+                try:
+                    res.append(eval(entry))
+                except:
                     res.append(entry)
-            return res
-        except:
-            with open("out.log", "w") as fo:
-                fo.write(f"Debugging dataset: {specs.names}, {line}")
-            exit(1)
+            else:
+                res.append(entry)
+        return res
 
     @staticmethod
     def check_and_prepare_dataset_specs(specs, hparams):
@@ -79,7 +73,7 @@ class SuperTransformersDataset:
         return specs
 
     @staticmethod
-    def read_csv_file(specs, hparams):
+    def read_csv_file(specs):
         """ Return a generator of parsed lines. """
         kwargs = {}
         for param in ['delimiter', 'quoting', 'quotechar']:

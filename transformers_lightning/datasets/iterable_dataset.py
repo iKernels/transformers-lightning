@@ -45,9 +45,7 @@ class TransformersIterableDataset(SuperTransformersDataset, IterableDataset):
 
     def parse_and_return_length(self):
         """ Get length by doing a fast scan of the input file. """
-        reader = SuperTransformersDataset.read_csv_file(
-            self.specs, self.hparams
-        )
+        reader = SuperTransformersDataset.read_csv_file(self.specs)
         return sum(1 for _ in reader)
 
     def counter_generator(self, generator_in):
@@ -61,9 +59,7 @@ class TransformersIterableDataset(SuperTransformersDataset, IterableDataset):
         self._length = self.parse_and_return_length()
 
     def __iter__(self):
-        self.reader = SuperTransformersDataset.read_csv_file(
-            self.specs, self.hparams
-        )
+        self.reader = SuperTransformersDataset.read_csv_file(self.specs)
         self.global_counter = 0
 
         # add counter middlelayer
@@ -76,8 +72,6 @@ class TransformersIterableDataset(SuperTransformersDataset, IterableDataset):
             # each node must receive exactly the same data! we must skip something in the end if needed
             world_size = torch.distributed.get_world_size()
             rank = torch.distributed.get_rank()
-
-            print(f"\n\n\n ********************* DIOCANEEEEEEEEEEEEEEEEEEEE {world_size} {rank} ******************* \n\n\n")
 
             if (self._length % world_size) != 0:
                 # BUG in lightning -> must require that every node has something to put in next batch
