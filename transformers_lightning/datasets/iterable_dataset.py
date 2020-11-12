@@ -41,30 +41,37 @@ class TransformersIterableDataset(SuperTransformersDataset, IterableDataset):
         without pre-processing in a fast way. However, this cannot set in __len__ method because
         in that way it may be misleaded for a normal index-based MapDataset
         """
+        if not hasattr(self, "_length"):
+            self._length = self.get_length()
         return self._length
 
-    def parse_and_return_length(self):
+    def get_length(self):
         """ Get length by doing a fast scan of the input file. """
         reader = SuperTransformersDataset.read_csv_file(self.specs)
         return sum(1 for _ in reader)
 
     def counter_generator(self, generator_in):
         """ Counter over total number of elements extracted by the generator. """
+        self.global_counter = 0
         for x in generator_in:
-            yield x
+            yield (x, self.global_counter)
             self.global_counter += 1
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self._length = self.parse_and_return_length()
-
     def __iter__(self):
+        """
+        Return the iterable by nesting different generator, each of which does a different
+        filtering based on the process id when in distributed training and on the worker id
+        if using also parallel loading in the dataloader.
+
+        - First middlelayer: counter_generator simply increments self.global_counter at every extraction of data
+        - Second middlelayer: utils.batch_filter simply ensures that at least `world_size` elements are read at a time
+        - Third middlelater: utils.filter_generator on distributed training to filter one element every `world_size`
+        - Fourth middlelater: utils.filter_generator on parallel workers processing to filter one element every `num_workers`
+        """
         self.reader = SuperTransformersDataset.read_csv_file(self.specs)
-        self.global_counter = 0
 
         # add counter middlelayer
         self.reader = self.counter_generator(self.reader)
-        self.limit = None
 
         # add distributed training middlelayer
         if torch.distributed.is_initialized():
@@ -73,41 +80,30 @@ class TransformersIterableDataset(SuperTransformersDataset, IterableDataset):
             world_size = torch.distributed.get_world_size()
             rank = torch.distributed.get_rank()
 
-            if (self._length % world_size) != 0:
-                # BUG in lightning -> must require that every node has something to put in next batch
-                self.limit = (self._length // world_size) * world_size
+            # drop some last elements if last batch would be of different size on some nodes
+            self.reader = utils.batch_filter(
+                self.reader,
+                size=world_size
+            )
 
+            # filter away elements destinated to other nodes
             self.reader = utils.filter_generator(
                 self.reader,
-                world_size,
-                rank
+                step=world_size,
+                offset=rank
             )
 
         # add parallel processing middlelayer
-        worker_info = torch.utils.data.get_worker_info()
-        if worker_info is not None:
+        if torch.utils.data.get_worker_info() is not None:
             self.reader = utils.filter_generator(
                 self.reader,
-                worker_info.num_workers,
-                worker_info.id
+                torch.utils.data.get_worker_info().num_workers,
+                torch.utils.data.get_worker_info().id
             )
 
-        if (
-            self.limit is not None and 
-            (worker_info is None or worker_info.id == 0) and
-            (not torch.distributed.is_initialized() or torch.distributed.get_rank() == 0)
-        ):
-            print(f"WARNING: dataset length limited to the greatest multiple of the world size ({world_size}): {self.limit}")
- 
-
-        for row in self.reader:
-            # if limit is 
-            if self.limit is not None and self.global_counter >= self.limit:
-                return
-
-            row_dict = self.get_data_as_dict(row)
-            row_dict = self.prepare(row_dict, idx=self.global_counter)
-            row_dict["ids"] = self.global_counter
+        for data, idx in self.reader:
+            row_dict = self.get_data_as_dict(data)
+            row_dict = self.prepare(row_dict, idx=idx)
             yield row_dict
 
         

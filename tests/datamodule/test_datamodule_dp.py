@@ -26,7 +26,7 @@ n_cpus = multiprocessing.cpu_count()
     ['iter',     0,             'dp',                   2,      1],
     ['iter',     1,             'dp',                   2,      2],
     ['iter',     2,             'dp',                   2,      4],
-    ['iter',     n_cpus,        'dp',                   2,      10],
+    ['iter',     n_cpus,        'dp',                   2,      5],
 
     # MAP dataset
     # num_workers with dp
@@ -38,7 +38,7 @@ n_cpus = multiprocessing.cpu_count()
     ['map',     0,             'dp',                   2,      1],
     ['map',     1,             'dp',                   2,      2],
     ['map',     2,             'dp',                   2,      4],
-    ['map',     n_cpus,        'dp',                   2,      10]
+    ['map',     n_cpus,        'dp',                   2,      5]
 ])
 def test_datamodule_gpu_dp(ds_type, num_workers, distributed_backend, gpus, epochs):
 
