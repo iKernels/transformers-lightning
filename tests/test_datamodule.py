@@ -268,7 +268,7 @@ def test_datamodule_gpu_dp(ds_type, num_workers, distributed_backend, gpus, epoc
 #    ['map',     0,             'ddp',                  2,      1],
 #    ['map',     n_cpus,        'ddp',                  2,      10],
 ])
-def test_datamodule_gpu_ddp(ds_type, num_workers, distributed_backend, gpus, epochs):
+def test_datamodule_gpu_ddp_only(ds_type, num_workers, distributed_backend, gpus, epochs):
     
     hparams = Namespace(
         batch_size=4,
