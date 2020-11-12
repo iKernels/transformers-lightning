@@ -30,9 +30,7 @@ class SimpleTransformerLikeModel(transformers_lightning.models.SuperModel):
 
     def training_epoch_end(self, outputs):
         ids = torch.cat([o['ids'] for o in outputs], dim=0)
-        self.log('boh', ids.sum(), on_epoch=True, prog_bar=True, logger=True)
 
-        """
         print(f"ID {torch.distributed.get_rank()}/{torch.distributed.get_world_size()} returned ids: {ids}")
         # in distributed mode collect ids from every process (gpu)
         if self.trainer.distributed_backend == "ddp":
@@ -58,7 +56,6 @@ class SimpleTransformerLikeModel(transformers_lightning.models.SuperModel):
             f"({self.trainer.max_steps}) Received not all {len(received)} ids: {received}"
         ))
 
-        """
 
     def validation_step(self, batch, batch_idx):
         kwargs = {k: batch[k] for k in ["input_ids", "attention_mask", "token_type_ids", "labels"]}
