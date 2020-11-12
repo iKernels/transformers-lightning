@@ -22,6 +22,7 @@ class SimpleTransformerLikeModel(models.SuperModel):
     def training_step(self, batch, batch_idx):
         if self.trainer.distributed_backend == "ddp":
             print(f"ID {torch.distributed.get_rank()}/{torch.distributed.get_world_size()} processing ids: {batch['ids']}")
+ 
         kwargs = {k: batch[k] for k in ["input_ids", "attention_mask", "token_type_ids", "labels"]}
         results = self(**kwargs, return_dict=True)
         return { 'loss': results.loss, 'ids': batch['ids'] }
