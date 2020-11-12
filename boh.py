@@ -74,52 +74,54 @@ class SimpleTransformerLikeModel(transformers_lightning.models.SuperModel):
         return results.loss
 
 
-class ExampleDataModule(transformers_lightning.datamodules.SuperDataModule):
-
-    def __init__(self, *args, train_config=None, **kwargs):
-        super().__init__(*args, **kwargs)
-
-        if train_config is None:
-            self.train_config = "dataset1.yaml"
-        else:
-            self.train_config = train_config
- 
-    train_dataloader = transformers_lightning.datamodules.SuperDataModule.default_train_dataloader
 
 
 
+for i in range(3):
+    hparams = Namespace(
+        batch_size=4,
+        val_batch_size=4,
+        test_batch_size=4,
+        accumulate_grad_batches=3,
+        num_workers=0,
+        dataset_dir='tests/test_data',
+        config_dir='tests/test_data',
+        cache_dir='cache',
+        output_dir='output',
+        max_epochs=1,
+        max_steps=None,
+        max_sequence_length=10,
+        gpus=2,
+        dataset_style='iter',
+        distributed_backend='ddp'
+    )
 
-hparams = Namespace(
-    batch_size=4,
-    val_batch_size=4,
-    test_batch_size=4,
-    accumulate_grad_batches=3,
-    num_workers=0,
-    dataset_dir='tests/test_data',
-    config_dir='tests/test_data',
-    cache_dir='cache',
-    output_dir='output',
-    max_epochs=1,
-    max_steps=None,
-    max_sequence_length=10,
-    gpus=2,
-    dataset_style='iter',
-    distributed_backend='ddp'
-)
+    class ExampleDataModule(transformers_lightning.datamodules.SuperDataModule):
 
-# instantiate PL trainer
-trainer = pl.Trainer.from_argparse_args(
-    hparams,
-    profiler='simple',
-    logger=None,
-    callbacks=[],
-)
+        def __init__(self, *args, train_config=None, **kwargs):
+            super().__init__(*args, **kwargs)
 
-# instantiate PL model
-model = SimpleTransformerLikeModel(hparams)    
+            if train_config is None:
+                self.train_config = f"dataset{i}.yaml"
+            else:
+                self.train_config = train_config
+    
+        train_dataloader = transformers_lightning.datamodules.SuperDataModule.default_train_dataloader
 
-# Datasets
-datamodule = ExampleDataModule(hparams, model, trainer)
 
-model.datamodule = datamodule
-trainer.fit(model, datamodule=datamodule)
+    # instantiate PL trainer
+    trainer = pl.Trainer.from_argparse_args(
+        hparams,
+        profiler='simple',
+        logger=None,
+        callbacks=[],
+    )
+
+    # instantiate PL model
+    model = SimpleTransformerLikeModel(hparams)    
+
+    # Datasets
+    datamodule = ExampleDataModule(hparams, model, trainer)
+
+    model.datamodule = datamodule
+    trainer.fit(model, datamodule=datamodule)
