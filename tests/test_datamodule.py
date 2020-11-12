@@ -258,21 +258,21 @@ def test_datamodule_gpu_dp(ds_type, num_workers, distributed_backend, gpus, epoc
     # ITER dataset
     # num_workers with ddp
     ['iter',     0,             'ddp',                  2,      1],
-#    ['iter',     1,             'ddp',                  2,      2],
-#    ['iter',     2,             'ddp',                  2,      2],
-#    ['iter',     0,             'ddp',                  2,      1],
-#    ['iter',     n_cpus,        'ddp',                  2,      10],
+    ['iter',     1,             'ddp',                  2,      2],
+    ['iter',     2,             'ddp',                  2,      2],
+    ['iter',     0,             'ddp',                  2,      1],
+    ['iter',     n_cpus,        'ddp',                  2,      10],
 
     # MAP dataset
     # num_workers with ddp
-#    ['map',     0,             'ddp',                  2,      2],
-#    ['map',     1,             'ddp',                  2,      2],
-#    ['map',     2,             'ddp',                  2,      2],
-#    ['map',     0,             'ddp',                  2,      1],
-#    ['map',     n_cpus,        'ddp',                  2,      10],
+    ['map',     0,             'ddp',                  2,      2],
+    ['map',     1,             'ddp',                  2,      2],
+    ['map',     2,             'ddp',                  2,      2],
+    ['map',     0,             'ddp',                  2,      1],
+    ['map',     n_cpus,        'ddp',                  2,      10],
 ])
 def test_datamodule_gpu_ddp_only(ds_type, num_workers, distributed_backend, gpus, epochs):
-    
+
     hparams = Namespace(
         batch_size=4,
         val_batch_size=4,
@@ -322,8 +322,7 @@ def test_datamodule_gpu_ddp_only(ds_type, num_workers, distributed_backend, gpus
     ['iter',     3],
     ['map',      1],
     ['map',      2],
-    ['map',      3],
-
+    ['map',      3]
 ])
 def test_datamodule_gpu_ddp_different_ds(ds_type, ds_number):
     
