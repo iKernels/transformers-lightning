@@ -1,5 +1,6 @@
 import multiprocessing
 from argparse import Namespace
+import os
 
 import pytest
 import pytorch_lightning as pl
@@ -48,6 +49,8 @@ n_cpus = multiprocessing.cpu_count()
 ])
 def test_datamodule_cpu(ds_type, num_workers, distributed_backend, gpus, epochs):
     
+    os.environ["CUDA_VISIBLE_DEVICES"] = ""
+
     hparams = Namespace(
         batch_size=4,
         val_batch_size=4,
