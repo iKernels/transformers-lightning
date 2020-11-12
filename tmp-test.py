@@ -16,14 +16,6 @@ tests = [   # ITER dataset
     ['iter',     2,             'ddp',                  2,      2,      1],
     ['iter',     0,             'ddp',                  2,      1,      2],
     ['iter',     n_cpus,        'ddp',                  2,      10,     3],
-
-    # MAP dataset
-    # num_workers with ddp
-    ['map',     0,             'ddp',                  2,      2,       1],
-    ['map',     1,             'ddp',                  2,      2,       1],
-    ['map',     2,             'ddp',                  2,      2,       1],
-    ['map',     0,             'ddp',                  2,      1,       2],
-    ['map',     n_cpus,        'ddp',                  2,      10,      3],
 ]
 def test_datamodule_gpu_ddp_only(ds_type, num_workers, distributed_backend, gpus, epochs, dataset_idx):
 
