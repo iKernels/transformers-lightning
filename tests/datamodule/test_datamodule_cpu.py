@@ -28,7 +28,6 @@ n_cpus = multiprocessing.cpu_count()
     ['iter',     2,             None,                   0,   1],
     ['iter',     2,             None,                   0,   2],
     ['iter',     2,             None,                   0,   4],
-    ['iter',     2,             None,                   0,   10],
 
     # MAP dataset
     # test different num_workers in single node on cpu
@@ -41,11 +40,9 @@ n_cpus = multiprocessing.cpu_count()
     ['map',     0,             None,                   0,   1],
     ['map',     0,             None,                   0,   2],
     ['map',     0,             None,                   0,   4],
-    ['map',     0,             None,                   0,   10],
     ['map',     2,             None,                   0,   1],
     ['map',     2,             None,                   0,   2],
     ['map',     2,             None,                   0,   4],
-    ['map',     2,             None,                   0,   10]
 ])
 def test_datamodule_cpu(ds_type, num_workers, distributed_backend, gpus, epochs):
     

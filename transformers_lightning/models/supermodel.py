@@ -1,4 +1,5 @@
 import math
+import torch
 
 from pytorch_lightning import LightningModule, _logger as logger
 from transformers import AdamW, get_linear_schedule_with_warmup
@@ -47,12 +48,16 @@ class SuperModel(LightningModule):
         except:
             dataset_len = self.trainer.datamodule.train_dataset.length
 
-        if self.trainer.on_gpu:
-            total_devices = self.trainer.num_nodes * self.trainer.num_processes
+        if self.trainer.use_dp:
+            total_devices = 1
+        elif self.trainer.use_ddp or self.trainer.use_ddp2:
+            total_devices = torch.distributed.get_world_size()
+        elif self.trainer.on_gpu:
+            total_devices = 1
         elif self.trainer.on_tpu:
             total_devices = len(self.trainer.tpu_cores) * self.trainer.num_nodes
         elif self.trainer.distributed_backend == 'ddp_cpu':
-            total_devices = self.trainer.num_processes
+            total_devices = self.trainer.num_processes * self.trainer.num_nodes
         else:
             total_devices = 1
 
