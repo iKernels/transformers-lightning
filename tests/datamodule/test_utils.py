@@ -20,21 +20,23 @@ class SimpleTransformerLikeModel(models.SuperModel):
         self.tokenizer = BertTokenizer.from_pretrained("bert-base-cased", config=config, cache_dir=hparams.cache_dir)
 
     def training_step(self, batch, batch_idx):
-        print(f"ID {torch.distributed.get_rank()}/{torch.distributed.get_world_size()} processing ids: {batch['ids']}")
+        if self.trainer.distributed_backend == "ddp":
+            print(f"ID {torch.distributed.get_rank()}/{torch.distributed.get_world_size()} processing ids: {batch['ids']}")
         kwargs = {k: batch[k] for k in ["input_ids", "attention_mask", "token_type_ids", "labels"]}
         results = self(**kwargs, return_dict=True)
         return { 'loss': results.loss, 'ids': batch['ids'] }
 
-        """    def training_step_end(self, batch_parts):
+    def training_step_end(self, batch_parts):
         batch_parts['loss'] = torch.sum(batch_parts['loss'])
-        return batch_parts"""
+        return batch_parts
 
     def training_epoch_end(self, outputs):
         ids = torch.cat([o['ids'] for o in outputs], dim=0)
 
-        print(f"ID {torch.distributed.get_rank()}/{torch.distributed.get_world_size()} returned ids: {ids}")
         # in distributed mode collect ids from every process (gpu)
         if self.trainer.distributed_backend == "ddp":
+            print(f"ID {torch.distributed.get_rank()}/{torch.distributed.get_world_size()} returned ids: {ids}")
+
             gather_ids = [torch.ones_like(ids) for _ in range(torch.distributed.get_world_size())]
             torch.distributed.all_gather(gather_ids, ids)
             print(f"ID {torch.distributed.get_rank()}/{torch.distributed.get_world_size()} gather ids: {gather_ids}")
