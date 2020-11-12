@@ -316,7 +316,7 @@ def test_datamodule_gpu_ddp(ds_type, num_workers, distributed_backend, gpus, epo
 # Test iter dataset work correctly with dp
 @pytest.mark.skipif(torch.cuda.device_count() < 2, reason="test requires multi-GPU machine")
 @pytest.mark.parametrize(
-    ["ds_type", "dataset"], [
+    ["ds_type", "ds_number"], [
     
     # ITER dataset
     # num_workers with ddp
