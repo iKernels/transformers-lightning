@@ -28,20 +28,22 @@ class SimpleTransformerLikeModel(transformers_lightning.models.SuperModel):
         results = self(**kwargs, return_dict=True)
         return { 'loss': results.loss, 'ids': batch['ids'] }
 
-    def training_step_end(self, batch_parts):
+        """    def training_step_end(self, batch_parts):
         batch_parts['loss'] = torch.sum(batch_parts['loss'])
-        return batch_parts
+        return batch_parts"""
 
     def training_epoch_end(self, outputs):
         ids = torch.cat([o['ids'] for o in outputs], dim=0)
 
         print(f"ID {torch.distributed.get_rank()}/{torch.distributed.get_world_size()} returned ids: {ids}")
         # in distributed mode collect ids from every process (gpu)
-        if torch.distributed.is_initialized():
+        if self.trainer.distributed_backend == "ddp":
             gather_ids = [torch.ones_like(ids) for _ in range(torch.distributed.get_world_size())]
             torch.distributed.all_gather(gather_ids, ids)
-            
+            print(f"ID {torch.distributed.get_rank()}/{torch.distributed.get_world_size()} gather ids: {gather_ids}")
+
             ids = torch.cat(gather_ids, dim=0)
+            print(f"ID {torch.distributed.get_rank()}/{torch.distributed.get_world_size()} ALL ids: {ids}")
 
         try:
             received = torch.zeros((len(self.datamodule.train_dataset),)).to(dtype=bool)
@@ -285,11 +287,9 @@ def test_datamodule_gpu_ddp_only(ds_type, num_workers, distributed_backend, gpus
         max_steps=None,
         max_sequence_length=10,
         gpus=gpus,
-        dataset_style=ds_type
+        dataset_style=ds_type,
+        distributed_backend=distributed_backend
     )
-
-    if distributed_backend is not None:
-        hparams.distributed_backend = distributed_backend
 
     # instantiate PL trainer
     trainer = pl.Trainer.from_argparse_args(
@@ -306,14 +306,7 @@ def test_datamodule_gpu_ddp_only(ds_type, num_workers, distributed_backend, gpus
     datamodule = ExampleDataModule(hparams, model, trainer)
 
     model.datamodule = datamodule
-    # Train!
-    if datamodule.do_train():
-        trainer.fit(model, datamodule=datamodule)
-
-    # Test!
-    if datamodule.do_test():
-        trainer.test(model, datamodule=datamodule)
-
+    trainer.fit(model, datamodule=datamodule)
 
 
 
