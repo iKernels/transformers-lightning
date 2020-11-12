@@ -176,7 +176,7 @@ def concat_dict_tensors(*args, dim=0):
     res = {k: torch.cat(v, dim=dim) for k, v in res.items()}
     return res
 
-def filter_generator(generator_in, step, offset):
+def filter_generator(generator_in, step=1, offset=0):
     """
     Return elements from a generator. First `offset` elements are discarded
     Then, return an element after every every `step` extracted
@@ -207,3 +207,20 @@ def filter_generator(generator_in, step, offset):
             yield next(generator_in)
         except:
             return
+
+def batch_filter(generator_in, size=1):
+    """
+    By reading `size` elements at a time, we assure that no last iteration will have
+    a different batch size across nodes, that would cause a fail.
+    """
+    assert size >= 0, f"Cannot read {size} elements at a time. size must be >= 0"
+    while True:
+        res = []
+        for i in range(size):
+            try:
+                res.append(next(generator_in))
+            except:
+                return
+        for i in res:
+            yield i
+
