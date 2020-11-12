@@ -73,7 +73,7 @@ class TransformersIterableDataset(SuperTransformersDataset, IterableDataset):
         if torch.distributed.is_initialized():
             # each node must receive exactly the same data! we must skip something in the end
             if (self._length % torch.distributed.get_world_size()) != 0:
-
+                pass
             self.reader = utils.filter_generator(
                 self.reader,
                 torch.distributed.get_world_size(),
