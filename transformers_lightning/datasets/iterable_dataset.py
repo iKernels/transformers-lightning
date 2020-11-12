@@ -80,6 +80,7 @@ class TransformersIterableDataset(SuperTransformersDataset, IterableDataset):
             if (self._length % world_size) != 0:
                 # BUG in lightning -> must require that every node has something to put in next batch
                 self.limit = (self._length // world_size) * world_size
+                print(f"WARNING: dataset length limited to the greatest multiple of the world size ({world_size}): {self.limit}")
 
             self.reader = utils.filter_generator(
                 self.reader,
@@ -100,8 +101,6 @@ class TransformersIterableDataset(SuperTransformersDataset, IterableDataset):
             # if limit is 
             if self.limit is not None and self.global_counter >= self.limit:
                 return
-
-            print(f"Process {torch.distributed.get_rank()}, worker: {worker_info.id if worker_info is not None else None} yielding {self.global_counter}")
 
             row_dict = self.get_data_as_dict(row)
             row_dict = self.prepare(row_dict, idx=self.global_counter)
