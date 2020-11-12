@@ -80,7 +80,6 @@ class TransformersIterableDataset(SuperTransformersDataset, IterableDataset):
             if (self._length % world_size) != 0:
                 # BUG in lightning -> must require that every node has something to put in next batch
                 self.limit = (self._length // world_size) * world_size
-                print(f"WARNING: dataset length limited to the greatest multiple of the world size ({world_size}): {self.limit}")
 
             self.reader = utils.filter_generator(
                 self.reader,
@@ -96,6 +95,8 @@ class TransformersIterableDataset(SuperTransformersDataset, IterableDataset):
                 worker_info.num_workers,
                 worker_info.id
             )
+
+        if self.limit is not None and (worker_info is None or worker_info.id == 0) and 
 
         for row in self.reader:
             # if limit is 

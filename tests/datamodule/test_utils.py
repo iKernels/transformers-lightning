@@ -10,8 +10,9 @@ n_cpus = multiprocessing.cpu_count()
 
 class SimpleTransformerLikeModel(models.SuperModel):
 
-    def __init__(self, hparams):
+    def __init__(self, hparams, do_ids_check=True):
         super().__init__(hparams)
+        self.do_ids_check = do_ids_check
 
         # super light BERT model
         config = BertConfig(hidden_size=12, num_hidden_layers=1, num_attention_heads=1, intermediate_size=12)
@@ -50,14 +51,15 @@ class SimpleTransformerLikeModel(models.SuperModel):
             received = torch.zeros((expected_len,)).to(dtype=bool)
         received[ids] = True
 
-        # assert no duplicate element received
-        assert len(set(ids.tolist())) == len(ids.tolist()), (
-            f"Received {len(ids.tolist())} ids but only {len(set(ids.tolist()))} are unique: {ids}"
-        )
-        # assert all elements received
-        assert all(received), (
-            f"({self.trainer.max_steps}) Received not all {len(received)} ids: {received}"
-        )
+        if self.do_ids_check:
+            # assert no duplicate element received
+            assert len(set(ids.tolist())) == len(ids.tolist()), (
+                f"Received {len(ids.tolist())} ids but only {len(set(ids.tolist()))} are unique: {ids}"
+            )
+            # assert all elements received
+            assert all(received), (
+                f"({self.trainer.max_steps}) Received not all {len(received)} ids: {received}"
+            )
 
     def validation_step(self, batch, batch_idx):
         kwargs = {k: batch[k] for k in ["input_ids", "attention_mask", "token_type_ids", "labels"]}

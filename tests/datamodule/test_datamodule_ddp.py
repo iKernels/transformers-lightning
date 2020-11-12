@@ -59,7 +59,7 @@ def test_datamodule_gpu_ddp_only(ds_type, num_workers, distributed_backend, gpus
     )
 
     # instantiate PL model
-    model = SimpleTransformerLikeModel(hparams)    
+    model = SimpleTransformerLikeModel(hparams, do_ids_check=(ds_type != 'map'))    
 
     # Datasets
     datamodule = ExampleDataModule(hparams, model, trainer, train_config=f"dataset{dataset_idx}.yaml")
