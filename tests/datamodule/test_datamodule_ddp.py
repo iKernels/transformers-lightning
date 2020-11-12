@@ -1,5 +1,6 @@
 import multiprocessing
 from argparse import Namespace
+import time
 
 import pytest
 import pytorch_lightning as pl
@@ -31,6 +32,8 @@ n_cpus = multiprocessing.cpu_count()
     ['map',     n_cpus,        'ddp',                  2,      10,      3],
 ])
 def test_datamodule_gpu_ddp_only(ds_type, num_workers, distributed_backend, gpus, epochs, dataset_idx):
+
+    time.sleep(5) # sleep for 5 second to be sure area is clean
 
     hparams = Namespace(
         batch_size=4,
