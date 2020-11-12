@@ -68,16 +68,23 @@ class TransformersIterableDataset(SuperTransformersDataset, IterableDataset):
 
         # add counter middlelayer
         self.reader = self.counter_generator(self.reader)
+        self.limit = None
 
         # add distributed training middlelayer
         if torch.distributed.is_initialized():
-            # each node must receive exactly the same data! we must skip something in the end
-            if (self._length % torch.distributed.get_world_size()) != 0:
-                pass
+
+            # each node must receive exactly the same data! we must skip something in the end if needed
+            world_size = torch.distributed.get_world_size()
+            rank = torch.distributed.get_rank()
+
+            if (self._length % world_size) != 0:
+                # BUG in lightning -> must require that every node has something to put in next batch
+                self.limit = (self._length // world_size) * world_size
+
             self.reader = utils.filter_generator(
                 self.reader,
-                torch.distributed.get_world_size(),
-                torch.distributed.get_rank()
+                world_size,
+                rank
             )
 
         # add parallel processing middlelayer
@@ -90,7 +97,10 @@ class TransformersIterableDataset(SuperTransformersDataset, IterableDataset):
             )
 
         for row in self.reader:
-            print(f"Process: {torch.distributed.get_rank()}, worker: {worker_info.id if worker_info is not None else None} yielding {self.global_counter}")
+            # if limit is 
+            if self.limit is not None and self.global_counter >= self.limit:
+                return
+
             row_dict = self.get_data_as_dict(row)
             row_dict = self.prepare(row_dict, idx=self.global_counter)
             row_dict["ids"] = self.global_counter
