@@ -96,7 +96,13 @@ class TransformersIterableDataset(SuperTransformersDataset, IterableDataset):
                 worker_info.id
             )
 
-        if self.limit is not None and (worker_info is None or worker_info.id == 0) and 
+        if (
+            self.limit is not None and 
+            (worker_info is None or worker_info.id == 0) and
+            (not torch.distributed.is_initialized() or torch.distributed.get_rank() == 0)
+        ):
+            print(f"WARNING: dataset length limited to the greatest multiple of the world size ({world_size}): {self.limit}")
+ 
 
         for row in self.reader:
             # if limit is 
