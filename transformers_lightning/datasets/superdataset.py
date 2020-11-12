@@ -22,15 +22,19 @@ class SuperTransformersDataset:
     def process_line(line, specs):
         """ Convert fields in list to int, float or bool if possible. """
         res = []
-        for name, entry in zip(specs.names, line):
-            if name not in specs.x:
-                try:
-                    res.append(eval(entry))
-                except:
+        try:
+            for name, entry in zip(specs.names, line):
+                if name not in specs.x:
+                    try:
+                        res.append(eval(entry))
+                    except:
+                        res.append(entry)
+                else:
                     res.append(entry)
-            else:
-                res.append(entry)
-        return res
+            return res
+        except:
+            print("Debugging dataset:", specs.names, line)
+            exit(1)
 
     @staticmethod
     def check_and_prepare_dataset_specs(specs, hparams):
