@@ -25,7 +25,7 @@ pip install git+https://github.com/lucadiliello/transformers-lightning.git --upg
 <a name="doc"></a>
 ## Documentation
 
-<a name="dataset"></a>
+<a name="datasets"></a>
 ### Dataset
 
 Dataset are read by an universal `*sv` (tsv, csv, ...) parser that only required a `yaml` file containing the format specifications.
