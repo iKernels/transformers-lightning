@@ -1,6 +1,7 @@
 import multiprocessing
 from argparse import Namespace
 import time
+import os
 
 import pytest
 import pytorch_lightning as pl
@@ -33,6 +34,7 @@ n_cpus = multiprocessing.cpu_count()
 ])
 def test_datamodule_gpu_ddp_only(ds_type, num_workers, distributed_backend, gpus, epochs, dataset_idx):
 
+    os.environ["CUDA_VISIBLE_DEVICES"] = "0,1"
     time.sleep(5) # sleep for 5 second to be sure area is clean
 
     hparams = Namespace(

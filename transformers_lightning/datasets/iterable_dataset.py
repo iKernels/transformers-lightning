@@ -77,6 +77,8 @@ class TransformersIterableDataset(SuperTransformersDataset, IterableDataset):
             world_size = torch.distributed.get_world_size()
             rank = torch.distributed.get_rank()
 
+            print(f"\n\n\n ********************* DIOCANEEEEEEEEEEEEEEEEEEEE {world_size} {rank} ******************* \n\n\n")
+
             if (self._length % world_size) != 0:
                 # BUG in lightning -> must require that every node has something to put in next batch
                 self.limit = (self._length // world_size) * world_size
