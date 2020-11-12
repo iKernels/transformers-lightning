@@ -9,22 +9,23 @@ n_cpus = multiprocessing.cpu_count()
 
 # Test iter dataset work correctly with dp
 tests = [   # ITER dataset
+    # ITER dataset
     # num_workers with ddp
-    ['iter',     0,             'ddp',                  2,      1],
-    ['iter',     1,             'ddp',                  2,      2],
-    ['iter',     2,             'ddp',                  2,      2],
-    ['iter',     0,             'ddp',                  2,      1],
-    ['iter',     n_cpus,        'ddp',                  2,      10],
+    ['iter',     0,             'ddp',                  2,      1,      1],
+    ['iter',     1,             'ddp',                  2,      2,      1],
+    ['iter',     2,             'ddp',                  2,      2,      1],
+    ['iter',     0,             'ddp',                  2,      1,      2],
+    ['iter',     n_cpus,        'ddp',                  2,      10,     3],
 
     # MAP dataset
     # num_workers with ddp
-    ['map',     0,             'ddp',                  2,      2],
-    ['map',     1,             'ddp',                  2,      2],
-    ['map',     2,             'ddp',                  2,      2],
-    ['map',     0,             'ddp',                  2,      1],
-    ['map',     n_cpus,        'ddp',                  2,      10],
+    ['map',     0,             'ddp',                  2,      2,       1],
+    ['map',     1,             'ddp',                  2,      2,       1],
+    ['map',     2,             'ddp',                  2,      2,       1],
+    ['map',     0,             'ddp',                  2,      1,       2],
+    ['map',     n_cpus,        'ddp',                  2,      10,      3],
 ]
-def test_datamodule_gpu_ddp_only(ds_type, num_workers, distributed_backend, gpus, epochs):
+def test_datamodule_gpu_ddp_only(ds_type, num_workers, distributed_backend, gpus, epochs, dataset_idx):
 
     hparams = Namespace(
         batch_size=4,
@@ -56,7 +57,7 @@ def test_datamodule_gpu_ddp_only(ds_type, num_workers, distributed_backend, gpus
     model = SimpleTransformerLikeModel(hparams)    
 
     # Datasets
-    datamodule = ExampleDataModule(hparams, model, trainer)
+    datamodule = ExampleDataModule(hparams, model, trainer, train_config=f"dataset{dataset_idx}.yaml")
 
     model.datamodule = datamodule
     trainer.fit(model, datamodule=datamodule)
