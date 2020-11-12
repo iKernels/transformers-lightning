@@ -139,4 +139,4 @@ def test_datamodule_gpu_ddp_only(ds_type, num_workers, distributed_backend, gpus
 
 for t in test:
     test_datamodule_gpu_ddp_only(*t)
-    break 
+ 
