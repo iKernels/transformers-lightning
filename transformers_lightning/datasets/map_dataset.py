@@ -21,7 +21,7 @@ class TransformersMapDataset(SuperTransformersDataset, Dataset):
         super().__init__(*args, **kwargs)
 
         # load data as a simple list
-        self.data = list(self.__class__.read_csv_file(self.specs, self.hparams))
+        self.data = list(SuperTransformersDataset.read_csv_file(self.specs))
 
     def __len__(self):
         return len(self.data)
