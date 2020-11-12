@@ -320,9 +320,6 @@ def test_datamodule_gpu_ddp_only(ds_type, num_workers, distributed_backend, gpus
     ['iter',     1],
     ['iter',     2],
     ['iter',     3],
-    ['map',      1],
-    ['map',      2],
-    ['map',      3]
 ])
 def test_datamodule_gpu_ddp_different_ds(ds_type, ds_number):
     
