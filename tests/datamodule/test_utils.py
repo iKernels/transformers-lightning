@@ -47,9 +47,12 @@ class SimpleTransformerLikeModel(models.SuperModel):
         try:
             received = torch.zeros((len(self.datamodule.train_dataset),)).to(dtype=bool)
         except TypeError:
-            expected_len = (
-                self.datamodule.train_dataset.length // torch.distributed.get_world_size()
-            ) * torch.distributed.get_world_size()
+            if self.trainer.distributed_backend == "ddp":
+                expected_len = (
+                    self.datamodule.train_dataset.length // torch.distributed.get_world_size()
+                ) * torch.distributed.get_world_size()
+            else:
+                expected_len = self.datamodule.train_dataset.length
             received = torch.zeros((expected_len,)).to(dtype=bool)
         received[ids] = True
 
