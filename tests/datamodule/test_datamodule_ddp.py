@@ -20,7 +20,7 @@ n_cpus = multiprocessing.cpu_count()
     ['iter',     1,             'ddp',                  2,      2,      1],
     ['iter',     2,             'ddp',                  2,      2,      1],
     ['iter',     0,             'ddp',                  2,      1,      2],
-    ['iter',     n_cpus,        'ddp',                  2,      10,     3],
+    ['iter',     n_cpus,        'ddp',                  2,      10,     2],
 
     # MAP dataset
     # num_workers with ddp
