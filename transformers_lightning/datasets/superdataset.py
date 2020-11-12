@@ -33,7 +33,8 @@ class SuperTransformersDataset:
                     res.append(entry)
             return res
         except:
-            print("Debugging dataset:", specs.names, line)
+            with open("out.log", "w") as fo:
+                fo.write(f"Debugging dataset: {specs.names}, {line}")
             exit(1)
 
     @staticmethod
