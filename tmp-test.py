@@ -2,7 +2,7 @@ import multiprocessing
 from argparse import Namespace
 
 import pytorch_lightning as pl
-from .test_utils import SimpleTransformerLikeModel, ExampleDataModule
+from tests.datamodule.test_utils import SimpleTransformerLikeModel, ExampleDataModule
 
 n_cpus = multiprocessing.cpu_count()
 
