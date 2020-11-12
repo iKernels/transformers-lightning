@@ -44,7 +44,9 @@ class SimpleTransformerLikeModel(transformers_lightning.models.SuperModel):
         try:
             received = torch.zeros((len(self.datamodule.train_dataset),)).to(dtype=bool)
         except TypeError:
-            received = torch.zeros((self.datamodule.train_dataset.length,)).to(dtype=bool)
+            received = torch.zeros(
+                (self.datamodule.train_dataset.limit if self.datamodule.train_dataset.limit is not None else self.datamodule.train_dataset.length,)
+            ).to(dtype=bool)
         received[ids] = True
 
         # assert no duplicate element received
