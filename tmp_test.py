@@ -34,8 +34,9 @@ class SimpleTransformerLikeModel(transformers_lightning.models.SuperModel):
         # in distributed mode collect ids from every process (gpu)
         if torch.distributed.is_initialized():
             gather_ids = [torch.ones_like(ids) for _ in range(torch.distributed.get_world_size())]
+            print(f"ID {torch.distributed.get_rank()}/{torch.distributed.get_world_size()} gather ids: {gather_ids}")
             torch.distributed.all_gather(gather_ids, ids)
-            
+
             ids = torch.cat(gather_ids, dim=0)
             print(f"ID {torch.distributed.get_rank()}/{torch.distributed.get_world_size()} ALL ids: {ids}")
 
