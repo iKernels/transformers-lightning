@@ -88,16 +88,26 @@ class ExampleDataModule(datamodules.SuperDataModule):
 
 
 
+# Test iter dataset work correctly with dp
+@pytest.mark.parametrize(
+    ["ds_type", "num_workers", "distributed_backend", "gpus", "epochs"], [
+
     # ITER dataset
     # num_workers with ddp
-test = [
     ['iter',     0,             'ddp',                  2,      1],
     ['iter',     1,             'ddp',                  2,      2],
     ['iter',     2,             'ddp',                  2,      2],
     ['iter',     0,             'ddp',                  2,      1],
     ['iter',     n_cpus,        'ddp',                  2,      10],
-]
 
+    # MAP dataset
+    # num_workers with ddp
+    ['map',     0,             'ddp',                  2,      2],
+    ['map',     1,             'ddp',                  2,      2],
+    ['map',     2,             'ddp',                  2,      2],
+    ['map',     0,             'ddp',                  2,      1],
+    ['map',     n_cpus,        'ddp',                  2,      10],
+])
 def test_datamodule_gpu_ddp_only(ds_type, num_workers, distributed_backend, gpus, epochs):
 
     hparams = Namespace(
@@ -135,8 +145,4 @@ def test_datamodule_gpu_ddp_only(ds_type, num_workers, distributed_backend, gpus
     model.datamodule = datamodule
     trainer.fit(model, datamodule=datamodule)
 
-
-
-for t in test:
-    test_datamodule_gpu_ddp_only(*t)
  
