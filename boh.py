@@ -102,7 +102,7 @@ for i in range(3):
             super().__init__(*args, **kwargs)
 
             if train_config is None:
-                self.train_config = f"dataset{i}.yaml"
+                self.train_config = f"dataset{i+1}.yaml"
             else:
                 self.train_config = train_config
     
