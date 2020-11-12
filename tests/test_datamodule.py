@@ -6,7 +6,7 @@ sys.path.append('..')
 import pytest
 import pytorch_lightning as pl
 import torch
-import transformers_lightning
+from ..transformers_lightning import models, datamodules
 from torch.utils.data import DataLoader
 from transformers import AdamW, BertTokenizer
 from transformers.modeling_bert import (BertConfig,
@@ -14,7 +14,7 @@ from transformers.modeling_bert import (BertConfig,
 
 n_cpus = multiprocessing.cpu_count()
 
-class SimpleTransformerLikeModel(transformers_lightning.models.SuperModel):
+class SimpleTransformerLikeModel(models.SuperModel):
 
     def __init__(self, hparams):
         super().__init__(hparams)
@@ -76,7 +76,7 @@ class SimpleTransformerLikeModel(transformers_lightning.models.SuperModel):
         return results.loss
 
 
-class ExampleDataModule(transformers_lightning.datamodules.SuperDataModule):
+class ExampleDataModule(datamodules.SuperDataModule):
 
     def __init__(self, *args, train_config=None, **kwargs):
         super().__init__(*args, **kwargs)
@@ -86,7 +86,7 @@ class ExampleDataModule(transformers_lightning.datamodules.SuperDataModule):
         else:
             self.train_config = train_config
  
-    train_dataloader = transformers_lightning.datamodules.SuperDataModule.default_train_dataloader
+    train_dataloader = datamodules.SuperDataModule.default_train_dataloader
 
 
 
