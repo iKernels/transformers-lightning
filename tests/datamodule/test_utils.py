@@ -1,12 +1,9 @@
-import multiprocessing
-
 import torch
-from transformers_lightning import models, datamodules
-from transformers import AdamW, BertTokenizer
 from transformers.modeling_bert import (BertConfig,
                                         BertForSequenceClassification)
+from transformers_lightning.adapters.csv_adapter import CSVAdapter
+from transformers_lightning import datamodules, models
 
-n_cpus = multiprocessing.cpu_count()
 
 class SimpleTransformerLikeModel(models.SuperModel):
 
@@ -17,12 +14,13 @@ class SimpleTransformerLikeModel(models.SuperModel):
         # super light BERT model
         config = BertConfig(hidden_size=12, num_hidden_layers=1, num_attention_heads=1, intermediate_size=12)
         self.model = BertForSequenceClassification(config)
-        self.tokenizer = BertTokenizer.from_pretrained("bert-base-cased", config=config, cache_dir=hparams.cache_dir)
 
     def training_step(self, batch, batch_idx):
+
         if self.trainer.distributed_backend == "ddp":
             print(f"ID {torch.distributed.get_rank()}/{torch.distributed.get_world_size()} processing ids: {batch['ids']}")
- 
+
+        batch['labels'] = batch['labels'].to(dtype=torch.long)
         kwargs = {k: batch[k] for k in ["input_ids", "attention_mask", "token_type_ids", "labels"]}
         results = self(**kwargs, return_dict=True)
         return { 'loss': results.loss, 'ids': batch['ids'] }
@@ -78,14 +76,28 @@ class SimpleTransformerLikeModel(models.SuperModel):
         return results.loss
 
 
+class ExampleAdapter(CSVAdapter):
+
+    def __init__(self, *args, tokenizer=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.tokenizer = tokenizer
+
+    def preprocess_line(self, line: list) -> list:
+
+        results = self.tokenizer.encode_plus(
+            line[3], line[4],
+            add_special_tokens=True,
+            padding='max_length',
+            max_length=self.hparams.max_sequence_length,
+            truncation=True
+        )
+
+        res = { **results, 'ids': line[0], 'labels': line[5] }
+        return res
+
+
 class ExampleDataModule(datamodules.SuperDataModule):
 
-    def __init__(self, *args, train_config=None, **kwargs):
+    def __init__(self, *args, test_number=1, tokenizer=None, **kwargs):
         super().__init__(*args, **kwargs)
-
-        if train_config is None:
-            self.train_config = "dataset1.yaml"
-        else:
-            self.train_config = train_config
- 
-    train_dataloader = datamodules.SuperDataModule.default_train_dataloader
+        self.train_adapter = ExampleAdapter(self.hparams, f"test{test_number}.tsv", delimiter="\t", tokenizer=tokenizer)        

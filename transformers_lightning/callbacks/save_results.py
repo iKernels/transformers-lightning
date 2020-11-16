@@ -1,6 +1,5 @@
-import argparse
-import csv
 import os
+import csv
 from argparse import ArgumentParser
 from typing import (Any, Callable, Dict, Iterable, List, Mapping, Optional,
                     Sequence, Tuple, Union)
@@ -107,8 +106,8 @@ class SaveTestResultsCallback(Callback):
                 self.write(filename, value)
 
     @staticmethod
-    def add_callback_specific_args(parent_parser):
+    def add_callback_specific_args(parser: ArgumentParser):
         """ Add callback_specific arguments to parser. """
         # parser = ArgumentParser(parents=[parent_parser], add_help=False)
         # parser.add_argument('--paramenter_name', ...
-        return parent_parser
+        return parser

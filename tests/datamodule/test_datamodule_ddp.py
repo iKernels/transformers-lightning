@@ -7,7 +7,7 @@ import pytest
 import pytorch_lightning as pl
 import torch
 from .test_utils import SimpleTransformerLikeModel, ExampleDataModule
-
+from transformers import BertTokenizer
 n_cpus = multiprocessing.cpu_count()
 
 
@@ -35,7 +35,7 @@ n_cpus = multiprocessing.cpu_count()
 def test_datamodule_gpu_ddp_only(ds_type, num_workers, distributed_backend, gpus, epochs, dataset_idx):
 
     os.environ["CUDA_VISIBLE_DEVICES"] = "0,1"
-    time.sleep(5) # sleep for 5 second to be sure area is clean
+    time.sleep(2) # sleep for 5 second to be sure area is clean
 
     hparams = Namespace(
         batch_size=4,
@@ -51,9 +51,12 @@ def test_datamodule_gpu_ddp_only(ds_type, num_workers, distributed_backend, gpus
         max_steps=None,
         max_sequence_length=10,
         gpus=gpus,
-        dataset_style=ds_type,
-        distributed_backend=distributed_backend
+        iterable_datasets=ds_type == 'iter',
+        accelerator=distributed_backend,
+        skip_in_training=None
     )
+
+    tokenizer = BertTokenizer.from_pretrained("bert-base-cased", cache_dir=hparams.cache_dir)
 
     # instantiate PL trainer
     trainer = pl.Trainer.from_argparse_args(
@@ -67,7 +70,7 @@ def test_datamodule_gpu_ddp_only(ds_type, num_workers, distributed_backend, gpus
     model = SimpleTransformerLikeModel(hparams, do_ids_check=(ds_type != 'map'))    
 
     # Datasets
-    datamodule = ExampleDataModule(hparams, model, trainer, train_config=f"dataset{dataset_idx}.yaml")
+    datamodule = ExampleDataModule(hparams, test_number=1, tokenizer=tokenizer)
 
     model.datamodule = datamodule
     trainer.fit(model, datamodule=datamodule)
