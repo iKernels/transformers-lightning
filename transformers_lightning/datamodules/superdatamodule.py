@@ -1,6 +1,6 @@
-import math
+from argparse import ArgumentParser
 import multiprocessing
-import os
+from transformers_lightning.adapters import SuperAdapter
 
 import pytorch_lightning as pl
 from torch.utils.data import DataLoader
@@ -12,8 +12,8 @@ from transformers_lightning.datasets import (TransformersIterableDataset,
 class SuperDataModule(pl.LightningDataModule):
     """
     SuperDataModule should be the parent class of all `LightingDataModules` in your project.
-    It implements some simple methods to check whether training, val or testing is required
-    to do things like:
+    It implements some simple methods to check whether training, val or testing is required.
+    Example:
 
     >>> if datamodule.do_train():
     >>>     trainer.fit(model, datamodule=datamodule)
@@ -22,103 +22,92 @@ class SuperDataModule(pl.LightningDataModule):
     >>>     trainer.test(model, datamodule=datamodule)
     """
 
-    def __init__(self, hparams, model, trainer, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    train_adapter: SuperAdapter = None
+    valid_adapter: SuperAdapter = None
+    test_adapter: SuperAdapter = None
 
+    def __init__(self,
+        hparams,
+        train_adapter = None,
+        valid_adapter = None,
+        test_adapter = None,
+        collate_fn=utils.collate_single_fn
+    ):
+        super().__init__()
         self.hparams = hparams
-        self.tokenizer = model.tokenizer
-        self.trainer = trainer
+        self.collate_fn = collate_fn
 
-        self.train_config = None
-        self.val_config = None
-        self.test_config = None
+        # instantiate eventual adapters passed from init method
+        if train_adapter is not None:
+            assert isinstance(train_adapter, SuperAdapter), f"Argument `train_adapter` must be of type `SuperAdapter`"
+            self.train_adapter = train_adapter
+        if valid_adapter is not None:
+            assert isinstance(valid_adapter, SuperAdapter), f"Argument `valid_adapter` must be of type `SuperAdapter`"
+            self.valid_adapter = valid_adapter
+        if test_adapter is not None:
+            assert isinstance(test_adapter, SuperAdapter), f"Argument `test_adapter` must be of type `SuperAdapter`"
+            self.test_adapter = test_adapter
 
-    def get_config(self, config_file):
-        """ Load a config file from standard directory and check that file exists! """
-        config_path = os.path.join(self.hparams.config_dir, "datasets", config_file)
-        assert os.path.isfile(config_path), f"Specified config {config_path} does not exist!"
-        return utils.load_yaml(config_path)
+        """
+        This space be used to instantiate the Adapters
 
-    @property
-    def train_config(self):
-        if not hasattr(self, '_train_config'):
-            self._train_config = None
-        return self._train_config
-
-    @train_config.setter
-    def train_config(self, config_file):
-        """ Load config only is it is not None. """
-        if config_file is not None:
-            self._train_config = self.get_config(config_file)
-        else:
-            self._train_config = None
-
-    @property
-    def val_config(self):
-        if not hasattr(self, '_val_config'):
-            self._val_config = None
-        return self._val_config
-
-    @val_config.setter
-    def val_config(self, config_file):
-        """ Load config only is it is not None. """
-        if config_file is not None:
-            self._val_config = self.get_config(config_file)
-        else:
-            self._val_config = None
-
-    @property
-    def test_config(self):
-        if not hasattr(self, '_test_config'):
-            self._test_config = None
-        return self._test_config
-
-    @test_config.setter
-    def test_config(self, config_file):
-        """ Load config only is it is not None. """
-        if config_file is not None:
-            self._test_config = self.get_config(config_file)
-        else:
-            self._test_config = None
-
-    # Optional, called only on 1 GPU/machine
-    def prepare_data(self):
-        pass
+        >>> self.train_adapter = TSVAdapter(self.hparams, "pre-training/train.tsv", delimiter="\t")
+        >>> self.valid_adapter = TSVAdapter(self.hparams, "pre-training/valid.tsv", delimiter="\t")
+        >>> self.test_adapter = TSVAdapter(self.hparams, "pre-training/test.tsv", delimiter="\t")
+        """
 
     # Optional, called for every GPU/machine (assigning state is OK)
     def setup(self, stage=None):
         """
-        Load dataloaders only when needed. 
+        Load datasets only if respective Adapter are defined.
+        Finally check that is a 
         This implementation should be enough for most subclasses.
         """
+        if self.hparams.iterable_datasets:
+            dataset_class = TransformersIterableDataset
+        else:
+            dataset_class = TransformersMapDataset
 
-        dataset_class = (
-            TransformersMapDataset if self.hparams.dataset_style == 'map' else TransformersIterableDataset
-        )
         if stage == 'fit' or stage is None:
-            if self.train_config is not None:
+            if self.train_adapter is not None:
+                kwargs = {
+                    'start_from_step': self.hparams.skip_in_training
+                } if self.hparams.iterable_datasets else {}
                 self.train_dataset = dataset_class(
-                    self.hparams, self.tokenizer, self.train_config
+                    self.hparams, self.train_adapter, self.trainer, **kwargs
                 )
-            if self.val_config is not None:
-                self.val_dataset = dataset_class(
-                    self.hparams, self.tokenizer, self.val_config
+            if self.valid_adapter is not None:
+                self.valid_dataset = dataset_class(
+                    self.hparams, self.valid_adapter, self.trainer
                 )
 
         elif stage == 'test' or stage is None:
-            if self.test_config is not None:
+            if self.test_adapter is not None:
                 self.test_dataset = dataset_class(
-                    self.hparams, self.tokenizer, self.test_config
+                    self.hparams, self.test_adapter, self.trainer
                 )
 
+        assert self.train_adapter is None or self.train_dataset is not None, (
+            f"Cannot specify `train_adapter` and then `train_dataset` is None: "
+            f"{self.train_adapter} and {self.train_dataset}"
+        )
+        assert self.valid_adapter is None or self.valid_dataset is not None, (
+            f"Cannot specify `valid_adapter` and then `valid_dataset` is None: "
+            f"{self.valid_adapter} and {self.valid_dataset}"
+        )
+        assert self.test_adapter is None or self.test_dataset is not None, (
+            f"Cannot specify `test_adapter` and then `test_dataset` is None: "
+            f"{self.test_adapter} and {self.test_dataset}"
+        )
+
     def do_train(self):
-        return hasattr(self, 'train_dataloader')
+        return self.train_adapter is not None
 
     def do_validation(self):
-        return hasattr(self, 'val_dataloader')
+        return self.valid_adapter is not None
 
     def do_test(self):
-        return hasattr(self, 'test_dataloader')
+        return self.test_adapter is not None
 
     def default_dataloader(self, dataset, batch_size):
         """ Return a dataloader with all usual default parameters. """
@@ -126,26 +115,36 @@ class SuperDataModule(pl.LightningDataModule):
                           batch_size=batch_size,
                           num_workers=self.hparams.num_workers,
                           pin_memory=True,
-                          collate_fn=utils.collate_single_fn)
+                          collate_fn=self.collate_fn)
 
-    def default_train_dataloader(self):
-        return self.default_dataloader(self.train_dataset, self.hparams.batch_size)
+    def train_dataloader(self):
+        if self.train_dataset:
+            return self.default_dataloader(self.train_dataset, self.hparams.batch_size)
+        return None
 
-    def default_val_dataloader(self):
-        return self.default_dataloader(self.val_dataset, self.hparams.val_batch_size)
+    def val_dataloader(self):
+        if self.valid_adapter:
+            return self.default_dataloader(self.valid_dataset, self.hparams.val_batch_size)
+        return None
 
-    def default_test_dataloader(self):
-        return self.default_dataloader(self.test_dataset, self.hparams.test_batch_size)
+    def test_dataloader(self):
+        if self.test_adapter:
+            return self.default_dataloader(self.test_dataset, self.hparams.test_batch_size)
+        return None
 
     @staticmethod
-    def add_datamodule_specific_args(parser):
-
+    def add_datamodule_specific_args(parser: ArgumentParser):
         parser.add_argument('--num_workers', required=False, default=multiprocessing.cpu_count(), type=int,
                             help='Number of workers to be used to load datasets')
-
+        parser.add_argument('--skip_in_training', type=int, default=None, required=False)
         parser.add_argument('--batch_size', type=int, default=32)
         parser.add_argument('--val_batch_size', type=int, default=256)
         parser.add_argument('--test_batch_size', type=int, default=256)
-        parser.add_argument('--dataset_style', type=str, choices=['map', 'iter'], default='map')
+        parser.add_argument('--iterable_datasets', action="store_true")
+
+        tmp_args, _ = parser.parse_known_args()
+        assert tmp_args.skip_in_training is None or tmp_args.iterable_datasets, (
+            f"At the moment, `--skip_in_training <steps>` can be used only with `--iterable_datasets`"
+        )
 
         return parser
