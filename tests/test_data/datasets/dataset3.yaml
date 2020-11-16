@@ -1,8 +1,0 @@
-filepath: test3.tsv
-names: [ids, id1, id2, question1, question2, labels]
-delimiter: '\t'
-quoting: minimal
-quotechar: '"'
-engine: python
-x: [question1, question2]
-y: [labels]

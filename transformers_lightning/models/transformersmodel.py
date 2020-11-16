@@ -1,5 +1,5 @@
 from transformers import AdamW, get_linear_schedule_with_warmup
-from transformers_lightning import utils, models
+from transformers_lightning import models
 from pytorch_lightning import _logger as logger
 
 
@@ -54,7 +54,7 @@ class TransformersModel(models.SuperModel):
         parser.add_argument('--max_grad_norm', type=float, default=1e-8)
         parser.add_argument('--warmup_steps', type=int, default=0)
 
-        tmp_args, extra = parser.parse_known_args()
+        tmp_args, _ = parser.parse_known_args()
         if tmp_args.learning_rate > 1:
             logger.warning(f"You specified a huge learning rate! Learning rate: {tmp_args.learning_rate}")
 
