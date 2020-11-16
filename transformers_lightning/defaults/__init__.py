@@ -1,18 +1,25 @@
-""" Keeping all default values together improves editability. """
+
+from argparse import ArgumentParser
 
 
 class DefaultConfig:
-    dataset_dir = "input"
-    config_dir = "conf"
-    cache_dir = "cache"
-    output_dir = "outputs"
-    results_dir = "results"
-    pre_trained_dir = "pre_trained_models"
-    tensorboard_dir = "tensorboard"
-    checkpoints_dir = "checkpoints"
+    """
+    Keeping all default values together improves readability and editability. 
+    Do not touch this tfile unless you want to add something. Possibly subclass this class
+    if you want to add some foundamental parameter.
+    """
+
+    dataset_dir: str = "input"
+    config_dir: str = "conf"
+    cache_dir: str = "cache"
+    output_dir: str = "outputs"
+    results_dir: str = "results"
+    pre_trained_dir: str = "pre_trained_models"
+    tensorboard_dir: str = "tensorboard"
+    checkpoints_dir: str = "checkpoints"
 
     @staticmethod
-    def add_defaults_args(parser):
+    def add_defaults_args(parser: ArgumentParser):
         parser.add_argument('--dataset_dir', type=str, required=False, default=DefaultConfig.dataset_dir,
                         help='Specify the dataset files folder')
         parser.add_argument('--config_dir', type=str, required=False, default=DefaultConfig.config_dir,
