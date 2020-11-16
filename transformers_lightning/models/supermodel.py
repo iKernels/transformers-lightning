@@ -1,8 +1,8 @@
+from argparse import ArgumentParser
 import math
-import torch
 
 from pytorch_lightning import LightningModule, _logger as logger
-from transformers import AdamW, get_linear_schedule_with_warmup
+from transformers import AdamW
 from transformers_lightning import utils
 
 
@@ -46,20 +46,12 @@ class SuperModel(LightningModule):
         try:
             dataset_len = len(self.trainer.datamodule.train_dataset)
         except:
-            dataset_len = self.trainer.datamodule.train_dataset.length
+            try:
+                dataset_len = self.trainer.datamodule.train_dataset.length
+            except:
+                return None
 
-        if self.trainer.use_dp:
-            total_devices = 1
-        elif self.trainer.use_ddp or self.trainer.use_ddp2:
-            total_devices = torch.distributed.get_world_size()
-        elif self.trainer.on_gpu:
-            total_devices = 1
-        elif self.trainer.on_tpu:
-            total_devices = len(self.trainer.tpu_cores) * self.trainer.num_nodes
-        elif self.trainer.distributed_backend == 'ddp_cpu':
-            total_devices = self.trainer.num_processes * self.trainer.num_nodes
-        else:
-            total_devices = 1
+        total_devices = utils.get_total_devices(trainer=self.trainer)
 
         num_training_batches = math.ceil(dataset_len / self.hparams.batch_size)
         training_batches_per_epoch = num_training_batches // total_devices
@@ -71,3 +63,9 @@ class SuperModel(LightningModule):
         )
 
         return steps
+
+    @staticmethod
+    def add_model_specific_args(parser: ArgumentParser):
+        """
+        Add here parameters that you would like to add to the models
+        """

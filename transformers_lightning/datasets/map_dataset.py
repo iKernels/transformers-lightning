@@ -1,14 +1,4 @@
-import csv
-import os
-from argparse import Namespace
-
-import numpy as np
-import pandas as pd
-import torch
-from pytorch_lightning import _logger as logger
 from torch.utils.data import Dataset
-from transformers import PreTrainedTokenizer
-from transformers_lightning import utils
 from transformers_lightning.datasets import SuperTransformersDataset
 
 
@@ -17,11 +7,9 @@ class TransformersMapDataset(SuperTransformersDataset, Dataset):
     Superclass of all map datasets. Tokenization is performed on the fly.
     Dataset is split in chunks to save memory using the relative dataframe function.
     """
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-        # load data as a simple list
-        self.data = list(SuperTransformersDataset.read_csv_file(self.specs))
+    def __init__(self, *args):
+        super().__init__(*args)
+        self.data = list(iter(self.adapter))
 
     def __len__(self):
         return len(self.data)
@@ -38,6 +26,6 @@ class TransformersMapDataset(SuperTransformersDataset, Dataset):
         )
 
         row = self.data[idx]
-        row_dict = self.get_data_as_dict(row)
+        row_dict = self.adapter.preprocess_line(row)
 
-        return self.prepare(row_dict, idx=idx)
+        return row_dict
