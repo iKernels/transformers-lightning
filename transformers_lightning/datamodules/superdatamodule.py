@@ -80,6 +80,15 @@ class SuperDataModule(pl.LightningDataModule):
                 self.valid_dataset = dataset_class(
                     self.hparams, self.valid_adapter, self.trainer
                 )
+            
+            assert self.train_adapter is None or self.train_dataset is not None, (
+                f"Cannot specify `train_adapter` and then `train_dataset` is None: "
+                f"{self.train_adapter} and {self.train_dataset}"
+            )
+            assert self.valid_adapter is None or self.valid_dataset is not None, (
+                f"Cannot specify `valid_adapter` and then `valid_dataset` is None: "
+                f"{self.valid_adapter} and {self.valid_dataset}"
+            )
 
         elif stage == 'test' or stage is None:
             if self.test_adapter is not None:
@@ -87,18 +96,10 @@ class SuperDataModule(pl.LightningDataModule):
                     self.hparams, self.test_adapter, self.trainer
                 )
 
-        assert self.train_adapter is None or self.train_dataset is not None, (
-            f"Cannot specify `train_adapter` and then `train_dataset` is None: "
-            f"{self.train_adapter} and {self.train_dataset}"
-        )
-        assert self.valid_adapter is None or self.valid_dataset is not None, (
-            f"Cannot specify `valid_adapter` and then `valid_dataset` is None: "
-            f"{self.valid_adapter} and {self.valid_dataset}"
-        )
-        assert self.test_adapter is None or self.test_dataset is not None, (
-            f"Cannot specify `test_adapter` and then `test_dataset` is None: "
-            f"{self.test_adapter} and {self.test_dataset}"
-        )
+            assert self.test_adapter is None or self.test_dataset is not None, (
+                f"Cannot specify `test_adapter` and then `test_dataset` is None: "
+                f"{self.test_adapter} and {self.test_dataset}"
+            )
 
     def do_train(self):
         return self.train_adapter is not None
