@@ -67,5 +67,7 @@ class SuperModel(LightningModule):
     @staticmethod
     def add_model_specific_args(parser: ArgumentParser):
         """
-        Add here parameters that you would like to add to the models
+        Add here parameters that you would like to add to the training session
+        and return the parser.
         """
+        return parser

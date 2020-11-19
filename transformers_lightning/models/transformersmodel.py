@@ -41,7 +41,10 @@ class TransformersModel(models.SuperModel):
                                                     num_warmup_steps=self.hparams.warmup_steps,
                                                     num_training_steps=max_steps)
 
-        return [optimizer], [scheduler]
+        return {
+            'optimizer': optimizer,
+            'scheduler': scheduler
+        }
 
     @staticmethod
     def add_model_specific_args(parser):
