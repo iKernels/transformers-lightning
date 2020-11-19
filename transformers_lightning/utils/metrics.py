@@ -1,6 +1,8 @@
 import torch
 import numpy as np
 
+from transformers_lightning.utils import IGNORE_IDX
+
 
 def get_mini_groups(idx: torch.Tensor) -> list:
     """
@@ -106,7 +108,7 @@ def get_tp_and_fn(preds: torch.Tensor, labels: torch.Tensor, threshold: float):
     )
 
 
-def masked_metric(labels=None, predictions=None, logits=None, exclude=-100, metric=None, **kwargs):
+def masked_metric(labels=None, predictions=None, logits=None, exclude=IGNORE_IDX, metric=None, **kwargs):
     """
     Compute a metric only not taking into account labels that should not be considered.
     """

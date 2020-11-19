@@ -9,6 +9,8 @@ import transformers
 from transformers_lightning import utils
 
 
+IGNORE_IDX = -100
+
 def mask_tokens_for_mlm(
     inputs: Union[torch.Tensor, np.array],
     tokenizer: transformers.PreTrainedTokenizer,
@@ -71,7 +73,7 @@ def _mask_tokens_for_mlm_torch(
         padding_mask = labels.eq(tokenizer.pad_token_id)
         probability_matrix.masked_fill_(padding_mask, value=0.0)
     masked_indices = torch.bernoulli(probability_matrix).bool()
-    labels[~masked_indices] = -100  # We only compute loss on masked tokens
+    labels[~masked_indices] = IGNORE_IDX  # We only compute loss on masked tokens
 
     # 80% of the time, we replace masked input tokens with tokenizer.mask_token ([MASK])
     indices_replaced = torch.bernoulli(torch.full(labels.shape, 0.8, device=device)).bool() & masked_indices
@@ -115,7 +117,7 @@ def _mask_tokens_for_mlm_numpy(
         probability_matrix = probability_matrix.filled(0.0)
 
     masked_indices = np.random.binomial(1, p=probability_matrix).astype(bool)
-    labels[~masked_indices] = -100  # We only compute loss on masked tokens
+    labels[~masked_indices] = IGNORE_IDX  # We only compute loss on masked tokens
 
     # 80% of the time, we replace masked input tokens with tokenizer.mask_token ([MASK])
     indices_replaced = np.random.choice(2, p=[0.2, 0.8], size=labels.shape).astype(bool) & masked_indices
@@ -163,7 +165,7 @@ def random_token_substutition(
         'input_ids': tensor([[  101,   172,  8959,  1186,  3082, 27735,   181,  1348,   102]]),
         'token_type_ids': tensor([[0, 0, 0, 0, 0, 0, 0, 0, 0]]),
         'attention_mask': tensor([[1, 1, 1, 1, 1, 1, 1, 1, 1]]),
-        'labels': tensor([[-100, 0, 1, 0, 1, 1, 0, 1, -100]])
+        'labels': tensor([[IGNORE_IDX, 0, 1, 0, 1, 1, 0, 1, IGNORE_IDX]])
     }
 
     If `do_not_touch_input_ids` is True, input ids are not modified and only labels are created.
@@ -193,13 +195,13 @@ def random_token_substutition(
     ]
     special_tokens_mask_tensor = torch.tensor(special_tokens_mask, dtype=torch.bool, device=device)
     probability_matrix.masked_fill_(special_tokens_mask_tensor, value=0.0)
-    labels.masked_fill_(special_tokens_mask_tensor, value=-100)
+    labels.masked_fill_(special_tokens_mask_tensor, value=IGNORE_IDX)
 
     # no need to substitute padding tokens, assigning 0.0 prob
     if tokenizer._pad_token is not None:
         padding_mask = inputs.eq(tokenizer.pad_token_id)
         probability_matrix.masked_fill_(padding_mask, value=0.0)
-        labels.masked_fill_(padding_mask, value=-100)
+        labels.masked_fill_(padding_mask, value=IGNORE_IDX)
 
     substituted_indices = torch.bernoulli(probability_matrix).bool()
 
