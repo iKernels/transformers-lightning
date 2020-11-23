@@ -152,12 +152,18 @@ def uniform_distrib(size, **kwargs):
     """ Return a vector containing uniform values such that the last exis sums to 1.0. """
     return torch.full(size=size, fill_value=1/size[-1], **kwargs)
 
-def normalization(x, dim=-1):
+def normalize_standard(x: torch.Tensor, dim: int = -1) -> torch.Tensor:
     """ Do (x - E[x]) / ( E[x - E[x]] ) on axis specified by dim. """
     return torch.true_divide(
-        torch.sub(x, x.mean(dim=dim).unsqueeze(1)), 
-        x.std(dim=dim).unsqueeze(1)
+        torch.sub(x, x.mean(dim=dim).unsqueeze(-1)), 
+        x.std(dim=dim).unsqueeze(-1)
     )
+
+def normalize_linear(x: torch.Tensor, dim: int = -1) -> torch.Tensor:
+    """ Do (x - min(x)) / (max(x) - min(x)) on axis specified by dim. """
+    max_x = torch.max(x, dim=dim)
+    min_x = torch.min(x, dim=dim)
+    return (x - min_x) / (max_x - min_x)
 
 def concat_dict_tensors(*args, dim=0):
     """ Concat dictionaries containing tensors on `dim` dimension. """
