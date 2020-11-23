@@ -41,15 +41,25 @@ class SuperDataModule(pl.LightningDataModule):
         if train_adapter is not None:
             assert isinstance(train_adapter, SuperAdapter), f"Argument `train_adapter` must be of type `SuperAdapter`"
             self.train_adapter = train_adapter
+
         if valid_adapter is not None:
             assert isinstance(valid_adapter, SuperAdapter), f"Argument `valid_adapter` must be of type `SuperAdapter`"
             self.valid_adapter = valid_adapter
+
         if test_adapter is not None:
-            assert isinstance(test_adapter, SuperAdapter), f"Argument `test_adapter` must be of type `SuperAdapter`"
+            assert (
+                isinstance(test_adapter, SuperAdapter) or isinstance(test_adapter, list)
+            ), f"Argument `test_adapter` must be of type `SuperAdapter` or List[SuperAdapter]"
+
+            if isinstance(test_adapter, list):
+                for adapter in test_adapter:
+                    assert isinstance(adapter, SuperAdapter), (
+                        f"Argument `test_adapter` must be of type `SuperAdapter` or List[SuperAdapter]"
+                    )
             self.test_adapter = test_adapter
 
         """
-        This space be used to instantiate the Adapters
+        This space should be used to instantiate the Adapters it they were not passed through the kwargs
 
         >>> self.train_adapter = TSVAdapter(self.hparams, "pre-training/train.tsv", delimiter="\t")
         >>> self.valid_adapter = TSVAdapter(self.hparams, "pre-training/valid.tsv", delimiter="\t")
@@ -92,9 +102,14 @@ class SuperDataModule(pl.LightningDataModule):
 
         elif stage == 'test' or stage is None:
             if self.test_adapter is not None:
-                self.test_dataset = dataset_class(
-                    self.hparams, self.test_adapter, self.trainer
-                )
+                if isinstance(self.test_adapter, SuperAdapter):
+                    self.test_dataset = dataset_class(
+                        self.hparams, self.test_adapter, self.trainer
+                    )
+                else:
+                    self.test_dataset = [dataset_class(
+                        self.hparams, adapter, self.trainer
+                    ) for adapter in self.test_adapter]
 
             assert self.test_adapter is None or self.test_dataset is not None, (
                 f"Cannot specify `test_adapter` and then `test_dataset` is None: "
@@ -130,6 +145,8 @@ class SuperDataModule(pl.LightningDataModule):
 
     def test_dataloader(self):
         if self.test_adapter:
+            if isinstance(self.test_dataset, list):
+                return [self.default_dataloader(dataset, self.hparams.test_batch_size) for dataset in self.test_dataset]
             return self.default_dataloader(self.test_dataset, self.hparams.test_batch_size)
         return None
 

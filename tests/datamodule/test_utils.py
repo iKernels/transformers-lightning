@@ -66,11 +66,13 @@ class SimpleTransformerLikeModel(models.SuperModel):
             )
 
     def validation_step(self, batch, batch_idx):
+        batch['labels'] = batch['labels'].to(dtype=torch.long)
         kwargs = {k: batch[k] for k in ["input_ids", "attention_mask", "token_type_ids", "labels"]}
         results = self(**kwargs, return_dict=True)
         return results.loss
 
-    def test_step(self, batch, batch_idx):
+    def test_step(self, batch, batch_idx, dataset_idx):
+        batch['labels'] = batch['labels'].to(dtype=torch.long)
         kwargs = {k: batch[k] for k in ["input_ids", "attention_mask", "token_type_ids", "labels"]}
         results = self(**kwargs, return_dict=True)
         return results.loss
@@ -100,4 +102,4 @@ class ExampleDataModule(datamodules.SuperDataModule):
 
     def __init__(self, *args, test_number=1, tokenizer=None, **kwargs):
         super().__init__(*args, **kwargs)
-        self.train_adapter = ExampleAdapter(self.hparams, f"test{test_number}.tsv", delimiter="\t", tokenizer=tokenizer)        
+        self.train_adapter = ExampleAdapter(self.hparams, f"test{test_number}.tsv", delimiter="\t", tokenizer=tokenizer)
