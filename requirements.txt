@@ -2,3 +2,4 @@ pytest
 pytorch-lightning= >= 1.0.6
 transformers >= 3.5.0
 torch >= 1.6.0
+scipy >= 1.5.4
