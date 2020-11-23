@@ -154,9 +154,10 @@ def uniform_distrib(size, **kwargs):
 
 def normalize_standard(x: torch.Tensor, dim: int = -1) -> torch.Tensor:
     """ Do (x - E[x]) / ( E[x - E[x]] ) on axis specified by dim. """
-    return torch.true_divide(
-        torch.sub(x, x.mean(dim=dim).unsqueeze(-1)), 
-        x.std(dim=dim).unsqueeze(-1)
+    return torch.where(
+        (x.std(dim=dim) > 0).unsqueeze(-1),
+        (x - x.mean(dim=dim).unsqueeze(-1)) / x.std(dim=dim).unsqueeze(-1),
+        (x - x.mean(dim=dim).unsqueeze(-1))
     )
 
 def normalize_linear(x: torch.Tensor, dim: int = -1) -> torch.Tensor:
