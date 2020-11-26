@@ -1,6 +1,6 @@
 # transformers-lightning
 
-A collection of `models`, `adapters`, `datasets`, `datamodules`, `callbacks` and `metrics` to better intergrate the [PyTorch Lightning](https://pytorch-lightning.readthedocs.io/en/stable/lightning-module.html) and the [Transformers](https://huggingface.co/transformers/) libraries.
+A collection of `adapters`, `datasets`, `datamodules`, `callbacks`, `models`, `metrics` and `losses` to better intergrate the [PyTorch Lightning](https://pytorch-lightning.readthedocs.io/en/stable/lightning-module.html) and the [Transformers](https://huggingface.co/transformers/) libraries.
 
 
 # Table of contents
