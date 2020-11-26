@@ -1,30 +1,5 @@
 import torch
-import numpy as np
 
-from transformers_lightning.utils import IGNORE_IDX
-
-
-def get_mini_groups(idx: torch.Tensor) -> list:
-    """
-    Return a list of lists where each sub-list contains the indexes of some group of `idx`
-    [0, 0, 0, 1, 1, 1, 1] -> [[0, 1, 2], [3, 4, 5, 6]]
-    """
-    indexes = dict()
-    for i, _id in enumerate(idx):
-        _id = _id.item()
-        if _id in indexes:
-            indexes[_id] += [i]
-        else:
-            indexes[_id] = [i]
-    return indexes.values()
-
-def normalize(x: torch.Tensor, do_softmax: bool = False, do_argmax: bool = False) -> torch.Tensor:
-    # softmax and argmax to obtain discrete predictions probabilities
-    if do_softmax:
-        x = torch.nn.functional.softmax(x, dim=-1)
-    if do_argmax:
-        x = torch.argmax(x, dim=-1)
-    return x
 
 def reciprocal_rank(preds: torch.Tensor, labels: torch.Tensor):
     """
@@ -82,47 +57,3 @@ def hit_rate(preds: torch.Tensor, labels: torch.Tensor, k: int = 1, empty_docume
     if labels.sum() == 0:
         return torch.tensor(empty_document).to(preds)
     return (labels[torch.argsort(preds, dim=-1, descending=True)][:k].sum() > 0).to(preds)
-
-def get_tp_and_fp(preds: torch.Tensor, labels: torch.Tensor, threshold: float):
-    """
-    Compute number of true and false positives
-    """
-    indexes = np.argsort(preds, dim=-1, descending=True)
-    labels = labels[indexes]
-    preds = preds[indexes]
-    return (
-        int(labels[0] == 1 and preds[0] >= threshold), # TP
-        int(labels[0] == 0 and preds[0] >= threshold) # FP
-    )
-
-def get_tp_and_fn(preds: torch.Tensor, labels: torch.Tensor, threshold: float):
-    """
-    Compute number of true positives and false negatives
-    """
-    indexes = np.argsort(preds, dim=-1, descending=True)
-    labels = labels[indexes]
-    preds = preds[indexes]
-    return (
-        int(labels[0] == 1 and preds[0] >= threshold), # TP
-        int(preds[0] < threshold) # FN
-    )
-
-
-def masked_metric(labels=None, predictions=None, logits=None, exclude=IGNORE_IDX, metric=None, **kwargs):
-    """
-    Compute a metric only not taking into account labels that should not be considered.
-    """
-    assert metric is not None, "A non-None metric to compute on predictions and labels should be provided"
-    assert labels is not None, "labels should be provided to compute accuracy"
-    assert (predictions is None) != (logits is None), \
-        "only one between `predictions` and `logits` should be provided"
-    
-    if logits is not None:
-        predictions = torch.argmax(logits, dim=-1)
-
-    # do not compute performance when label is equal to exclue
-    valid_indexes = (labels != exclude) 
-    predictions = predictions[valid_indexes]
-    labels = labels[valid_indexes]
-
-    return metric(predictions.view(-1), labels.view(-1), **kwargs)
