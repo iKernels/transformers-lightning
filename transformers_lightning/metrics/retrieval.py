@@ -1,82 +1,212 @@
 import torch
+from pytorch_lightning.metrics import Metric
+
+from transformers_lightning.utils import IGNORE_IDX
+from transformers_lightning.metrics.utils import get_mini_groups, masked_metric
+from transformers_lightning.metrics.functional import (
+    reciprocal_rank, average_precision, precision, recall, hit_rate
+)
 
 
-# TODO: adapt to pytorch_lightning template
-def get_mini_groups(idx: torch.Tensor) -> list:
-    """
-    Return a list of lists where each sub-list contains the indexes of some group of `idx`
-    [0, 0, 0, 1, 1, 1, 1] -> [[0, 1, 2], [3, 4, 5, 6]]
-    """
-    indexes = dict()
-    for i, _id in enumerate(idx):
-        _id = _id.item()
-        if _id in indexes:
-            indexes[_id] += [i]
-        else:
-            indexes[_id] = [i]
-    return indexes.values()
+class RetrievalMetric(Metric):
+    r"""
+    Compute a metric for Information Retrieval by grouping predictions on same
+    document using indexes. Detailed information about metrics are contained
+    in sub-classes.
 
-def normalize(x: torch.Tensor, do_softmax: bool = False, do_argmax: bool = False) -> torch.Tensor:
-    # softmax and argmax to obtain discrete predictions probabilities
-    if do_softmax:
-        x = torch.nn.functional.softmax(x, dim=-1)
-    if do_argmax:
-        x = torch.argmax(x, dim=-1)
-    return x
+    It may be possible that a document has no positive label: this case can
+    be managed in different ways using the `empty_documents` parameter.
+    - `error`: an error is raised
+    - `skip`: those documents are skipped (default)
+    - `positive`: those documents are counted as positive preds
+    - `negative`: those documents are counted as negative preds
 
-def reciprocal_rank(preds: torch.Tensor, labels: torch.Tensor):
+    Entries with labels equal to IGNORE_IDX will be ignored.
+    Subclasses must override at least the `metric` method.
     """
-    RR over a single group. See `get_mini_groups` for details about groups
-    """
-    labels = labels[torch.argsort(preds, dim=-1, descending=True)]
-    position = torch.where(labels == 1)[0]
-    return 1.0 / (position[0] + 1) if (len(position.shape) > 0) and (position.shape[0] > 0) else torch.tensor([0.0])
 
-def average_precision(preds: torch.Tensor, labels: torch.Tensor):
-    """
-    AP over a single group. See `get_mini_groups` for details about groups
-    """
-    labels = labels[torch.argsort(preds, dim=-1, descending=True)]
-    positions = (torch.arange(len(labels), device=labels.device) + 1) * labels
-    denominators = positions[torch.where(positions > 0)[0]]
-    res = torch.true_divide((torch.arange(len(denominators), device=denominators.device) + 1), denominators).mean()
-    return res
+    options = ['error', 'skip', 'positive', 'negative']
 
-def precision(preds: torch.Tensor, labels: torch.Tensor, k: int = 1, empty_document=1.0):
-    """
-    Precision@k over a single group. See `get_mini_groups` for details about groups.
-    Precision@k = (# of recommended items @k that are relevant) / (# of recommended items @k)
-    :param empty_document: what should be returned if document has no positive labels
-    """
-    assert preds.shape == labels.shape, (
-        f"Predicions and labels must have the same shape, found {preds.shape} and {labels.shape} instead"
-    )
-    if labels.sum() == 0:
-        return torch.tensor(empty_document).to(preds)
-    return torch.true_divide(labels[torch.argsort(preds, dim=-1, descending=True)][:k].sum(), k).to(preds)
+    def __init__(self, dist_sync_on_step=False, empty_documents='skip', exclude=IGNORE_IDX):
+        super().__init__(dist_sync_on_step=dist_sync_on_step)
 
-def recall(preds: torch.Tensor, labels: torch.Tensor, k: int = 1, empty_document=1.0):
-    """
-    Recall@k over a single group. See `get_mini_groups` for details about groups
-    Recall@k = (# of recommended items @k that are relevant) / (total # of relevant items)
-    :param empty_document: what should be returned if document has no positive labels
-    """
-    assert preds.shape == labels.shape, (
-        f"Predicions and labels must have the same shape, found {preds.shape} and {labels.shape} instead"
-    )
-    if labels.sum() == 0:
-        return torch.tensor(empty_document).to(preds)
-    return torch.true_divide(labels[torch.argsort(preds, dim=-1, descending=True)][:k].sum(), labels.sum()).to(preds)
+        assert empty_documents in self.options, (
+            f"`empty_documents` received a wrong value {empty_documents}."
+            f"Allowed values are {self.options}"
+        )
 
-def hit_rate(preds: torch.Tensor, labels: torch.Tensor, k: int = 1, empty_document=1.0):
+        self.empty_documents = empty_documents
+        self.exclude = exclude
+
+        self.add_state("idx", default=torch.tensor([], dtype=torch.int64), dist_reduce_fx="cat")
+        self.add_state("preds", default=torch.tensor([], dtype=torch.int64), dist_reduce_fx="cat")
+        self.add_state("target", default=torch.tensor([], dtype=torch.int64), dist_reduce_fx="cat")
+
+    def update(self, idx: torch.Tensor, preds: torch.Tensor, target: torch.Tensor):
+        assert idx.shape == preds.shape == target.shape
+
+        self.idx = torch.cat([self.idx, idx])
+        self.preds = torch.cat([self.preds, preds])
+        self.target = torch.cat([self.target, target])
+    
+    def compute(self):
+        res = []
+        for group in get_mini_groups(self.idx):
+            if self.target[group].sum() == 0:
+                if self.empty_documents == 'error':
+                    raise ValueError(
+                        f"MeanReciprocalRank was provided of a prediction with no positive values, idx: {group}"
+                    )
+                elif self.empty_documents == 'positive': res.append(torch.tensor([1.0]))
+                elif self.empty_documents == 'negative': res.append(torch.tensor([0.0]))
+            else:
+                res.append(
+                    self.metric(group)
+                )
+        return torch.stack(res).mean()
+
+    def metric(self, group):
+        r""" Compute a metric over a single group. """
+        raise NotImplementedError("This method must be overridden by subclasses")
+
+
+class MeanReciprocalRank(RetrievalMetric):
+    r"""
+    Mean Reciprocal Rank computes the MRR over multiple predictions.
+    Each reciprocal rank computation can be done on a different number of predictions
+    thanks to the usage of a tensor dedicated to indexes.
+
+    Example:
+    >>> indexes = torch.tensor([0, 0, 0, 1, 1, 1, 1])
+    >>> preds = torch.tensor([0.2, 0.3, 0.5, 0.1, 0.3, 0.5, 0.2])
+    >>> target = torch.tensor([False, False, True, False, True, False, False])
+
+    >>> mrr = MeanReciprocalRank()
+    >>> mrr(indexes, preds, target)
+    >>> mrr.compute()
+    ... 0.75
     """
-    HitRate@k over a single group. See `get_mini_groups` for details about groups
-    HitRate@k = (# of recommended items @k that are relevant) > 0 ? 1 else 0
-    :param empty_document: what should be returned if document has no positive labels
+
+    def metric(self, group):
+        return masked_metric(predictions=self.preds[group],
+                             labels=self.target[group],
+                             exclude=self.exclude,
+                             metric=reciprocal_rank,
+                             args=[],
+                             kwargs={})
+
+class MeanAveragePrecision(RetrievalMetric):
+    r"""
+    Mean Average Precision computes the MAP over multiple predictions.
+    Each average precision computation can be done on a different number of predictions
+    thanks to the usage of a tensor dedicated to indexes.
+
+    Example:
+    >>> indexes = torch.tensor([0, 0, 0, 1, 1, 1, 1])
+    >>> preds = torch.tensor([0.2, 0.3, 0.5, 0.1, 0.3, 0.5, 0.2])
+    >>> target = torch.tensor([False, False, True, False, True, False, False])
+
+    >>> map = MeanAveragePrecision()
+    >>> map(indexes, preds, target)
+    >>> map.compute()
+    ... 0.75
     """
-    assert preds.shape == labels.shape, (
-        f"Predicions and labels must have the same shape, found {preds.shape} and {labels.shape} instead"
-    )
-    if labels.sum() == 0:
-        return torch.tensor(empty_document).to(preds)
-    return (labels[torch.argsort(preds, dim=-1, descending=True)][:k].sum() > 0).to(preds)
+
+    def metric(self, group):
+        return masked_metric(predictions=self.preds[group],
+                             labels=self.target[group],
+                             exclude=self.exclude,
+                             metric=average_precision,
+                             args=[],
+                             kwargs={})
+
+
+class PrecisionAtK(RetrievalMetric):
+    r"""
+    Precision at K computes the P@K over multiple predictions.
+    Each precision at k computation can be done on a different number of predictions
+    thanks to the usage of a tensor dedicated to indexes.
+
+    Example:
+    >>> indexes = torch.tensor([0, 0, 0, 1, 1, 1, 1])
+    >>> preds = torch.tensor([0.2, 0.3, 0.5, 0.1, 0.3, 0.5, 0.2])
+    >>> target = torch.tensor([False, False, True, False, True, False, False])
+
+    >>> p_k = PrecitionAtK(k=1)
+    >>> p_k(indexes, preds, target)
+    >>> p_k.compute()
+    ... 0.5
+    """
+
+    def __init__(self, *args, k=1, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.k = k
+
+    def metric(self, group):
+        return masked_metric(predictions=self.preds[group],
+                             labels=self.target[group],
+                             exclude=self.exclude,
+                             metric=precision,
+                             args=[],
+                             kwargs={'k': self.k})
+
+
+class RecallAtK(RetrievalMetric):
+    r"""
+    Recall at K computes the R@K over multiple predictions.
+    Each recall at k computation can be done on a different number of predictions
+    thanks to the usage of a tensor dedicated to indexes.
+
+    Example:
+    >>> indexes = torch.tensor([0, 0, 0, 1, 1, 1, 1])
+    >>> preds = torch.tensor([0.2, 0.3, 0.5, 0.1, 0.3, 0.5, 0.2])
+    >>> target = torch.tensor([False, False, True, False, True, False, False])
+
+    >>> r_k = RecallAtK(k=1)
+    >>> r_k(indexes, preds, target)
+    >>> r_k.compute()
+    ... 0.5
+    """
+
+    def __init__(self, *args, k=1, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.k = k
+
+    def metric(self, group):
+        return masked_metric(predictions=self.preds[group],
+                             labels=self.target[group],
+                             exclude=self.exclude,
+                             metric=recall,
+                             args=[],
+                             kwargs={'k': self.k})
+
+
+class HitRateAtK(RetrievalMetric):
+    r"""
+    Hit Rate at K computes the HR@K over multiple predictions.
+    Each hit rate at k computation can be done on a different number of predictions
+    thanks to the usage of a tensor dedicated to indexes.
+    Notice that HR@1 == P@1
+
+    Example:
+    >>> indexes = torch.tensor([0, 0, 0, 1, 1, 1, 1])
+    >>> preds = torch.tensor([0.2, 0.3, 0.5, 0.1, 0.3, 0.5, 0.2])
+    >>> target = torch.tensor([False, False, True, False, True, False, False])
+
+    >>> hr_k = HitRateAtK(k=1)
+    >>> hr_k(indexes, preds, target)
+    >>> hr_k.compute()
+    ... 0.5
+    """
+
+    def __init__(self, *args, k=1, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.k = k
+
+    def metric(self, group):
+        return masked_metric(predictions=self.preds[group],
+                             labels=self.target[group],
+                             exclude=self.exclude,
+                             metric=hit_rate,
+                             args=[],
+                             kwargs={'k': self.k})
