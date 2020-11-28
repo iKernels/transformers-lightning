@@ -1,7 +1,7 @@
 import torch
 from typing import List
 
-from transformers_lightning.utils import IGNORE_IDX
+from transformers_lightning.language_modeling import IGNORE_IDX
 
 
 def get_mini_groups(idx: torch.Tensor) -> List[torch.Tensor]:

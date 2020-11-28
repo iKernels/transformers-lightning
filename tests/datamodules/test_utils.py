@@ -94,7 +94,7 @@ class ExampleAdapter(CSVAdapter):
             truncation=True
         )
 
-        res = { **results, 'ids': line[0], 'labels': line[5] }
+        res = { **results, 'ids': int(line[0]), 'labels': line[5].lower().strip() == "true" }
         return res
 
 

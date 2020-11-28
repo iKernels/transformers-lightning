@@ -9,7 +9,7 @@ import shutil
 
 import pytest
 import pytorch_lightning as pl
-from tests.datamodule.test_utils import SimpleTransformerLikeModel, ExampleAdapter
+from tests.datamodules.test_utils import SimpleTransformerLikeModel, ExampleAdapter
 
 n_cpus = multiprocessing.cpu_count()
 
@@ -66,6 +66,7 @@ def test_datamodule_cpu(epochs, accumulate_grad_batches, batch_size, callback_in
         skip_in_training=None,
         checkpoint_interval=callback_interval,
         no_val_checkpointing=not val_callback,
+        no_epoch_checkpointing=False,
         output_dir="tests/output",
         pre_trained_dir='pre_trained_name',
         name="test",
