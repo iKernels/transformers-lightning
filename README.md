@@ -1,15 +1,21 @@
 # transformers-lightning
 
-A collection of `models`, `datasets`, `defaults`, `callbacks`, `loggers`, `metrics` and `losses` to connect the [PyTorch Lightning](https://pytorch-lightning.readthedocs.io/en/stable/lightning-module.html) and the [Transformers](https://huggingface.co/transformers/) libraries.
+A collection of `adapters`, `datasets`, `datamodules`, `callbacks`, `models`, `metrics`, `losses` and `language-modeling` techniques to better intergrate the [PyTorch Lightning](https://pytorch-lightning.readthedocs.io/en/stable/lightning-module.html) and the [Transformers](https://huggingface.co/transformers/) libraries.
 
 
 # Table of contents
 **[1. Install](#install)**
 
 **[2. Documentation](#doc)**
-  
-  * [2.1. Datasets](#datasets)
-  * [2.2. Datamodules](#datamodules)
+
+  * [2.1. Adapters](transformers_lightning/adapters)
+  * [2.2. Datasets](transformers_lightning/datasets)
+  * [2.3. Datamodules](transformers_lightning/datamodules)
+  * [2.4. Callbacks](transformers_lightning/callbacks)
+  * [2.5. Models](transformers_lightning/models)
+  * [2.6. Metrics](transformers_lightning/metrics)
+  * [2.7. Losses](transformers_lightning/losses)
+  * [2.8. Language modeling](transformers_lightning/language_modeling)
 
 **[3. Main file](#main)**
 
@@ -21,62 +27,25 @@ Install the last stable release with
 pip install git+https://github.com/lucadiliello/transformers-lightning.git --upgrade
 ```
 
+You can also install a particular version, for example the `0.3.0` by doing:
+```
+pip install git+https://github.com/lucadiliello/transformers-lightning.git@0.3.0 --upgrade
+```
+
 
 <a name="doc"></a>
 ## Documentation
 
-<a name="datasets"></a>
-### Dataset
+The documentation of each component is described in the relative folder.
+Follows a general schema that clearly explains connections between components and data flow.
 
-Dataset are read by an universal `*sv` (tsv, csv, ...) parser that only required a `yaml` file containing the format specifications.
-The config file should be like the following:
-```yaml
-# for wikipedia example
-filepath: wikipedia_eng.tsv # path refers to the defaults.dataset_dir folder
-names: [label, sentence]
-delimiter: '\t'
-quoting: minimal # one of none, minimal, nonnumeric, all
-quotechar: '"'
-x: [sentence]   # columns that will be parsed together with the tokenizer
-y: [label]      # columns that will be used as labels
-```
-Put all `yaml` files with respect to your datasets in the `defaults.config_dir/datasets` folder.
-Notice: all dataset files should be header-free, i.e. header names are specified in the `yaml` file with the `names` parameter.
-
-
-<a name="datamodules"></a>
-### Datamodules
-
-`LightningDataModules` are an easy way to collect some dataset together and to allow reusability.
-By default this library loads a `train`, `val` and `test` dataset. All three datasets are optional.
-
-Example:
-```python
-from transformers_lightning.datamodules import SuperDataModule
-
-class QuoraDataModule(SuperDataModule):
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-        self.train_config = "quora_train.yaml"
-        self.val = "quora_valid.yaml"
-        self.test_config = "quora_test.yaml"
-
-    train_dataloader = SuperDataModule.default_train_dataloader
-    val_dataloader = SuperDataModule.default_val_dataloader
-    test_dataloader = SuperDataModule.default_test_dataloader
-```
-
-By default, all dataset are loaded with a `TransformersMapDataset`, this means that each dataset is
-completely loaded in memory and shuffled. If you don't want to load all dataset completely in memory,
-use the argument `--dataset_style 'iter'`.
+<img src="./pictures/transformers_lightning.svg">
 
 
 <a name="main"></a>
 ## Main file
 
-Structure your main file like:
+We encourage you at structuring your main file like:
 
 ```python
 
@@ -97,10 +66,12 @@ torch.set_printoptions(precision=16)
 
 def main(hparams):
 
-    # instantiate PL model
-    model = pl_model_class(hparams)
+    # tokenizer
+    # tokenizer
+    tokenizer = Tokenizer(...)
 
-    utils.init_folders(hparams)
+    # instantiate PL model
+    model = TransformerModel(hparams, tokenizer=tokenizer, ...)
 
     # default tensorboard logger
     test_tube_logger = pl.loggers.TestTubeLogger(
@@ -121,7 +92,7 @@ def main(hparams):
     )
 
     # Datasets
-    datamodule = pl_datamodule_class(hparams, model, trainer)
+    datamodule = YourDataModule(hparams, model, trainer)
 
     # Train!
     if datamodule.do_train():
@@ -134,36 +105,18 @@ def main(hparams):
 
 if __name__ == '__main__':
 
-    # configurations
-    from transformers_lightning.defaults import DefaultConfig
-
-    # list available models and datamodules
-    all_models = utils.get_classes_from_module(models, parent=pl.LightningModule)
-    all_datamodules = utils.get_classes_from_module(datamodules, parent=pl.LightningDataModule)
-
     parser = ArgumentParser()
 
-    # Global level parameters (model and data)
-    parser.add_argument('-m', '--model', type=str, required=True, choices=all_models.keys())
-    parser.add_argument('-d', '--dataset', type=str, required=True, choices=all_datamodules.keys())
-
     # Experiment name, used both for checkpointing, pre_trained_names, logging and tensorboard
-    parser.add_argument('--name', type=str, required=True,
-                        help='Name of the model')
+    parser.add_argument('--name', type=str, required=True, help='Name of the experiment, well be used to correctly retrieve checkpoints and logs')
 
     # I/O folders
+    from transformers_lightning.defaults import DefaultConfig
     parser = DefaultConfig.add_defaults_args(parser)
 
-    # retrieving model with temporary parsered arguments
-    tmp_params, extra = parser.parse_known_args()
-
-    # get pl_model_class in advance to know which params it needs, same for the datamodule
-    pl_model_class = all_models[tmp_params.model]
-    pl_datamodule_class = all_datamodules[tmp_params.dataset]
-
     # add model specific args
-    parser = pl_model_class.add_model_specific_args(parser)
-    parser = pl_datamodule_class.add_datamodule_specific_args(parser)
+    parser = TransformerModel.add_model_specific_args(parser)
+    parser = YourDataModule.add_datamodule_specific_args(parser)
 
     # add callback / logger specific parameters
     parser = callbacks.TransformersModelCheckpointCallback.add_callback_specific_args(parser)
