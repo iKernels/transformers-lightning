@@ -10,7 +10,6 @@ from transformers_lightning.language_modeling import IGNORE_IDX, LanguageModel
 from transformers_lightning.language_modeling.utils import whole_word_lists
 
 
-
 class MaskedLanguageModeling(LanguageModel):
     """
     Prepare masked tokens inputs/labels for masked language modeling: 80% MASK, 10% random, 10% original.
