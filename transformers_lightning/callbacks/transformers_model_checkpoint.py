@@ -104,6 +104,10 @@ class TransformersModelCheckpointCallback(Callback):
         # only run on main process
         if trainer.global_rank != 0:
             return
+        
+        # not validation checkpointing if it is disabled
+        if self.hparams.no_epoch_checkpointing:
+            return
 
         self.save_model(
             pl_module,
@@ -154,4 +158,6 @@ class TransformersModelCheckpointCallback(Callback):
                             help="Save pre_trained models every steps. A None value means save only at the end of each epoch.")
         parser.add_argument('--no_val_checkpointing', action="store_true",
                             help="Disable transformers checkpointing at each validation end.")
+        parser.add_argument('--no_epoch_checkpointing', action="store_true",
+                            help="Disable transformers checkpointing at the end of each epoch.")
         return parser
