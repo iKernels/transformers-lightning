@@ -1,7 +1,7 @@
 import torch
 from pytorch_lightning.metrics import Metric
 
-from transformers_lightning.utils import IGNORE_IDX
+from transformers_lightning.language_modeling import IGNORE_IDX
 from transformers_lightning.metrics.utils import get_mini_groups, masked_metric
 from transformers_lightning.metrics.functional import (
     reciprocal_rank, average_precision, precision, recall, hit_rate

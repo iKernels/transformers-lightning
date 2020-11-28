@@ -1,12 +1,28 @@
+import csv
+
 from argparse import Namespace
 from transformers_lightning.adapters import CSVAdapter
+from transformers_lightning.utils import strip_lines
 import pytest
 
 
 class ExampleAdapter(CSVAdapter):
 
-    def preprocess_lines(self, lines: list) -> list:
-        pass
+    def __iter__(self):
+        with open(self.filepath, "r") as fi:
+            # use utils.strip_lines to emulate skip_blank_lines of pd.DataFrame
+            reader = csv.reader(
+                strip_lines(fi),
+                delimiter=self.delimiter,
+                quoting=self.quoting,
+                quotechar=self.quotechar
+            )
+            for line in reader:
+                yield [int(line[0]), int(line[1]), int(line[2]), line[3], line[4], eval(line[5])]
+        
+
+    def preprocess_line(self, line: list) -> list:
+        return line
 
 # Test iter dataset work correctly with dp
 @pytest.mark.parametrize(
