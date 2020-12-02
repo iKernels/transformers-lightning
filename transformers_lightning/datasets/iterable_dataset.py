@@ -131,6 +131,5 @@ class TransformersIterableDataset(SuperTransformersDataset, IterableDataset):
 
         # pre-process data and return
         for line in self.reader:
-            yield self.adapter.preprocess_line(line)
-
+            yield self.adapter.preprocess_line(line, **self.trainer.__dict__)
 

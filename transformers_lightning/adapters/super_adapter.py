@@ -32,7 +32,7 @@ class SuperAdapter:
         """
 
     @abc.abstractmethod
-    def preprocess_line(self, line: list) -> list:
+    def preprocess_line(self, line: list, **kwargs) -> list:
         """
         Process a line. The structure of each line is exactly
         the same returned by the __iter__ method. Here you should do data preparation
