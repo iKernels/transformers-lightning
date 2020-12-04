@@ -1,8 +1,8 @@
 # Language modeling
 
 Language modeling is the art of modifying an input sentence to automatically generate tamperings and corresponding labels. Thos modification are then used to learn language models about languages structure. It is very similar to ho human learn languages by doing exercises where they predict missing words or tries to find errors in sentences.
-
 All language modeling techniques accept two special arguments: `weights` and `whole_word_masking/swapping`. The first allow the user to provide a weights vectors with the same size of the vocabulary to weight probabilities accordingly. The second parameter enforces modifications at the `word` level instead of the `token` one. 
+
 
 ## Masked Language Modeling
 
