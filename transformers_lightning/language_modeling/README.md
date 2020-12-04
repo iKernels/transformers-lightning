@@ -1,8 +1,8 @@
 # Language modeling
 
-Language modeling is the art of modifying an input sentence to automatically generate tamperings and corresponding labels. These modifications are then used to learn models about languages structure. It is very similar to ho human learn languages by doing exercises where they predict missing words or tries to find errors in sentences.
+Language modeling is the art of modifying an input sentence to automatically generate tamperings and corresponding labels. Thos modification are then used to learn language models about languages structure. It is very similar to ho human learn languages by doing exercises where they predict missing words or tries to find errors in sentences.
+All language modeling techniques accept two special arguments: `weights` and `whole_word_masking/swapping`. The first allow the user to provide a weights vectors with the same size of the vocabulary to weight probabilities accordingly. The second parameter enforces modifications at the `word` level instead of the `token` one. 
 
-All language modeling techniques accept two special arguments: `weights` and `whole_word_masking/swapping`. The first allow the user to provide a weights vector with the same size of the vocabulary to weight probabilities accordingly. The second parameter enforces modifications at the `word` level instead of the `token` one. 
 
 ## Masked Language Modeling
 
@@ -32,27 +32,4 @@ Usage example:
 ... tensor([[ 101, 103, 5650, 102]]) # 103 mask token id
 >>> labels
 ... tensor([[-100, 2774, -100, -100]]) # -100 = IGNORE_IDX
-```
-
-
-## Random Token Substitution
-
-These alternative technique consists in randomly swapping some input tokens in others. The default probability of a token being swap is equal to the MLM case, that is, 15%.
-
-```python
->>> import torch
->>> from transformers import BertTokenizer
-
->>> tok = BertTokenizer.from_pretrained("bert-base-cased")
->>> rts = RandomTokenSubstitution(tok)
-
->>> input_ids = torch.tensor([tok.encode("test sentence")])
->>> input_ids
-... tensor([[ 101, 2774, 5650, 102]])
-
->>> swapped, labels = rts(input_ids)
->>> swapped
-... tensor([[ 101, 2774, 5650, 102]])
->>> labels
-... tensor([[-100, 1, 0, -100]]) # -100 = IGNORE_IDX
 ```
