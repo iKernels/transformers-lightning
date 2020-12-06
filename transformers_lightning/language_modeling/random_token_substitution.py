@@ -6,7 +6,7 @@ import scipy.stats as st
 
 from transformers_lightning import utils
 from transformers_lightning.language_modeling import IGNORE_IDX, LanguageModel
-from transformers_lightning.language_modeling.utils import whole_word_lists
+from transformers_lightning.language_modeling.utils import whole_word_tails_mask
 
 
 class RandomTokenSubstitution(LanguageModel):
@@ -20,7 +20,11 @@ class RandomTokenSubstitution(LanguageModel):
 
         probabilities = ( 1 + (w - w_mean) / (w_std * Z_(1 - r/2)) ) -> clipped in [0, 1]
 
-    If `whole_word_swapping` is True, either every or no token in a word will be masked.
+    If `whole_word_swapping` is True, either every or no token in a word will be masked. This argument requires
+    that `words_tails` are passed to the `__call__` method such that the model can understand which parts of a word
+    are tails ('##..'-like tokens). `words_tails` must be a boolean tensor with the same shape as `inputs`
+    and be True iff the corresponding tokens starts with `##`. Passing a None `words_tails` will make the model compute
+    them, which is expensive. So, for performance reasons we strongly suggest to compute `words_tails` in adapters.
 
     Usage example
     >>> import torch
@@ -57,10 +61,13 @@ class RandomTokenSubstitution(LanguageModel):
         self.reliability = reliability
         self.whole_word_swapping = whole_word_swapping
 
+    # TODO: implement whole word masking taking into account average probability of all tokens in a word
+    # instead of only of the first token
     def __call__(
         self,
         inputs: torch.Tensor,
         weights: torch.Tensor = None,
+        words_tails: torch.Tensor = None
     ) -> Tuple[torch.LongTensor, torch.LongTensor]:
 
         device = inputs.device
@@ -74,17 +81,14 @@ class RandomTokenSubstitution(LanguageModel):
             z_score = st.norm.ppf(1 - self.reliability / 2)
             probability_matrix = self.rts_probability * (1 + utils.normalize_standard(weights[inputs], dim=-1) / z_score)
             probability_matrix = torch.clip(probability_matrix, min=0, max=1)
-        
-        # create whole work masking mask -> 1 if the token starts with ## (following token in composed words)
-        whole_words_array = whole_word_lists(inputs, self.tokenizer) if self.whole_word_swapping else None
+
+        # create whole work masking mask -> True if the token starts with ## (following token in composed words)
+        if words_tails is None and self.whole_word_swapping:
+            words_tails = whole_word_tails_mask(inputs, self.tokenizer)
 
         if self.whole_word_swapping:
             # with whole word masking probability matrix should average probability over the entire word
-            for i, whole_words in enumerate(whole_words_array):
-                for word in whole_words:
-                    if len(word) > 1:
-                        probability_matrix[i, word[0]] = probability_matrix[i, word].mean()
-                        probability_matrix[i, word[1:]] = 0
+            probability_matrix.masked_fill_(words_tails, value=0.0)
 
         # not going to substitute special tokens of the LM (bert, roby, ...)
         special_tokens_mask = [
@@ -102,19 +106,13 @@ class RandomTokenSubstitution(LanguageModel):
 
         substituted_indices = torch.bernoulli(probability_matrix).bool()
 
+        # with whole word masking, assure all tokens in a word are either all masked or not
+        if self.whole_word_swapping:
+            for i in range(1, substituted_indices.shape[-1]):
+                substituted_indices[:, i] = substituted_indices[:, i] | (substituted_indices[:, i-1] & words_tails[:, i])
+
         random_words = torch.randint(len(self.tokenizer), inputs.shape, dtype=torch.long, device=device)
         inputs[substituted_indices] = random_words[substituted_indices]
         labels.masked_fill_(substituted_indices, value=1)
-
-        # with whole word masking, assure every token in a word is either masked in each token or not
-        if self.whole_word_swapping:
-            tail_indices = torch.zeros_like(substituted_indices).bool()
-            for i, whole_words in enumerate(whole_words_array):
-                for word in whole_words:
-                    if labels[i, word[0]]:
-                        tail_indices[i, word[1:]] = True
-
-            labels[tail_indices] = True
-            inputs[tail_indices] = random_words[tail_indices]
 
         return inputs, labels
