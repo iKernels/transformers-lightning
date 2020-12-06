@@ -11,8 +11,14 @@ class FileAdapter(SuperAdapter):
 
     def __init__(self, hparams: Namespace, filepath: str) -> None:
         r"""
-        :param filepath: must be relative to the `dataset_dir` defined in hparams
+        :param filepath: path of the file that should be loaded
         """
         super().__init__(hparams)
-        assert isinstance(filepath, str), f"Argument `filepath` must be of type `str`"
-        self.filepath = filepath # os.path.join(hparams.dataset_dir, filepath)
+  
+        assert isinstance(filepath, str), (
+            f"Argument `filepath` must be of type `str`"
+        )
+        assert os.path.isfile(filepath), (
+            f"{filepath} is not a correct path to a file"
+        )
+        self.filepath = filepath

@@ -1,12 +1,14 @@
 import json
 import os
+from typing import Dict, Generator, Iterable, Union
+import yaml
 from argparse import Namespace
 
-import yaml
 
-
-def load_yaml(filename, to_namespace=True):
-    """ Load a yaml file. """
+def load_yaml(filename: str, to_namespace: bool = True) -> Union[Dict, Namespace]:
+    r"""
+    Load a yaml file from disk
+    """
     assert os.path.isfile(filename), f"File {filename} does not exist!"
     with open(filename, 'r') as infile:
         res = yaml.safe_load(infile.read())
@@ -14,8 +16,10 @@ def load_yaml(filename, to_namespace=True):
         return Namespace(**res)
     return res
 
-def load_json(filename, to_namespace=True):
-    """ Load config from json file. """
+def load_json(filename: str, to_namespace: bool = True) -> Union[Dict, Namespace]:
+    r"""
+    Load config from json file from disk
+    """
     assert os.path.isfile(filename), f"File {filename} does not exist!"
     with open(filename, 'r') as infile:
         res = json.load(infile)
@@ -23,14 +27,18 @@ def load_json(filename, to_namespace=True):
         return Namespace(**res)
     return res
 
-def dump_json(filename, data):
-    """ Save json to file. """
+def dump_json(filename: str, data: Dict) -> None:
+    r"""
+    Save json to file.
+    """
     assert not os.path.isfile(filename), f"File {filename} does already exist!"
     with open(filename, 'w') as outfile:
         json.dump(data, outfile)
 
-def strip_lines(iterable):
-    """ Remove blank lines from generator. """
-    for i, line in enumerate(iterable):
+def strip_lines(iterable: Iterable[str]) -> Generator:
+    r"""
+    Remove blank lines from iterable over strings and return new generator.
+    """
+    for line in iterable:
         if line.strip():
             yield line

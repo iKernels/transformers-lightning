@@ -10,7 +10,7 @@ from transformers_lightning.language_modeling.utils import whole_word_tails_mask
 
 
 class MaskedLanguageModeling(LanguageModel):
-    """
+    r"""
     Prepare masked tokens inputs/labels for masked language modeling: 80% MASK, 10% random, 10% original.
     If `weights` are provided, probability of each token to be masked will be weighted in the following way:
         - w are the weights
@@ -88,7 +88,7 @@ class MaskedLanguageModeling(LanguageModel):
 
         # create whole work masking mask -> True if the token starts with ## (following token in composed words)
         if words_tails is None and self.whole_word_masking:
-            words_tails = whole_word_tails_mask(inputs, self.tokenizer)
+            words_tails = whole_word_tails_mask(inputs, self.tokenizer, device=device)
 
         if self.whole_word_masking:
             # with whole word masking probability matrix should average probability over the entire word
@@ -103,6 +103,12 @@ class MaskedLanguageModeling(LanguageModel):
             padding_mask = labels.eq(self.tokenizer.pad_token_id)
             probability_matrix.masked_fill_(padding_mask, value=0.0)
         masked_indices = torch.bernoulli(probability_matrix).bool()
+
+        # with whole word masking, assure all tokens in a word are either all masked or not
+        if self.whole_word_masking:
+            for i in range(1, masked_indices.shape[-1]):
+                masked_indices[:, i] = masked_indices[:, i] | (masked_indices[:, i-1] & words_tails[:, i])
+
         labels[~masked_indices] = IGNORE_IDX  # We only compute loss on masked tokens
 
         # 80% of the time, we replace masked input tokens with tokenizer.mask_token ([MASK])

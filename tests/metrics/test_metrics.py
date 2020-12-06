@@ -25,7 +25,22 @@ from transformers_lightning.metrics.retrieval import (
             1,
             0.75, 0.75, 0.5, 0.25, 0.5
         ],
-        # TODO: add tests
+        [
+            torch.tensor([  0,  0,  0,   0,  1,  1,  1,  1,  1]),
+            torch.tensor([  0.2,0.1,-0.3,0.1,0.7,0.4,0.3,0.2,0.1]),
+            torch.tensor([  1,  0,  1,   0,  0,  0,  0,  0,  0]),
+            "positive",
+            2,
+            1.0, 0.875, 0.75, 0.75, 1.0
+        ],
+        [
+            torch.tensor([  0,  0,  0,   0,  1,  1,  1,  1,  1]),
+            torch.tensor([  0.2,0.1,-0.3,0.1,0.7,0.4,0.3,0.2,0.1]),
+            torch.tensor([  1,  0,  1,   0,  0,  0,  0,  0,  0]),
+            "negative",
+            1,
+            0.5, 0.375, 0.5, 0.25, 0.5
+        ],
     ]
 )
 def test_metrics(ids, predictions, labels, empty_docs, k, mrr, map, precision, recall, hit_rate):

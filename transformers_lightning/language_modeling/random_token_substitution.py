@@ -10,7 +10,7 @@ from transformers_lightning.language_modeling.utils import whole_word_tails_mask
 
 
 class RandomTokenSubstitution(LanguageModel):
-    """
+    r"""
     Prepare tokens inputs/labels for random token substutition modeling.
     We sample a few tokens in each sequence for RTS training (with probability `rts_probability` defaults to 0.15 in Bert/RoBERTa)
 
@@ -84,7 +84,7 @@ class RandomTokenSubstitution(LanguageModel):
 
         # create whole work masking mask -> True if the token starts with ## (following token in composed words)
         if words_tails is None and self.whole_word_swapping:
-            words_tails = whole_word_tails_mask(inputs, self.tokenizer)
+            words_tails = whole_word_tails_mask(inputs, self.tokenizer, device=device)
 
         if self.whole_word_swapping:
             # with whole word masking probability matrix should average probability over the entire word

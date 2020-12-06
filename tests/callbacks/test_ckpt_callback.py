@@ -12,15 +12,18 @@ import pytorch_lightning as pl
 from tests.datamodules.test_utils import SimpleTransformerLikeModel, ExampleAdapter
 
 n_cpus = multiprocessing.cpu_count()
+OUTPUT_DIR = "tests/output"
+if os.path.isdir(OUTPUT_DIR):
+    shutil.rmtree(OUTPUT_DIR)
 
 
 class ExampleDataModule(SuperDataModule):
 
     def __init__(self, *args, test_number=1, tokenizer=None, **kwargs):
         super().__init__(*args, **kwargs)
-        self.train_adapter = ExampleAdapter(self.hparams, f"test{test_number}.tsv", delimiter="\t", tokenizer=tokenizer)
-        self.valid_adapter = ExampleAdapter(self.hparams, f"test{test_number}.tsv", delimiter="\t", tokenizer=tokenizer)
-        self.test_adapter = [ExampleAdapter(self.hparams, f"test{test_number}.tsv", delimiter="\t", tokenizer=tokenizer) for _ in range(2)]
+        self.train_adapter = ExampleAdapter(self.hparams, f"tests/test_data/test{test_number}.tsv", delimiter="\t", tokenizer=tokenizer)
+        self.valid_adapter = ExampleAdapter(self.hparams, f"tests/test_data/test{test_number}.tsv", delimiter="\t", tokenizer=tokenizer)
+        self.test_adapter = [ExampleAdapter(self.hparams, f"tests/test_data/test{test_number}.tsv", delimiter="\t", tokenizer=tokenizer) for _ in range(2)]
 
 
 # Test iter dataset work correctly
@@ -55,9 +58,6 @@ def test_datamodule_cpu(epochs, accumulate_grad_batches, batch_size, callback_in
         test_batch_size=batch_size,
         accumulate_grad_batches=accumulate_grad_batches,
         num_workers=4,
-        dataset_dir='tests/test_data',
-        config_dir='tests/test_data',
-        cache_dir='cache',
         max_epochs=epochs,
         max_steps=None,
         max_sequence_length=10,
@@ -67,13 +67,13 @@ def test_datamodule_cpu(epochs, accumulate_grad_batches, batch_size, callback_in
         checkpoint_interval=callback_interval,
         no_val_checkpointing=not val_callback,
         no_epoch_checkpointing=False,
-        output_dir="tests/output",
+        output_dir=OUTPUT_DIR,
         pre_trained_dir='pre_trained_name',
         name="test",
         val_check_interval=0.25
     )
 
-    tokenizer = BertTokenizer.from_pretrained("bert-base-cased", cache_dir=hparams.cache_dir)
+    tokenizer = BertTokenizer.from_pretrained("bert-base-cased")
 
     callback = TransformersModelCheckpointCallback(hparams)
 

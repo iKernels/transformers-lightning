@@ -2,11 +2,6 @@ from typing import Tuple
 
 import torch
 import transformers
-import scipy.stats as st
-from pytorch_lightning import _logger as logger
-
-from transformers_lightning import utils
-from transformers_lightning.language_modeling import IGNORE_IDX
 
 
 class LanguageModel:

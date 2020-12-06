@@ -1,5 +1,8 @@
-def filter_generator(generator_in, step=1, offset=0):
-    """
+from typing import Generator
+
+
+def filter_generator(generator_in: Generator, step: int = 1, offset: int = 0) -> Generator:
+    r"""
     Return elements from a generator. First `offset` elements are discarded
     Then, return an element after every every `step` extracted
     """
@@ -30,8 +33,8 @@ def filter_generator(generator_in, step=1, offset=0):
         except:
             return
 
-def batch_filter(generator_in, size=1):
-    """
+def batch_filter(generator_in: Generator, size: int = 1) -> Generator:
+    r"""
     By reading `size` elements at a time, we assure that no last iteration will have
     a different batch size across nodes, that would cause a fail.
     """

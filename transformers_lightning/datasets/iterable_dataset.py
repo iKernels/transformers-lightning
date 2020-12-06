@@ -7,7 +7,7 @@ from transformers_lightning.datasets import SuperTransformersDataset
 
 
 class TransformersIterableDataset(SuperTransformersDataset, IterableDataset):
-    """
+    r"""
     Superclass of all iterable datasets. Pre-processing is performed on the fly.
     Dataset is read on the fly from disk to save memory.
 
@@ -48,7 +48,7 @@ class TransformersIterableDataset(SuperTransformersDataset, IterableDataset):
 
     @property
     def length(self):
-        """
+        r"""
         Even if this is an IterableDataset, length may be computed by scrolling the document
         without pre-processing in a fast way. However, this cannot be set as __len__ attribute because
         in that way it may be misleaded for a normal index-based MapDataset.
@@ -59,7 +59,7 @@ class TransformersIterableDataset(SuperTransformersDataset, IterableDataset):
 
     def __init__(self, *args, start_from_step=None):
         super().__init__(*args)
-        """
+        r"""
         If `start_from_step` is provided, this dataset will return data
         relative to the `start_from_step`+1 effective step. This is not a problem
         since the training algorithm does not know in advance the total dataset length.
@@ -83,7 +83,7 @@ class TransformersIterableDataset(SuperTransformersDataset, IterableDataset):
             )
 
     def __iter__(self):
-        """
+        r"""
         Return the iterable by nesting different generators, each of which does a different
         filtering based on the process id when in distributed training and on the worker id
         if using also parallel loading in the dataloader.
