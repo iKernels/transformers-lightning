@@ -12,8 +12,10 @@ class StackDataset(torch.utils.data.Dataset):
 
     def __init__(self, *datasets):
         super().__init__()
+        
         assert len(datasets) > 0, 'datasets should not be an empty iterable'
         self.datasets = list(datasets)
+        
         if not utils.functional.all_equal_in_iterable([len(d) for d in self.datasets]):
             rank_zero_warn(
                 "Datasets do not have all the same length: "
@@ -30,7 +32,7 @@ class StackDataset(torch.utils.data.Dataset):
                     f"absolute value of index {idx} should not exceed dataset length {len(self)}"
                 )
             idx = len(self) + idx
-        # assert index does not 
+        # assert index does not exit boundaries
         assert 0 <= idx < len(self), f"idx with value {idx} exists bounds [{0}, {len(self)}]"
         return tuple(dataset[idx] for dataset in self.datasets)
 

@@ -6,9 +6,9 @@ import time
 import pytest
 import pytorch_lightning as pl
 import torch
-from transformers_lightning import datamodules, models, adapters
+from transformers_lightning import datamodules, models, adapters, utils
 from transformers import BertTokenizer
-from transformers.modeling_bert import (BertConfig,
+from transformers.models.bert.modeling_bert import (BertConfig,
                                         BertForSequenceClassification)
 
 n_cpus = multiprocessing.cpu_count()
@@ -23,18 +23,13 @@ class SimpleTransformerLikeModel(models.SuperModel):
         self.model = BertForSequenceClassification(config)
 
     def configure_optimizers(self):
-        self.computed_max_steps = self.max_steps_anyway()
+        self.computed_max_steps = utils.compute_max_steps(self.hparams, self.trainer)
         return super().configure_optimizers()
 
     def training_step(self, batch, batch_idx):
         batch['labels'] = batch['labels'].to(dtype=torch.long)
-        kwargs = {k: batch[k] for k in ["input_ids", "attention_mask", "token_type_ids", "labels"]}
-        results = self(**kwargs, return_dict=True)
-        return { 'loss': results.loss, 'ids': batch['ids'] }
-
-    def training_step_end(self, batch_parts):
-        batch_parts['loss'] = torch.sum(batch_parts['loss'])
-        return batch_parts
+        results = self(**batch)
+        return results.loss
 
 
 class ExampleAdapter(adapters.CSVAdapter):
@@ -52,8 +47,7 @@ class ExampleAdapter(adapters.CSVAdapter):
             max_length=self.hparams.max_sequence_length,
             truncation=True
         )
-
-        res = { **results, 'ids': int(line[0]), 'labels': line[5].strip().lower() == "true" }
+        res = { **results, 'labels': line[5].strip().lower() == "true" }
         return res
 
 
@@ -61,7 +55,7 @@ class ExampleDataModule(datamodules.SuperDataModule):
 
     def __init__(self, *args, test_number=1, tokenizer=None, **kwargs):
         super().__init__(*args, **kwargs)
-        self.train_adapter = ExampleAdapter(self.hparams, f"test{test_number}.tsv", delimiter="\t", tokenizer=tokenizer)        
+        self.train_adapter = ExampleAdapter(self.hparams, f"tests/test_data/test{test_number}.tsv", delimiter="\t", tokenizer=tokenizer)        
 
 
 # Test if max_steps fix works correctly
@@ -84,9 +78,6 @@ def test_fix_max_steps_cpu(max_epochs, accumulate_grad_batches, batch_size, expe
         batch_size=batch_size,
         accumulate_grad_batches=accumulate_grad_batches,
         num_workers=4,
-        dataset_dir='tests/test_data',
-        config_dir='tests/test_data',
-        cache_dir='cache',
         output_dir='output',
         max_epochs=max_epochs,
         max_steps=None,
@@ -104,7 +95,7 @@ def test_fix_max_steps_cpu(max_epochs, accumulate_grad_batches, batch_size, expe
         callbacks=[],
     )
 
-    tokenizer = BertTokenizer.from_pretrained("bert-base-cased", cache_dir=hparams.cache_dir)
+    tokenizer = BertTokenizer.from_pretrained("bert-base-cased")
 
     # instantiate PL model
     model = SimpleTransformerLikeModel(hparams)    
@@ -141,9 +132,6 @@ def test_fix_max_steps_gpu(max_epochs, accumulate_grad_batches, batch_size, dist
         batch_size=batch_size,
         accumulate_grad_batches=accumulate_grad_batches,
         num_workers=4,
-        dataset_dir='tests/test_data',
-        config_dir='tests/test_data',
-        cache_dir='cache',
         output_dir='output',
         max_epochs=max_epochs,
         max_steps=None,
@@ -154,7 +142,7 @@ def test_fix_max_steps_gpu(max_epochs, accumulate_grad_batches, batch_size, dist
         accelerator=distributed_backend
     )
 
-    tokenizer = BertTokenizer.from_pretrained("bert-base-cased", cache_dir=hparams.cache_dir)
+    tokenizer = BertTokenizer.from_pretrained("bert-base-cased")
 
     # instantiate PL trainer
     trainer = pl.Trainer.from_argparse_args(

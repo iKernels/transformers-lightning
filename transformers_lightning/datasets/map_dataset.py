@@ -3,9 +3,9 @@ from transformers_lightning.datasets import SuperTransformersDataset
 
 
 class TransformersMapDataset(SuperTransformersDataset, Dataset):
-    """
+    r"""
     Superclass of all map datasets. Tokenization is performed on the fly.
-    Dataset is split in chunks to save memory using the relative dataframe function.
+    Dataset is completely read into memory. If you need some lighter way of doing training, see `IterableDataset`
     """
     def __init__(self, *args):
         super().__init__(*args)

@@ -1,7 +1,7 @@
 # Datasets
 
 `Datasets` are a convinient way to manage dataset and process and return the right data only when needed.
-This folder contains two main datasets: (i) a simple `MapDataset` that behaves exactly like a list and can be indexed and (ii) an `IterableDataset` that has no well-defined length and continues to preprocess and provide data until the corresponding adapter is completely emptied.
+This folder contains two main datasets: (i) a simple `MapDataset` that behaves exactly like a list and can be indexed and (ii) an `IterableDataset` that has no well-defined length and continues to preprocess and provide data until the corresponding adapter is completely emptied. The library provides also a simple `StackDataset` to emulate the `zip` command of `python`.
 
 To preprocess each entry of the dataset, the `Dataset` will call `adapter.preprocess_line` by default.
 
@@ -70,3 +70,25 @@ dataset = IterableDataset(hparams, adapter, start_from_step=10)
 ```
 
 Please do not provide a `start_from_step` longer than an epoch!
+
+
+## StackDataset
+
+A simple dataset that emulates the behaviour of the `zip` built-in command in python: it returns a tuple of entries, one for each `MapDataset` that is given as input.
+
+Example:
+```python
+adapter_1 = ExampleAdapter(hparams)
+dataset_1 = MapDataset(hparams, adapter_1)
+
+adapter_2 = ExampleAdapter(hparams)
+dataset_2 = MapDataset(hparams, adapter_2)
+
+dataset = StackDataset(dataset_1, dataset_2)
+
+for data_1, data_2 in dataset:
+    # data_1 will come from dataset_1
+    # data_2 will come from dataset_2
+```
+
+`StackDataset` does not inherit from `SuperTransformersDataset`!

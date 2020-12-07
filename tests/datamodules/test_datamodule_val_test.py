@@ -15,9 +15,9 @@ class ExampleDataModule(datamodules.SuperDataModule):
 
     def __init__(self, *args, test_number=1, tokenizer=None, **kwargs):
         super().__init__(*args, **kwargs)
-        self.train_adapter = ExampleAdapter(self.hparams, f"test{test_number}.tsv", delimiter="\t", tokenizer=tokenizer)
-        self.valid_adapter = ExampleAdapter(self.hparams, f"test{test_number}.tsv", delimiter="\t", tokenizer=tokenizer)
-        self.test_adapter = [ExampleAdapter(self.hparams, f"test{test_number}.tsv", delimiter="\t", tokenizer=tokenizer) for _ in range(2)]
+        self.train_adapter = ExampleAdapter(self.hparams, f"tests/test_data/test{test_number}.tsv", delimiter="\t", tokenizer=tokenizer)
+        self.valid_adapter = ExampleAdapter(self.hparams, f"tests/test_data/test{test_number}.tsv", delimiter="\t", tokenizer=tokenizer)
+        self.test_adapter = [ExampleAdapter(self.hparams, f"tests/test_data/test{test_number}.tsv", delimiter="\t", tokenizer=tokenizer) for _ in range(2)]
 
 
 # Test iter dataset work correctly
@@ -52,9 +52,6 @@ def test_datamodule_cpu(ds_type, num_workers, gpus, epochs):
         test_batch_size=4,
         accumulate_grad_batches=3,
         num_workers=num_workers,
-        dataset_dir='tests/test_data',
-        config_dir='tests/test_data',
-        cache_dir='cache',
         output_dir='output',
         max_epochs=epochs,
         max_steps=None,
@@ -64,7 +61,7 @@ def test_datamodule_cpu(ds_type, num_workers, gpus, epochs):
         skip_in_training=None
     )
 
-    tokenizer = BertTokenizer.from_pretrained("bert-base-cased", cache_dir=hparams.cache_dir)
+    tokenizer = BertTokenizer.from_pretrained("bert-base-cased")
 
     # instantiate PL trainer
     trainer = pl.Trainer.from_argparse_args(
