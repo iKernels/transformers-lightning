@@ -1,8 +1,7 @@
 import multiprocessing
 from argparse import Namespace
-from os import access
+from transformers_lightning import utils
 from tests import adapters
-import time
 
 import pytest
 import pytorch_lightning as pl
@@ -19,7 +18,7 @@ class SimpleTransformerLikeModel(models.SuperModel):
         self.lin = torch.nn.Linear(10, 10)
 
     def configure_optimizers(self):
-        self.computed_max_steps = self.max_steps_anyway()
+        self.computed_max_steps = utils.compute_max_steps(self.hparams, self.trainer)
         return super().configure_optimizers()
 
     def training_step(self, batch, batch_idx):
@@ -71,9 +70,6 @@ def test_skip_steps_cpu(max_epochs, accumulate_grad_batches, batch_size, skip, e
         batch_size=batch_size,
         accumulate_grad_batches=accumulate_grad_batches,
         num_workers=5,
-        dataset_dir='tests/test_data',
-        config_dir='tests/test_data',
-        cache_dir='cache',
         output_dir='output',
         max_epochs=max_epochs,
         max_sequence_length=10,
@@ -117,9 +113,6 @@ def test_skip_steps_gpu(max_epochs, accumulate_grad_batches, batch_size, skip, e
         batch_size=batch_size,
         accumulate_grad_batches=accumulate_grad_batches,
         num_workers=5,
-        dataset_dir='tests/test_data',
-        config_dir='tests/test_data',
-        cache_dir='cache',
         output_dir='output',
         max_epochs=max_epochs,
         max_sequence_length=10,

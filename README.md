@@ -131,3 +131,21 @@ if __name__ == '__main__':
     main(hparams)
 
 ```
+
+<a name="tests"></a>
+## Tests
+
+To run tests you should start by installing `pytest`:
+```bash
+pip install pytest
+```
+
+Now, you can run tests (from the main folder), by running for example:
+```bash
+python -m pytest tests/callbacks
+```
+to only test `callbacks` or
+```bash
+python -m pytest tests
+```
+to run every test.

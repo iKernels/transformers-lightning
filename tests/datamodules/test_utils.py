@@ -1,5 +1,5 @@
 import torch
-from transformers.modeling_bert import (BertConfig,
+from transformers.models.bert.modeling_bert import (BertConfig,
                                         BertForSequenceClassification)
 from transformers_lightning.adapters.csv_adapter import CSVAdapter
 from transformers_lightning import datamodules, models
@@ -22,7 +22,7 @@ class SimpleTransformerLikeModel(models.SuperModel):
 
         batch['labels'] = batch['labels'].to(dtype=torch.long)
         kwargs = {k: batch[k] for k in ["input_ids", "attention_mask", "token_type_ids", "labels"]}
-        results = self(**kwargs, return_dict=True)
+        results = self(**kwargs)
         return { 'loss': results.loss, 'ids': batch['ids'] }
 
     def training_step_end(self, batch_parts):
@@ -68,13 +68,13 @@ class SimpleTransformerLikeModel(models.SuperModel):
     def validation_step(self, batch, batch_idx):
         batch['labels'] = batch['labels'].to(dtype=torch.long)
         kwargs = {k: batch[k] for k in ["input_ids", "attention_mask", "token_type_ids", "labels"]}
-        results = self(**kwargs, return_dict=True)
+        results = self(**kwargs)
         return results.loss
 
     def test_step(self, batch, batch_idx, dataset_idx):
         batch['labels'] = batch['labels'].to(dtype=torch.long)
         kwargs = {k: batch[k] for k in ["input_ids", "attention_mask", "token_type_ids", "labels"]}
-        results = self(**kwargs, return_dict=True)
+        results = self(**kwargs)
         return results.loss
 
 
@@ -102,4 +102,4 @@ class ExampleDataModule(datamodules.SuperDataModule):
 
     def __init__(self, *args, test_number=1, tokenizer=None, **kwargs):
         super().__init__(*args, **kwargs)
-        self.train_adapter = ExampleAdapter(self.hparams, f"test{test_number}.tsv", delimiter="\t", tokenizer=tokenizer)
+        self.train_adapter = ExampleAdapter(self.hparams, f"tests/test_data/test{test_number}.tsv", delimiter="\t", tokenizer=tokenizer)

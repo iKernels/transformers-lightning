@@ -4,7 +4,7 @@ from typing import Iterable
 
 
 class SuperAdapter:
-    """
+    r"""
     The Adapter task is to provide a simple interface to read and prepare a dataset
     for the training phase. An Adapter should read some input data in the correct
     way, pre-process lines if needed (no tokenization) for example by removing
@@ -13,7 +13,7 @@ class SuperAdapter:
     """
 
     def __init__(self, hparams: Namespace) -> None:
-        """
+        r"""
         :param hparams: global namespace containing all the useful hyper-parameters
         """
         assert isinstance(hparams, Namespace), f"Argument `hparams` must be of type `Namespace`"
@@ -21,7 +21,7 @@ class SuperAdapter:
 
     @abc.abstractmethod
     def __iter__(self) -> Iterable:
-        """
+        r"""
         This function should use the arguments in `hparams` to read the file
         from the disk and return an iterator over the (parsed) lines.
         This is the right place to parse csv files and yield each parsed line for example.
@@ -33,7 +33,7 @@ class SuperAdapter:
 
     @abc.abstractmethod
     def preprocess_line(self, line: list) -> list:
-        """
+        r"""
         Process a line. The structure of each line is exactly
         the same returned by the __iter__ method. Here you should do data preparation
         for the actual model being trained. This is a good place to do batch tokenization,
