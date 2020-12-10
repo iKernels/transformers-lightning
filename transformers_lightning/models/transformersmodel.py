@@ -1,5 +1,6 @@
+from transformers_lightning.schedulers.linear_scheduler_with_warmup import LinearSchedulerWithWarmup
 from transformers_lightning import utils
-from transformers import AdamW, get_linear_schedule_with_warmup
+from transformers import AdamW
 from transformers_lightning import models
 from pytorch_lightning import _logger as logger
 
@@ -42,9 +43,9 @@ class TransformersModel(models.SuperModel):
                           betas=self.hparams.adam_betas)
 
         # init scheduler after optional fp16 to get rid of strange warning about optimizer and scheduler steps order
-        scheduler = get_linear_schedule_with_warmup(optimizer,
-                                                    num_warmup_steps=self.hparams.warmup_steps,
-                                                    num_training_steps=max_steps)
+        scheduler = LinearSchedulerWithWarmup(optimizer,
+                                              num_warmup_steps=self.hparams.warmup_steps,
+                                              num_training_steps=max_steps)
 
         return {
             'optimizer': optimizer,
