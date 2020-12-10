@@ -23,9 +23,6 @@ class TransformersModelCheckpointCallback(Callback):
         self.hparams = hparams
         self.destination = os.path.join(hparams.output_dir, hparams.pre_trained_dir, hparams.name)
 
-        if not os.path.isdir(self.destination):
-            os.makedirs(self.destination)
-
     def save_params(self):
         r"""
         Save a checkpoint of the training parameters (hparams)
@@ -71,6 +68,9 @@ class TransformersModelCheckpointCallback(Callback):
         """ Check model can be saved and save hparams to understand what kind of experiment it was. """
         if trainer.global_rank != 0:
             return
+        
+        if not os.path.isdir(self.destination) :
+            os.makedirs(self.destination)
 
         self.save_params()
 

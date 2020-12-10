@@ -1,6 +1,8 @@
 # Editor stuff
 .vscode
 .DS_Store
+.idea
+
 cache/
 output/
 outputs/

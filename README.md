@@ -1,6 +1,6 @@
 # transformers-lightning
 
-A collection of `adapters`, `datasets`, `datamodules`, `callbacks`, `models`, `metrics`, `losses` and `language-modeling` techniques to better intergrate the [PyTorch Lightning](https://pytorch-lightning.readthedocs.io/en/stable/lightning-module.html) and the [Transformers](https://huggingface.co/transformers/) libraries.
+A collection of `adapters`, `datasets`, `datamodules`, `callbacks`, `models`, `metrics`, `losses`, `language-modeling` techniques and `schedulers` to better intergrate the [PyTorch Lightning](https://pytorch-lightning.readthedocs.io/en/stable/lightning-module.html) and the [Transformers](https://huggingface.co/transformers/) libraries.
 
 
 # Table of contents
@@ -16,6 +16,7 @@ A collection of `adapters`, `datasets`, `datamodules`, `callbacks`, `models`, `m
   * [2.6. Metrics](transformers_lightning/metrics)
   * [2.7. Losses](transformers_lightning/losses)
   * [2.8. Language modeling](transformers_lightning/language_modeling)
+  * [2.9. Schedulers](transformers_lightning/schedulers)
 
 **[3. Main file](#main)**
 
