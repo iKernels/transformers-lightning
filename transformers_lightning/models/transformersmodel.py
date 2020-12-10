@@ -48,7 +48,11 @@ class TransformersModel(models.SuperModel):
 
         return {
             'optimizer': optimizer,
-            'scheduler': scheduler
+            'lr_scheduler': {
+                'scheduler': scheduler, # The LR schduler
+                'interval': 'step', # The unit of the scheduler's step size
+                'frequency': 1, # The frequency of the scheduler
+            }
         }
 
     @staticmethod
