@@ -2,7 +2,9 @@ import torch
 from transformers import BertTokenizer
 
 import pytest
-from transformers_lightning.language_modeling.random_token_substitution import RandomTokenSubstitution, IGNORE_IDX
+from transformers_lightning.language_modeling import IGNORE_IDX
+from transformers_lightning.language_modeling.random_token_substitution import RandomTokenSubstitution
+from transformers_lightning.language_modeling.utils import whole_word_tails_mask
 
 
 tok = BertTokenizer.from_pretrained('bert-base-cased')
@@ -24,9 +26,11 @@ def test_datamodule_cpu(seed, sentence, masking, new_ids):
     torch.cuda.random.manual_seed(seed)
 
     input_ids = torch.tensor([tok.encode(sentence)])
+    words_tails_mask = whole_word_tails_mask(input_ids, tok)
+
     original = input_ids.clone()
 
-    swapped, labels = rts(input_ids)
+    swapped, labels = rts(input_ids, words_tails=words_tails_mask)
 
     assert torch.all(torch.eq(swapped[labels != 1], original[labels != 1]))
     assert torch.all(torch.ne(swapped[labels == 1], original[labels == 1]))

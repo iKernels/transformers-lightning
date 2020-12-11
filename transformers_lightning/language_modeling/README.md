@@ -35,7 +35,7 @@ Usage example:
 ```
 
 
-# Random Token Substitution
+## Random Token Substitution
 
 These alternative technique consists in randomly swap some input tokens in others. The default probability of a token being swap is equal to the MLM case, that is 15%.
 

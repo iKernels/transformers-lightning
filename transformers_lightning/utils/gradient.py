@@ -1,10 +1,12 @@
 from torch.autograd import Function
-from torch.nn import Module
 
-"""
-Copyright of this piece of code goes to https://github.com/janfreyberg/pytorch-revgrad
-"""
+
 class RevGrad(Function):
+    r"""
+    Copyright of this piece of code goes to https://github.com/janfreyberg/pytorch-revgrad
+
+    Reverse the gradient values (* -1) while doing backpropagation.
+    """
     @staticmethod
     def forward(ctx, input_):
         ctx.save_for_backward(input_)

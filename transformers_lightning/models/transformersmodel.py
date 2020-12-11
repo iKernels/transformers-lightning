@@ -1,22 +1,28 @@
-from transformers import AdamW, get_linear_schedule_with_warmup
+from transformers_lightning.schedulers.linear_scheduler_with_warmup import LinearSchedulerWithWarmup
+from transformers_lightning import utils
+from transformers import AdamW
 from transformers_lightning import models
 from pytorch_lightning import _logger as logger
 
 
 class TransformersModel(models.SuperModel):
+    r"""
+    `TransformersModel` add a ready-to-be-used optimizer function and adds some parameters to
+    the command line parser for usual training hyperparameters.
+    """
 
     def configure_optimizers(self):
-        """
+        r"""
         Instantiate an optimizer on the parameters of self.model.
         A linear scheduler is also instantiated to manage the learning rate.
         """
 
         # fix max number of steps
-        max_steps = self.max_steps_anyway()
+        max_steps = utils.compute_max_steps(self.hparams, self.trainer)
 
         # get all parameters with names
         all_named_parameters = self.model.named_parameters()
-        
+
         # Prepare optimizer and schedule (linear warmup and decay)
         no_decay = ["bias", "LayerNorm.weight"]
         optimizer_grouped_parameters = [
@@ -37,18 +43,25 @@ class TransformersModel(models.SuperModel):
                           betas=self.hparams.adam_betas)
 
         # init scheduler after optional fp16 to get rid of strange warning about optimizer and scheduler steps order
-        scheduler = get_linear_schedule_with_warmup(optimizer,
-                                                    num_warmup_steps=self.hparams.warmup_steps,
-                                                    num_training_steps=max_steps)
+        scheduler = LinearSchedulerWithWarmup(optimizer,
+                                              num_warmup_steps=self.hparams.warmup_steps,
+                                              num_training_steps=max_steps)
 
         return {
             'optimizer': optimizer,
-            'scheduler': scheduler
+            'lr_scheduler': {
+                'scheduler': scheduler, # The LR schduler
+                'interval': 'step', # The unit of the scheduler's step size
+                'frequency': 1, # The frequency of the scheduler
+            }
         }
 
     @staticmethod
     def add_model_specific_args(parser):
-
+        r"""
+        Usual parameters used by AdamW and LinearScheduler. Moreover, it checks the learning rate is at
+        reasonable values.
+        """
         parser.add_argument('--learning_rate', type=float, default=1e-4)
         parser.add_argument('--max_sequence_length', type=int, default=128)
         parser.add_argument('--weight_decay', type=float, default=0.0)

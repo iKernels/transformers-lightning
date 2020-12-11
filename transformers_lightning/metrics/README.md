@@ -96,3 +96,6 @@ Usage example:
 ```
 
 
+## Pytorch Lightning
+
+This `metrics` package is actually being [PR reviewed](https://github.com/PyTorchLightning/pytorch-lightning/pull/4991) in order to be integrated in `pytorch_lightning`.
