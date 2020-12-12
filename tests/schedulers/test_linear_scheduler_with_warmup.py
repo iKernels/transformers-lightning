@@ -7,7 +7,7 @@ import pytorch_lightning as pl
 from transformers_lightning.models import SuperModel
 from transformers_lightning.adapters import SuperAdapter
 from transformers_lightning.datamodules import SuperDataModule
-from transformers_lightning.schedulers import LinearScheduler
+from transformers_lightning.schedulers import LinearSchedulerWithWarmup
 from transformers import AdamW
 
 
@@ -32,9 +32,10 @@ class FakeModel(SuperModel):
                           lr=self.hparams.learning_rate)
 
         # init scheduler after optional fp16 to get rid of strange warning about optimizer and scheduler steps order
-        scheduler = LinearScheduler(optimizer,
-                                    num_training_steps=self.hparams.max_steps,
-                                    last_epoch=self.hparams.last_epoch)
+        scheduler = LinearSchedulerWithWarmup(optimizer,
+                                              num_warmup_steps=self.hparams.num_warmup_steps,
+                                              num_training_steps=self.hparams.max_steps,
+                                              last_epoch=self.hparams.last_epoch)
 
         return {
             'optimizer': optimizer,
@@ -73,10 +74,10 @@ class FakeDataModule(SuperDataModule):
 
 # Test iter dataset work correctly
 @pytest.mark.parametrize(
-    ["num_training_steps", "last_epoch", "expected_lrs"], [
-        [20, -1, [1.0, 0.95, 0.9, 0.85, 0.8, 0.75, 0.7, 0.65, 0.6, 0.55, 0.5, 0.45, 0.4, 0.35, 0.3, 0.25, 0.2, 0.15, 0.1, 0.05, 0.0]]
+    ["num_warmup_steps", "num_training_steps", "last_epoch", "expected_lrs"], [
+        [10, 20, -1, [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2, 0.1, 0.0]]
 ])
-def test_datamodule_cpu(num_training_steps, last_epoch, expected_lrs):
+def test_datamodule_cpu(num_warmup_steps, num_training_steps, last_epoch, expected_lrs):
 
     os.environ["CUDA_VISIBLE_DEVICES"] = ""
 
@@ -86,6 +87,7 @@ def test_datamodule_cpu(num_training_steps, last_epoch, expected_lrs):
         output_dir='output',
         max_epochs=1,
         max_steps=num_training_steps,
+        num_warmup_steps=num_warmup_steps,
         last_epoch=last_epoch,
         max_sequence_length=10,
         gpus=0,
