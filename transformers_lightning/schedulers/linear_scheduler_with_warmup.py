@@ -32,10 +32,10 @@ class LinearSchedulerWithWarmup(_LRScheduler):
         last_epoch: int = -1,
         verbose: bool = False
     ):
-        if not isinstance(num_training_steps, int) or not num_training_steps > 0:
+        if not isinstance(num_training_steps, int) or not num_training_steps >= 0:
             raise ValueError("`num_training_steps` must be an integer greater than 0")
 
-        if not isinstance(num_warmup_steps, int) or not num_warmup_steps > 0:
+        if not isinstance(num_warmup_steps, int) or not num_warmup_steps >= 0:
             raise ValueError("`num_warmup_steps` must be an integer greater than 0")
         
         self.num_warmup_steps = num_warmup_steps
