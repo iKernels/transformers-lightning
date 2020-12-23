@@ -1,8 +1,10 @@
 import json
 import os
-from typing import Dict, Generator, Iterable, Union
-import yaml
 from argparse import Namespace
+from typing import Dict, Generator, Iterable, Union
+
+import yaml
+from pytorch_lightning import _logger as logger
 
 
 def load_yaml(filename: str, to_namespace: bool = True) -> Union[Dict, Namespace]:
@@ -27,11 +29,18 @@ def load_json(filename: str, to_namespace: bool = True) -> Union[Dict, Namespace
         return Namespace(**res)
     return res
 
-def dump_json(filename: str, data: Dict) -> None:
+def dump_json(filename: str, data: Dict, complain: bool = False) -> None:
     r"""
     Save json to file.
     """
-    assert not os.path.isfile(filename), f"File {filename} does already exist!"
+    if os.path.isfile(filename):
+        if complain:
+            raise ValueError(
+                f"File {filename} does already exist!"
+            )
+        else:
+            logger.warn(f"Overwriting {filename} file!")
+
     with open(filename, 'w') as outfile:
         json.dump(data, outfile)
 

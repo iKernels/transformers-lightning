@@ -7,7 +7,7 @@ import pytorch_lightning as pl
 from transformers_lightning.models import SuperModel
 from transformers_lightning.adapters import SuperAdapter
 from transformers_lightning.datamodules import SuperDataModule
-from transformers_lightning.schedulers import LinearScheduler
+from transformers_lightning.schedulers import ConstantSchedulerWithWarmup
 from transformers import AdamW
 
 
@@ -16,6 +16,7 @@ class FakeModel(SuperModel):
     def __init__(self, hparams):
         super().__init__(hparams)
         self.model = torch.nn.Linear(10, 10)
+        self.lrs = []
 
     def training_step(self, batch, *args):
         return {
@@ -32,9 +33,9 @@ class FakeModel(SuperModel):
                           lr=self.hparams.learning_rate)
 
         # init scheduler after optional fp16 to get rid of strange warning about optimizer and scheduler steps order
-        scheduler = LinearScheduler(optimizer,
-                                    num_training_steps=self.hparams.max_steps,
-                                    last_epoch=self.hparams.last_epoch)
+        scheduler = ConstantSchedulerWithWarmup(optimizer,
+                                                num_warmup_steps=5,
+                                                last_epoch=self.hparams.last_epoch)
 
         return {
             'optimizer': optimizer,
@@ -74,7 +75,7 @@ class FakeDataModule(SuperDataModule):
 # Test iter dataset work correctly
 @pytest.mark.parametrize(
     ["num_training_steps", "last_epoch", "expected_lrs"], [
-        [20, -1, [1.0, 0.95, 0.9, 0.85, 0.8, 0.75, 0.7, 0.65, 0.6, 0.55, 0.5, 0.45, 0.4, 0.35, 0.3, 0.25, 0.2, 0.15, 0.1, 0.05, 0.0]]
+        [20, -1, [0.0, 0.2, 0.4, 0.6, 0.8, 1.0] + [1.0] * 15]
 ])
 def test_datamodule_cpu(num_training_steps, last_epoch, expected_lrs):
 
