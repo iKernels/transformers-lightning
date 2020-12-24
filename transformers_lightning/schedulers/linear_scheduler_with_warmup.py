@@ -19,6 +19,8 @@ class LinearSchedulerWithWarmup(_LRScheduler):
             The index of the last epoch when resuming training.
         verbose (bool): If ``True``, prints a message to stdout for
             each update. Default: ``False``.
+        beg_step (int): An integer that specifies the initial step 
+            of the scheduler. To be used when resuming the training. 
 
     Example:
         >>> scheduler = LinearSchedulerWithWarmup(optimizer, num_warmup_steps=10, num_training_steps=100)
