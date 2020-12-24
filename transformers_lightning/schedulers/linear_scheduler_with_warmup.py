@@ -39,24 +39,25 @@ class LinearSchedulerWithWarmup(_LRScheduler):
         if not isinstance(num_warmup_steps, int) or not num_warmup_steps >= 0:
             raise ValueError("`num_warmup_steps` must be an integer greater than 0")
         
-        self.num_warmup_steps = num_warmup_steps
-        self.num_training_steps = num_training_steps
-        self.beg_step = beg_step
+        self._num_warmup_steps = num_warmup_steps
+        self._num_training_steps = num_training_steps
+        self._beg_step = beg_step
+
 
         super().__init__(optimizer, last_epoch, verbose)
 
     def lr_lambda(self, current_step: int) -> int:
 
-        assert current_step >= self.beg_step
-        assert current_step <= self.num_training_steps
+        #assert current_step >= self.beg_step
+        assert current_step <= self._num_training_steps
 
-        relative_curr_step = current_step - self.beg_step
-        relative_num_training_steps = self.num_training_steps - self.beg_step
+        relative_curr_step = current_step - self._beg_step
+        relative_num_training_steps = self._num_training_steps - self._beg_step
 
-        if relative_curr_step < self.num_warmup_steps:
-            return float(relative_curr_step) / float(max(1, self.num_warmup_steps))
+        if relative_curr_step < self._num_warmup_steps:
+            return float(relative_curr_step) / float(max(1, self._num_warmup_steps))
         return max(
-            0.0, float(relative_num_training_steps - relative_curr_step) / float(max(1, relative_num_training_steps - self.num_warmup_steps))
+            0.0, float(relative_num_training_steps - relative_curr_step) / float(max(1, relative_num_training_steps - self._num_warmup_steps))
         )
 
     def get_lr(self):
