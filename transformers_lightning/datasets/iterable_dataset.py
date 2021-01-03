@@ -1,5 +1,6 @@
 from pytorch_lightning import _logger as logger
 import torch
+from types import GeneratorType
 
 from torch.utils.data import IterableDataset
 from transformers_lightning import utils
@@ -131,6 +132,13 @@ class TransformersIterableDataset(SuperTransformersDataset, IterableDataset):
 
         # pre-process data and return
         for line in self.reader:
-            yield from self.adapter.preprocess_line(line)
+            
+            preprocessed_data = self.adapter.preprocess_line(line)
+
+            # if the adapter return a generator, yield an element per time
+            if isinstance(preprocessed_data, GeneratorType):
+                yield from preprocessed_data
+            else:
+                yield preprocessed_data
 
 
