@@ -1,5 +1,7 @@
 import multiprocessing
 from argparse import Namespace
+
+from transformers import AdamW
 from tests import adapters
 import time
 
@@ -13,7 +15,7 @@ from transformers.models.bert.modeling_bert import (BertConfig,
 
 n_cpus = multiprocessing.cpu_count()
 
-class SimpleTransformerLikeModel(models.SuperModel):
+class SimpleTransformerLikeModel(models.TransformersModel):
 
     def __init__(self, hparams):
         super().__init__(hparams)
@@ -24,7 +26,7 @@ class SimpleTransformerLikeModel(models.SuperModel):
 
     def configure_optimizers(self):
         self.computed_max_steps = utils.compute_max_steps(self.hparams, self.trainer)
-        return super().configure_optimizers()
+        return AdamW(self.model.parameters())
 
     def training_step(self, batch, batch_idx):
         batch['labels'] = batch['labels'].to(dtype=torch.long)

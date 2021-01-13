@@ -1,15 +1,33 @@
-from transformers_lightning.schedulers.linear_scheduler_with_warmup import LinearSchedulerWithWarmup
-from transformers_lightning import utils
-from transformers import AdamW
-from transformers_lightning import models
+from argparse import ArgumentParser, Namespace
+
+import torch
+from pytorch_lightning import LightningModule
 from pytorch_lightning import _logger as logger
+from transformers import AdamW
+
+from transformers_lightning import utils
+from transformers_lightning.schedulers.linear_scheduler_with_warmup import \
+    LinearSchedulerWithWarmup
 
 
-class TransformersModel(models.SuperModel):
+class TransformersModel(LightningModule):
     r"""
     `TransformersModel` add a ready-to-be-used optimizer function and adds some parameters to
     the command line parser for usual training hyperparameters.
     """
+
+    model: torch.nn.Module
+    hparams: Namespace
+
+    def __init__(self, hparams):
+        super().__init__()
+        self.save_hyperparameters(hparams)
+
+    def forward(self, *args, **kwargs) -> dict:
+        r"""
+        Simply call the `model` attribute with the given args and kwargs
+        """
+        return self.model(*args, **kwargs)
 
     def configure_optimizers(self):
         r"""
@@ -45,7 +63,8 @@ class TransformersModel(models.SuperModel):
         # init scheduler after optional fp16 to get rid of strange warning about optimizer and scheduler steps order
         scheduler = LinearSchedulerWithWarmup(optimizer,
                                               num_warmup_steps=self.hparams.warmup_steps,
-                                              num_training_steps=max_steps)
+                                              num_training_steps=max_steps,
+                                              beg_step=self.hparams.beg_scheduler_step)
 
         return {
             'optimizer': optimizer,
@@ -57,7 +76,7 @@ class TransformersModel(models.SuperModel):
         }
 
     @staticmethod
-    def add_model_specific_args(parser):
+    def add_model_specific_args(parser: ArgumentParser):
         r"""
         Usual parameters used by AdamW and LinearScheduler. Moreover, it checks the learning rate is at
         reasonable values.
@@ -69,6 +88,7 @@ class TransformersModel(models.SuperModel):
         parser.add_argument('--adam_betas', nargs=2, type=float, default=[0.9, 0.999])
         parser.add_argument('--max_grad_norm', type=float, default=1e-8)
         parser.add_argument('--warmup_steps', type=int, default=0)
+        parser.add_argument('--beg_scheduler_step', type=int, default=0)
 
         tmp_args, _ = parser.parse_known_args()
         if tmp_args.learning_rate > 1:

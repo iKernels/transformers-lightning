@@ -1,5 +1,6 @@
 from pytorch_lightning import _logger as logger
 import torch
+from types import GeneratorType
 
 from torch.utils.data import IterableDataset
 from transformers_lightning import utils
@@ -78,8 +79,8 @@ class TransformersIterableDataset(SuperTransformersDataset, IterableDataset):
             self.start_from_step = effective_batch_size * start_from_step
 
             logger.warning(
-                f"IterableDataset starting from step {start_from_step}. If this is the correct"
-                f"behavious, please ignore this warning"
+                f"IterableDataset starting from step {start_from_step}. If this is the correct "
+                f"behaviour, please ignore this warning."
             )
 
     def __iter__(self):
@@ -131,6 +132,13 @@ class TransformersIterableDataset(SuperTransformersDataset, IterableDataset):
 
         # pre-process data and return
         for line in self.reader:
-            yield self.adapter.preprocess_line(line)
+            
+            preprocessed_data = self.adapter.preprocess_line(line)
+
+            # if the adapter return a generator, yield an element per time
+            if isinstance(preprocessed_data, GeneratorType):
+                yield from preprocessed_data
+            else:
+                yield preprocessed_data
 
 
