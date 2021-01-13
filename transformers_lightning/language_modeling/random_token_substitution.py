@@ -2,9 +2,7 @@ from typing import Tuple
 import torch
 
 import transformers
-import scipy.stats as st
 
-from transformers_lightning import utils
 from transformers_lightning.language_modeling import IGNORE_IDX, LanguageModel
 from transformers_lightning.language_modeling.utils import whole_word_tails_mask
 
@@ -13,13 +11,6 @@ class RandomTokenSubstitution(LanguageModel):
     r"""
     Prepare tokens inputs/labels for random token substutition modeling.
     We sample a few tokens in each sequence for RTS training (with probability `rts_probability` defaults to 0.15 in Bert/RoBERTa)
-
-    If `weights` are provided, probability of each token to be masked will be weighted in the following way:
-        - w are the weights
-        - p the probability of masking a token
-
-        probabilities = ( 1 + (w - w_mean) / (w_std * Z_(1 - r/2)) ) -> clipped in [0, 1]
-
     If `whole_word_swapping` is True, either every or no token in a word will be masked. This argument requires
     that `words_tails` are passed to the `__call__` method such that the model can understand which parts of a word
     are tails ('##..'-like tokens). `words_tails` must be a boolean tensor with the same shape as `inputs`
@@ -53,20 +44,15 @@ class RandomTokenSubstitution(LanguageModel):
         self,
         tokenizer: transformers.PreTrainedTokenizer,
         rts_probability: float = 0.15,
-        reliability: float = 0.05,
         whole_word_swapping: bool = False,
     ):
         super().__init__(tokenizer)
         self.rts_probability = rts_probability
-        self.reliability = reliability
         self.whole_word_swapping = whole_word_swapping
 
-    # TODO: implement whole word masking taking into account average probability of all tokens in a word
-    # instead of only of the first token
     def __call__(
         self,
         inputs: torch.Tensor,
-        weights: torch.Tensor = None,
         words_tails: torch.Tensor = None
     ) -> Tuple[torch.LongTensor, torch.LongTensor]:
 
@@ -74,13 +60,7 @@ class RandomTokenSubstitution(LanguageModel):
         labels = torch.full(inputs.shape, fill_value=0, dtype=torch.long, device=device)
 
         # We sample a few tokens in each sequence for masked-LM training (with probability args.rts_probability defaults to 0.15 in Bert/RoBERTa)
-        if weights is None:
-            probability_matrix = torch.full(inputs.shape, fill_value=self.rts_probability, dtype=torch.float32, device=device)
-        else:
-            weights = weights.to(device=device)
-            z_score = st.norm.ppf(1 - self.reliability / 2)
-            probability_matrix = self.rts_probability * (1 + utils.normalize_standard(weights[inputs], dim=-1) / z_score)
-            probability_matrix = torch.clip(probability_matrix, min=0, max=1)
+        probability_matrix = torch.full(inputs.shape, fill_value=self.rts_probability, dtype=torch.float32, device=device)
 
         # create whole work masking mask -> True if the token starts with ## (following token in composed words)
         if words_tails is None and self.whole_word_swapping:
