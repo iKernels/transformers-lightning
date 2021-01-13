@@ -4,14 +4,14 @@ import torch
 
 import pytest
 import pytorch_lightning as pl
-from transformers_lightning.models import SuperModel
+from transformers_lightning.models import TransformersModel
 from transformers_lightning.adapters import SuperAdapter
 from transformers_lightning.datamodules import SuperDataModule
 from transformers_lightning.schedulers import LinearScheduler
 from transformers import AdamW
 
 
-class FakeModel(SuperModel):
+class FakeModel(TransformersModel):
 
     def __init__(self, hparams):
         super().__init__(hparams)
