@@ -54,7 +54,7 @@ Usage example:
 >>> preds = torch.tensor([0.2, 0.3, 0.5, 0.1, 0.3, 0.5, 0.2])
 >>> target = torch.tensor([False, False, True, False, True, False, False])
 
->>> p_k = PrecitionAtK(k=1)
+>>> p_k = PrecisionAtK(k=1)
 >>> p_k(indexes, preds, target)
 >>> p_k.compute()
 ... 0.5
