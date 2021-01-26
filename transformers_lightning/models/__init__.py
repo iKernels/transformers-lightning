@@ -1,2 +1,1 @@
-from transformers_lightning.models.supermodel import SuperModel
-from transformers_lightning.models.transformersmodel import TransformersModel
+from transformers_lightning.models.transformers_model import TransformersModel

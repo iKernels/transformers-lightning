@@ -1,11 +1,12 @@
 import torch
 from transformers.models.bert.modeling_bert import (BertConfig,
                                         BertForSequenceClassification)
+from transformers import AdamW
 from transformers_lightning.adapters.csv_adapter import CSVAdapter
 from transformers_lightning import datamodules, models
 
 
-class SimpleTransformerLikeModel(models.SuperModel):
+class SimpleTransformerLikeModel(models.TransformersModel):
 
     def __init__(self, hparams, do_ids_check=True):
         super().__init__(hparams)
@@ -14,6 +15,9 @@ class SimpleTransformerLikeModel(models.SuperModel):
         # super light BERT model
         config = BertConfig(hidden_size=12, num_hidden_layers=1, num_attention_heads=1, intermediate_size=12)
         self.model = BertForSequenceClassification(config)
+    
+    def configure_optimizers(self):
+        return AdamW(self.model.parameters())
 
     def training_step(self, batch, batch_idx):
 

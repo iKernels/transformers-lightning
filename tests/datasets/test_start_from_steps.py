@@ -1,5 +1,7 @@
 import multiprocessing
 from argparse import Namespace
+
+from transformers import AdamW
 from transformers_lightning import utils
 from tests import adapters
 
@@ -11,7 +13,7 @@ from transformers_lightning import datamodules, models, adapters
 n_cpus = multiprocessing.cpu_count()
 N = 100
 
-class SimpleTransformerLikeModel(models.SuperModel):
+class SimpleTransformerLikeModel(models.TransformersModel):
 
     def __init__(self, hparams):
         super().__init__(hparams)
@@ -19,7 +21,7 @@ class SimpleTransformerLikeModel(models.SuperModel):
 
     def configure_optimizers(self):
         self.computed_max_steps = utils.compute_max_steps(self.hparams, self.trainer)
-        return super().configure_optimizers()
+        return AdamW(self.lin.parameters())
 
     def training_step(self, batch, batch_idx):
         results = self.lin(batch['data']).mean()

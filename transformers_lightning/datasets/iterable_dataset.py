@@ -79,8 +79,8 @@ class TransformersIterableDataset(SuperTransformersDataset, IterableDataset):
             self.start_from_step = effective_batch_size * start_from_step
 
             logger.warning(
-                f"IterableDataset starting from step {start_from_step}. If this is the correct"
-                f"behavious, please ignore this warning"
+                f"IterableDataset starting from step {start_from_step}. If this is the correct "
+                f"behaviour, please ignore this warning."
             )
 
     def __iter__(self):
