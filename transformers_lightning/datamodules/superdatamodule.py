@@ -1,5 +1,8 @@
 from argparse import ArgumentParser
 import multiprocessing
+from typing import Iterable
+
+from torch.utils.data.dataset import IterableDataset
 from transformers_lightning.adapters import SuperAdapter
 
 import pytorch_lightning as pl
@@ -90,7 +93,7 @@ class SuperDataModule(pl.LightningDataModule):
                 self.valid_dataset = dataset_class(
                     self.hparams, self.valid_adapter, self.trainer
                 )
-            
+
             assert self.train_adapter is None or self.train_dataset is not None, (
                 f"Cannot specify `train_adapter` and then `train_dataset` is None: "
                 f"{self.train_adapter} and {self.train_dataset}"
@@ -125,29 +128,31 @@ class SuperDataModule(pl.LightningDataModule):
     def do_test(self):
         return self.test_adapter is not None
 
-    def default_dataloader(self, dataset, batch_size):
+    def default_dataloader(self, dataset, batch_size, shuffle=False):
         """ Return a dataloader with all usual default parameters. """
         return DataLoader(dataset,
                           batch_size=batch_size,
                           num_workers=self.hparams.num_workers,
                           pin_memory=True,
-                          collate_fn=self.collate_fn)
+                          collate_fn=self.collate_fn,
+                          shuffle=shuffle)
 
     def train_dataloader(self):
         if self.train_dataset:
-            return self.default_dataloader(self.train_dataset, self.hparams.batch_size)
+            shuffle = not isinstance(self.train_dataset, IterableDataset)
+            return self.default_dataloader(self.train_dataset, self.hparams.batch_size, shuffle=shuffle)
         return None
 
     def val_dataloader(self):
         if self.valid_adapter:
-            return self.default_dataloader(self.valid_dataset, self.hparams.val_batch_size)
+            return self.default_dataloader(self.valid_dataset, self.hparams.val_batch_size, shuffle=False)
         return None
 
     def test_dataloader(self):
         if self.test_adapter:
             if isinstance(self.test_dataset, list):
-                return [self.default_dataloader(dataset, self.hparams.test_batch_size) for dataset in self.test_dataset]
-            return self.default_dataloader(self.test_dataset, self.hparams.test_batch_size)
+                return [self.default_dataloader(dataset, self.hparams.test_batch_size, shuffle=False) for dataset in self.test_dataset]
+            return self.default_dataloader(self.test_dataset, self.hparams.test_batch_size, shuffle=False)
         return None
 
     @staticmethod
