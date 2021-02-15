@@ -85,7 +85,7 @@ class ElectraAdamW(AdamW):
 
                 # Decay the first and second moment running average coefficient
                 exp_avg.mul_(beta1).add_(grad, alpha=1 - beta1)
-                exp_avg_sq.mul_(beta2).add_(grad.sqrt(), value=1 - beta2)    # <-- fix is here
+                exp_avg_sq.mul_(beta2).add_(grad.sqrt(), alpha=1 - beta2)    # <-- fix is here
 
                 if amsgrad:
                     max_exp_avg_sq = state['max_exp_avg_sq']
