@@ -26,7 +26,7 @@ A collection of `adapters`, `datasets`, `datamodules`, `callbacks`, `models`, `m
 ## Install
 Install the last stable release with
 ```
-pip install transformers-lightning.git
+pip install transformers-lightning
 ```
 
 You can also install a particular older version, for example the `0.3.0` by doing:
