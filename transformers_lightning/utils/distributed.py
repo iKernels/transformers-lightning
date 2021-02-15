@@ -44,12 +44,9 @@ def compute_max_steps(hparams: Namespace, trainer: Trainer) -> int:
     # if cannot retrieve len of the dataset, skip
     # this can happen with iterabledatasets
     if not (
-        hasattr(trainer.datamodule.train_dataset, '__len__') or
-        hasattr(trainer.datamodule.train_dataset, 'length')
+        hasattr(trainer.datamodule.train_dataset, '__len__') or hasattr(trainer.datamodule.train_dataset, 'length')
     ):
-        logger.warning(
-            "Cannot infer dataset length from datamodule.train_dataset, returning max_steps=None"
-        )
+        logger.warning("Cannot infer dataset length from datamodule.train_dataset, returning max_steps=None")
         return None
 
     try:
@@ -67,8 +64,6 @@ def compute_max_steps(hparams: Namespace, trainer: Trainer) -> int:
     steps_per_epoch = math.ceil(training_batches_per_epoch / hparams.accumulate_grad_batches)
     steps = hparams.max_epochs * steps_per_epoch
 
-    logger.warning(
-        f"Automagically computed max_steps={steps}. If it appears to be OK, ignore this warning"
-    )
+    logger.warning(f"Automagically computed max_steps={steps}. If it appears to be OK, ignore this warning")
 
     return steps

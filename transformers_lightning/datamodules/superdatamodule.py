@@ -8,8 +8,7 @@ from transformers_lightning.adapters import SuperAdapter
 import pytorch_lightning as pl
 from torch.utils.data import DataLoader
 from transformers_lightning import utils
-from transformers_lightning.datasets import (TransformersIterableDataset,
-                                             TransformersMapDataset)
+from transformers_lightning.datasets import (TransformersIterableDataset, TransformersMapDataset)
 
 
 class SuperDataModule(pl.LightningDataModule):
@@ -29,12 +28,8 @@ class SuperDataModule(pl.LightningDataModule):
     valid_adapter: SuperAdapter = None
     test_adapter: SuperAdapter = None
 
-    def __init__(self,
-        hparams,
-        train_adapter = None,
-        valid_adapter = None,
-        test_adapter = None,
-        collate_fn=utils.collate_single_fn
+    def __init__(
+        self, hparams, train_adapter=None, valid_adapter=None, test_adapter=None, collate_fn=utils.collate_single_fn
     ):
         super().__init__()
         self.hparams = hparams
@@ -56,11 +51,10 @@ class SuperDataModule(pl.LightningDataModule):
 
             if isinstance(test_adapter, list):
                 for adapter in test_adapter:
-                    assert isinstance(adapter, SuperAdapter), (
-                        f"Argument `test_adapter` must be of type `SuperAdapter` or List[SuperAdapter]"
-                    )
+                    assert isinstance(
+                        adapter, SuperAdapter
+                    ), (f"Argument `test_adapter` must be of type `SuperAdapter` or List[SuperAdapter]")
             self.test_adapter = test_adapter
-
         """
         This space should be used to instantiate the Adapters it they were not passed through the kwargs
 
@@ -83,16 +77,10 @@ class SuperDataModule(pl.LightningDataModule):
 
         if stage == 'fit' or stage is None:
             if self.train_adapter is not None:
-                kwargs = {
-                    'start_from_step': self.hparams.skip_in_training
-                } if self.hparams.iterable_datasets else {}
-                self.train_dataset = dataset_class(
-                    self.hparams, self.train_adapter, self.trainer, **kwargs
-                )
+                kwargs = {'start_from_step': self.hparams.skip_in_training} if self.hparams.iterable_datasets else {}
+                self.train_dataset = dataset_class(self.hparams, self.train_adapter, self.trainer, **kwargs)
             if self.valid_adapter is not None:
-                self.valid_dataset = dataset_class(
-                    self.hparams, self.valid_adapter, self.trainer
-                )
+                self.valid_dataset = dataset_class(self.hparams, self.valid_adapter, self.trainer)
 
             assert self.train_adapter is None or self.train_dataset is not None, (
                 f"Cannot specify `train_adapter` and then `train_dataset` is None: "
@@ -106,13 +94,11 @@ class SuperDataModule(pl.LightningDataModule):
         elif stage == 'test' or stage is None:
             if self.test_adapter is not None:
                 if isinstance(self.test_adapter, SuperAdapter):
-                    self.test_dataset = dataset_class(
-                        self.hparams, self.test_adapter, self.trainer
-                    )
+                    self.test_dataset = dataset_class(self.hparams, self.test_adapter, self.trainer)
                 else:
-                    self.test_dataset = [dataset_class(
-                        self.hparams, adapter, self.trainer
-                    ) for adapter in self.test_adapter]
+                    self.test_dataset = [
+                        dataset_class(self.hparams, adapter, self.trainer) for adapter in self.test_adapter
+                    ]
 
             assert self.test_adapter is None or self.test_dataset is not None, (
                 f"Cannot specify `test_adapter` and then `test_dataset` is None: "
@@ -130,12 +116,14 @@ class SuperDataModule(pl.LightningDataModule):
 
     def default_dataloader(self, dataset, batch_size, shuffle=False):
         """ Return a dataloader with all usual default parameters. """
-        return DataLoader(dataset,
-                          batch_size=batch_size,
-                          num_workers=self.hparams.num_workers,
-                          pin_memory=True,
-                          collate_fn=self.collate_fn,
-                          shuffle=shuffle)
+        return DataLoader(
+            dataset,
+            batch_size=batch_size,
+            num_workers=self.hparams.num_workers,
+            pin_memory=True,
+            collate_fn=self.collate_fn,
+            shuffle=shuffle
+        )
 
     def train_dataloader(self):
         if self.train_dataset:
@@ -151,14 +139,22 @@ class SuperDataModule(pl.LightningDataModule):
     def test_dataloader(self):
         if self.test_adapter:
             if isinstance(self.test_dataset, list):
-                return [self.default_dataloader(dataset, self.hparams.test_batch_size, shuffle=False) for dataset in self.test_dataset]
+                return [
+                    self.default_dataloader(dataset, self.hparams.test_batch_size, shuffle=False)
+                    for dataset in self.test_dataset
+                ]
             return self.default_dataloader(self.test_dataset, self.hparams.test_batch_size, shuffle=False)
         return None
 
     @staticmethod
     def add_datamodule_specific_args(parser: ArgumentParser):
-        parser.add_argument('--num_workers', required=False, default=multiprocessing.cpu_count(), type=int,
-                            help='Number of workers to be used to load datasets')
+        parser.add_argument(
+            '--num_workers',
+            required=False,
+            default=multiprocessing.cpu_count(),
+            type=int,
+            help='Number of workers to be used to load datasets'
+        )
         parser.add_argument('--skip_in_training', type=int, default=None, required=False)
         parser.add_argument('--batch_size', type=int, default=32)
         parser.add_argument('--val_batch_size', type=int, default=256)

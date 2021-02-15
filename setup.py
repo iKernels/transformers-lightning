@@ -1,10 +1,12 @@
 import setuptools
 import json
 
+
 def load_long_description():
     with open("README.md", "r") as fh:
         long_description = fh.read()
     return long_description
+
 
 def load_requirements():
     requirements = []
@@ -15,12 +17,14 @@ def load_requirements():
                 requirements.append(line)
     return requirements
 
+
 def get_version():
     # get semver version [major.minor.patch]
     json_version = {}
     with open('.version.json', 'r') as f:
         json_version = json.load(f)
-    return '.'.join(str(w) for w in [json_version['major'],json_version['minor'],json_version['patch']])
+    return '.'.join(str(w) for w in [json_version['major'], json_version['minor'], json_version['patch']])
+
 
 setuptools.setup(
     name='transformers_lightning',

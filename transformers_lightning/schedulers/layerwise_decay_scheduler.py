@@ -14,7 +14,6 @@
 # limitations under the License.
 
 # Converted to PyTorch
-
 """Functions and classes related to optimization (weight updates).
 Modified from the original BERT code to allow for having separate learning
 rates for different layers of the network.
@@ -75,19 +74,13 @@ class PolynomialLayerwiseDecaySchedulerWithWarmup(_LRScheduler):
             raise ValueError("`num_training_steps` must be an integer greater than 0")
 
         if end_learning_rate < 0:
-            raise ValueError(
-                f"Cannot define negative `end_learning_rate`, found {end_learning_rate}"
-            )
-        
+            raise ValueError(f"Cannot define negative `end_learning_rate`, found {end_learning_rate}")
+
         if layerwise_lr_decay_power < 0:
-            raise ValueError(
-                f"Cannot define negative `layerwise_lr_decay_power`, found {layerwise_lr_decay_power}"
-            )
+            raise ValueError(f"Cannot define negative `layerwise_lr_decay_power`, found {layerwise_lr_decay_power}")
 
         if warmup_steps < 0:
-            raise ValueError(
-                f"Cannot define negative `warmup_steps`, found {warmup_steps}"
-            )
+            raise ValueError(f"Cannot define negative `warmup_steps`, found {warmup_steps}")
 
         self.num_training_steps = num_training_steps
         self.end_learning_rate = end_learning_rate
@@ -108,30 +101,29 @@ class PolynomialLayerwiseDecaySchedulerWithWarmup(_LRScheduler):
         closer to the input to the closer the output.
         """
 
-        return [
-            lr * (self.layerwise_lr_decay_power ** (max(self.depths) - depth)) for lr, depth in zip(lrs, self.depths)
-        ]
+        return [lr * (self.layerwise_lr_decay_power**(max(self.depths) - depth)) for lr, depth in zip(lrs, self.depths)]
 
     def get_lr(self):
         if not self._get_lr_called_within_step:
-            warnings.warn("To get the last learning rate computed by the scheduler, "
-                          "please use `get_last_lr()`.", UserWarning)
+            warnings.warn(
+                "To get the last learning rate computed by the scheduler, "
+                "please use `get_last_lr()`.", UserWarning
+            )
 
         decay_steps = self.num_training_steps
-        global_step = self.last_epoch   # often last_epoch is used to indicate the number of steps. It is updated every `sched.step()`...
+        global_step = self.last_epoch    # often last_epoch is used to indicate the number of steps. It is updated every `sched.step()`...
 
         # if cycle, extend decay_steps if larger than global_step
-        if self.cycle:           
+        if self.cycle:
             decay_steps = decay_steps * math.ceil(global_step / decay_steps)
         else:
             global_step = min(global_step, decay_steps)
 
         lrs = [
             (
-                (base_lr - self.end_learning_rate) * 
-                (1 - global_step / decay_steps) ** (self.lr_decay_power)
-                + self.end_learning_rate
-            ) * ( min(1.0, global_step / self.warmup_steps) if self.warmup_steps > 0 else 1.0)
+                (base_lr - self.end_learning_rate) *
+                (1 - global_step / decay_steps)**(self.lr_decay_power) + self.end_learning_rate
+            ) * (min(1.0, global_step / self.warmup_steps) if self.warmup_steps > 0 else 1.0)
             for base_lr in self.base_lrs
         ]
 

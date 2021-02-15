@@ -51,13 +51,12 @@ class CosineSchedulerWithWarmup(_LRScheduler):
     def lr_lambda(self, current_step):
         if current_step < self.num_warmup_steps:
             return float(current_step) / float(max(1, self.num_warmup_steps))
-        progress = float(current_step - self.num_warmup_steps) / float(max(1, self.num_training_steps - self.num_warmup_steps))
+        progress = float(current_step -
+                         self.num_warmup_steps) / float(max(1, self.num_training_steps - self.num_warmup_steps))
         return max(0.0, 0.5 * (1.0 + math.cos(math.pi * float(self.num_cycles) * 2.0 * progress)))
 
     def get_lr(self):
         if not self._get_lr_called_within_step:
-            warnings.warn("To get the last learning rate computed by the scheduler, "
-                          "please use `get_last_lr()`.")
+            warnings.warn("To get the last learning rate computed by the scheduler, " "please use `get_last_lr()`.")
 
-        return [base_lr * self.lr_lambda(self.last_epoch)
-                for base_lr in self.base_lrs]
+        return [base_lr * self.lr_lambda(self.last_epoch) for base_lr in self.base_lrs]

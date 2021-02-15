@@ -70,9 +70,7 @@ class TransformersIterableDataset(SuperTransformersDataset, IterableDataset):
         """
         self.start_from_step = None
         if start_from_step is not None:
-            assert isinstance(start_from_step, int), (
-                f"`start_from` must be integer, found {start_from_step}"
-            )
+            assert isinstance(start_from_step, int), (f"`start_from` must be integer, found {start_from_step}")
 
             total_devices = utils.get_total_devices(trainer=self.trainer)
             effective_batch_size = self.hparams.batch_size * self.hparams.accumulate_grad_batches * total_devices
@@ -93,16 +91,12 @@ class TransformersIterableDataset(SuperTransformersDataset, IterableDataset):
         1) utils.batch_filter simply ensures that at least `world_size` elements are read at a time
         2) utils.filter_generator on distributed training to keep one element every `world_size`
         3) utils.filter_generator on parallel workers processing to keep one element every `num_workers`
-        """ 
+        """
         self.reader = iter(self.adapter)
-        
+
         # skip first steps if needed
         if self.start_from_step is not None:
-            self.reader = utils.filter_generator(
-                self.reader,
-                step=1,
-                offset=self.start_from_step
-            )
+            self.reader = utils.filter_generator(self.reader, step=1, offset=self.start_from_step)
             self.start_from_step = None
 
         # add distributed training logic
@@ -111,16 +105,9 @@ class TransformersIterableDataset(SuperTransformersDataset, IterableDataset):
             world_size = torch.distributed.get_world_size()
             rank = torch.distributed.get_rank()
 
-            self.reader = utils.batch_filter(
-                self.reader,
-                size=world_size
-            )
+            self.reader = utils.batch_filter(self.reader, size=world_size)
 
-            self.reader = utils.filter_generator(
-                self.reader,
-                step=world_size,
-                offset=rank
-            )
+            self.reader = utils.filter_generator(self.reader, step=world_size, offset=rank)
 
         # add parallel processing with workers logic
         if torch.utils.data.get_worker_info() is not None:
@@ -132,7 +119,7 @@ class TransformersIterableDataset(SuperTransformersDataset, IterableDataset):
 
         # pre-process data and return
         for line in self.reader:
-            
+
             preprocessed_data = self.adapter.preprocess_line(line)
 
             # if the adapter return a generator, yield an element per time
@@ -140,5 +127,3 @@ class TransformersIterableDataset(SuperTransformersDataset, IterableDataset):
                 yield from preprocessed_data
             else:
                 yield preprocessed_data
-
-

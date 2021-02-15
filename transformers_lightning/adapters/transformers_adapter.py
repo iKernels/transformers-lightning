@@ -25,7 +25,8 @@ class TransformersAdapter(CSVAdapter):
         represents tail tokens (tokens that starts with '##') and `False` represents first tokens in words.
     """
 
-    def __init__(self,
+    def __init__(
+        self,
         *args,
         tokenizer: Union[transformers.PreTrainedTokenizer, transformers.PreTrainedTokenizerFast] = None,
         **kwargs
@@ -43,6 +44,4 @@ class TransformersAdapter(CSVAdapter):
         >>> tokens = ['[CLS]', 'This', 'is', 'a', 's', '##yn', '##ta', '##ctic', '##ally', 'correct', 'sentence', '[SEP]']
         >>> words_tails = [False, False, False, False, False, True, True, True, True, False, False, False]
         """
-        return [
-            tok.startswith('##') for tok in self.tokenizer.convert_ids_to_tokens(ids, skip_special_tokens=False)
-        ]
+        return [tok.startswith('##') for tok in self.tokenizer.convert_ids_to_tokens(ids, skip_special_tokens=False)]

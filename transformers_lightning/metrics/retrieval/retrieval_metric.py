@@ -1,72 +1,137 @@
 import torch
-from typing import List
+from abc import abstractmethod, ABC
+from typing import Callable, Optional, Any
 from pytorch_lightning.metrics import Metric
 
 from transformers_lightning.metrics.utils import get_mini_groups
 
-
 IGNORE_IDX = -100
 
-class RetrievalMetric(Metric):
+
+class RetrievalMetric(Metric, ABC):
     r"""
-    Compute a metric for Information Retrieval by grouping predictions on the same
-    document using indexes. Detailed information about metrics are contained
-    in sub-classes.
+    Works with binary data. Accepts integer or float predictions from a model output.
 
-    It may be possible that a document has no positive label: this case can
-    be managed in different ways using the `empty_documents` parameter:
-    - `skip`: those documents are skipped (default)
-    - `error`: a `ValueError` is raised
-    - `positive`: those documents are counted as positive predictions (1.0)
-    - `negative`: those documents are counted as negative predictions (0.0)
+    Forward accepts
+    - ``indexes`` (long tensor): ``(N, ...)``
+    - ``preds`` (float or int tensor): ``(N, ...)``
+    - ``target`` (long or bool tensor): ``(N, ...)``
 
-    Entries with targets equal to `exclude` will be ignored.
-    Subclasses must override at least the `metric` method.
+    `indexes`, `preds` and `target` must have the same dimension and will be flatten
+    to single dimension once provided.
+
+    `indexes` indicate to which query a prediction belongs.
+    Predictions will be first grouped by indexes. Then the
+    real metric, defined by overriding the `_metric` method,
+    will be computed as the mean of the scores over each query.
+
+    Args:
+        query_without_relevant_docs:
+            Specify what to do with queries that do not have at least a positive target. Choose from:
+        exclude:
+            Do not take into account predictions where the target is equal to this value. default `-100`
+        compute_on_step:
+            Forward only calls ``update()`` and return None if this is set to False. default: True
+        dist_sync_on_step:
+            Synchronize metric state across processes at each ``forward()``
+            before returning the value at the step. default: False
+        process_group:
+            Specify the process group on which synchronization is called. default: None (which selects
+            the entire world)
+        dist_sync_fn:
+            Callback that performs the allgather operation on the metric state. When `None`, DDP
+            will be used to perform the allgather. default: None
+
+            - ``'skip'``: skip those queries (default); if all queries are skipped, ``0.0`` is returned
+            - ``'error'``: raise a ``ValueError``
+            - ``'pos'``: score on those queries is counted as ``1.0``
+            - ``'neg'``: score on those queries is counted as ``0.0``
+
     """
 
-    options = ['error', 'skip', 'positive', 'negative']
-
-    def __init__(self, dist_sync_on_step: bool = False, empty_documents: str = 'skip', exclude: int = IGNORE_IDX):
-        super().__init__(dist_sync_on_step=dist_sync_on_step)
-
-        if empty_documents not in self.options:
-            raise ValueError(
-                f"`empty_documents` received a wrong value {empty_documents}."
-                f"Allowed values are {self.options}"
-            )
-
-        self.empty_documents = empty_documents
-        self.exclude = exclude
-
-        self.add_state("idx", default=torch.tensor([], dtype=torch.int64), dist_reduce_fx="cat")
-        self.add_state("preds", default=torch.tensor([], dtype=torch.int64), dist_reduce_fx="cat")
-        self.add_state("target", default=torch.tensor([], dtype=torch.int64), dist_reduce_fx="cat")
-
-    def update(self, idx: torch.Tensor, preds: torch.Tensor, target: torch.Tensor):
-        assert idx.shape == preds.shape == target.shape, (
-            f"Indexes, predicions and targets must be of the same shape"
+    def __init__(
+        self,
+        query_without_relevant_docs: str = 'skip',
+        exclude: int = IGNORE_IDX,
+        compute_on_step: bool = True,
+        dist_sync_on_step: bool = False,
+        process_group: Optional[Any] = None,
+        dist_sync_fn: Callable = None
+    ):
+        super().__init__(
+            compute_on_step=compute_on_step,
+            dist_sync_on_step=dist_sync_on_step,
+            process_group=process_group,
+            dist_sync_fn=dist_sync_fn
         )
 
-        self.idx = torch.cat([self.idx, idx])
-        self.preds = torch.cat([self.preds, preds])
-        self.target = torch.cat([self.target, target])
-    
-    def compute(self):
-        res = []
-        for group in get_mini_groups(self.idx):
-            if self.target[group].sum() == 0:
-                if self.empty_documents == 'error':
-                    raise ValueError(
-                        f"{self.__class__.__name__} was provided with a prediction with no positive values, idx: {group}"
-                    )
-                elif self.empty_documents == 'positive': res.append(torch.tensor(1.0))
-                elif self.empty_documents == 'negative': res.append(torch.tensor(0.0))
-            else:
-                res.append(
-                    self.metric(group)
-                )
-        return torch.stack(res).mean()
+        query_without_relevant_docs_options = ('error', 'skip', 'pos', 'neg')
+        if query_without_relevant_docs not in query_without_relevant_docs_options:
+            raise ValueError(
+                f"`query_without_relevant_docs` received a wrong value {query_without_relevant_docs}. "
+                f"Allowed values are {query_without_relevant_docs_options}"
+            )
 
-    def metric(self, group: List[int]):
-        r""" Compute a metric over a single group. """
-        raise NotImplementedError("This method must be overridden by subclasses")
+        self.query_without_relevant_docs = query_without_relevant_docs
+        self.exclude = exclude
+
+        self.add_state("idx", default=[], dist_reduce_fx=None)
+        self.add_state("preds", default=[], dist_reduce_fx=None)
+        self.add_state("target", default=[], dist_reduce_fx=None)
+
+    def update(self, idx: torch.Tensor, preds: torch.Tensor, target: torch.Tensor) -> None:
+        if not (idx.shape == target.shape == preds.shape):
+            raise ValueError("`idx`, `preds` and `target` must be of the same shape")
+
+        idx = idx.to(dtype=torch.int64).flatten()
+        preds = preds.to(dtype=torch.float32).flatten()
+        target = target.to(dtype=torch.int64).flatten()
+
+        self.idx.append(idx)
+        self.preds.append(preds)
+        self.target.append(target)
+
+    def compute(self) -> torch.Tensor:
+        r"""
+        First concat state `idx`, `preds` and `target` since they were stored as lists. After that,
+        compute list of groups that will help in keeping together predictions about the same query.
+        Finally, for each group compute the `_metric` if the number of positive targets is at least
+        1, otherwise behave as specified by `self.query_without_relevant_docs`.
+        """
+
+        idx = torch.cat(self.idx, dim=0)
+        preds = torch.cat(self.preds, dim=0)
+        target = torch.cat(self.target, dim=0)
+
+        res = []
+        kwargs = {'device': idx.device, 'dtype': torch.float32}
+
+        groups = get_mini_groups(idx)
+        for group in groups:
+
+            mini_preds = preds[group]
+            mini_target = target[group]
+
+            if not mini_target.sum():
+                if self.query_without_relevant_docs == 'error':
+                    raise ValueError(
+                        f"`{self.__class__.__name__}.compute()` was provided with "
+                        f"a query without positive targets, indexes: {group}"
+                    )
+                if self.query_without_relevant_docs == 'pos':
+                    res.append(torch.tensor(1.0, **kwargs))
+                elif self.query_without_relevant_docs == 'neg':
+                    res.append(torch.tensor(0.0, **kwargs))
+            else:
+                res.append(self._metric(mini_preds, mini_target))
+
+        if len(res) > 0:
+            return torch.stack(res).mean()
+        return torch.tensor(0.0, **kwargs)
+
+    @abstractmethod
+    def _metric(self, preds: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
+        r"""
+        Compute a metric over a predictions and target of a single group.
+        This method should be overridden by subclasses.
+        """

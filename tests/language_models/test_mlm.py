@@ -8,14 +8,29 @@ from transformers_lightning.language_modeling.utils import whole_word_tails_mask
 tok = BertTokenizer.from_pretrained('bert-base-cased')
 mlm = MaskedLanguageModeling(tok, whole_word_masking=True)
 
+
 # Test iter dataset work correctly
-@pytest.mark.parametrize(["seed", "sentence", "masking"],
-    [
+@pytest.mark.parametrize(
+    ["seed", "sentence", "masking"], [
         [0, "how are you man?", [IGNORE_IDX, IGNORE_IDX, 1132, 1128, IGNORE_IDX, IGNORE_IDX, IGNORE_IDX]],
-        [1, "The quick brown fox jumps over the lazy dog", [IGNORE_IDX, IGNORE_IDX, IGNORE_IDX, IGNORE_IDX, 17594, IGNORE_IDX, IGNORE_IDX, IGNORE_IDX, IGNORE_IDX, IGNORE_IDX, IGNORE_IDX]],
-        [8, "Be or not to be a superstar",  [IGNORE_IDX, IGNORE_IDX, IGNORE_IDX, IGNORE_IDX, IGNORE_IDX, IGNORE_IDX, IGNORE_IDX, 7688, 10058, IGNORE_IDX]],
-        [3, "", [IGNORE_IDX, IGNORE_IDX]],
-        [4, "share silence or say what you think?", [IGNORE_IDX, IGNORE_IDX, 3747, IGNORE_IDX, 1474, 1184, IGNORE_IDX, IGNORE_IDX, IGNORE_IDX, IGNORE_IDX]]
+        [
+            1, "The quick brown fox jumps over the lazy dog",
+            [
+                IGNORE_IDX, IGNORE_IDX, IGNORE_IDX, IGNORE_IDX, 17594, IGNORE_IDX, IGNORE_IDX, IGNORE_IDX, IGNORE_IDX,
+                IGNORE_IDX, IGNORE_IDX
+            ]
+        ],
+        [
+            8, "Be or not to be a superstar",
+            [
+                IGNORE_IDX, IGNORE_IDX, IGNORE_IDX, IGNORE_IDX, IGNORE_IDX, IGNORE_IDX, IGNORE_IDX, 7688, 10058,
+                IGNORE_IDX
+            ]
+        ], [3, "", [IGNORE_IDX, IGNORE_IDX]],
+        [
+            4, "share silence or say what you think?",
+            [IGNORE_IDX, IGNORE_IDX, 3747, IGNORE_IDX, 1474, 1184, IGNORE_IDX, IGNORE_IDX, IGNORE_IDX, IGNORE_IDX]
+        ]
     ]
 )
 def test_datamodule_cpu(seed, sentence, masking):

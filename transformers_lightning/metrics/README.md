@@ -16,15 +16,15 @@ Since information retrieval metric must work on many predictions at a time, we i
 Compute the MRR score over a set of documents.
 
 Usage example:
+
 ```python
 >>> indexes = torch.tensor([0, 0, 0, 1, 1, 1, 1])
 >>> preds = torch.tensor([0.2, 0.3, 0.5, 0.1, 0.3, 0.5, 0.2])
 >>> target = torch.tensor([False, False, True, False, True, False, False])
-
 >>> mrr = MeanReciprocalRank()
 >>> mrr(indexes, preds, target)
 >>> mrr.compute()
-... 0.75
+tensor(0.75)
 ```
 
 ### MeanAveragePrecision
@@ -32,51 +32,50 @@ Usage example:
 Compute the MAP score over a set of documents.
 
 Usage example:
+
 ```python
 >>> indexes = torch.tensor([0, 0, 0, 1, 1, 1, 1])
 >>> preds = torch.tensor([0.2, 0.3, 0.5, 0.1, 0.3, 0.5, 0.2])
 >>> target = torch.tensor([False, False, True, False, True, False, False])
-
 >>> map = MeanAveragePrecision()
 >>> map(indexes, preds, target)
 >>> map.compute()
-... 0.75
+tensor(0.75)
 ```
 
 
-### PrecisionAtK
+### Precision
 
-Compute the Precision @ K over a set of documents.
+Compute the Precision (possibly @ K) over a set of documents.
 
 Usage example:
+
 ```python
 >>> indexes = torch.tensor([0, 0, 0, 1, 1, 1, 1])
 >>> preds = torch.tensor([0.2, 0.3, 0.5, 0.1, 0.3, 0.5, 0.2])
 >>> target = torch.tensor([False, False, True, False, True, False, False])
-
->>> p_k = PrecisionAtK(k=1)
+>>> p_k = Precision(k=1)
 >>> p_k(indexes, preds, target)
 >>> p_k.compute()
-... 0.5
+tensor(0.5)
 ```
 
 
-### RecallAtK
+### Recall
 
-Compute the Recall @ K over a set of documents.
+Compute the Recall (possibly @ K) over a set of documents.
 
 Usage example:
+
 ```python
 >>> indexes = torch.tensor([0, 0, 0, 1, 1, 1, 1])
 >>> preds = torch.tensor([0.2, 0.3, 0.5, 0.1, 0.3, 0.5, 0.2])
 >>> target = torch.tensor([False, False, True, False, True, False, False])
-
->>> r_k = RecallAtK(k=1)
+>>> r_k = Recall(k=1)
 >>> r_k(indexes, preds, target)
 >>> r_k.compute()
-... 0.5
+tensor(0.5)
 ```
-
 
 
 ### HitRateAtK
@@ -84,15 +83,15 @@ Usage example:
 Compute the Hit Rate @ K over a set of documents.
 
 Usage example:
+
 ```python
 >>> indexes = torch.tensor([0, 0, 0, 1, 1, 1, 1])
 >>> preds = torch.tensor([0.2, 0.3, 0.5, 0.1, 0.3, 0.5, 0.2])
 >>> target = torch.tensor([False, False, True, False, True, False, False])
-
 >>> hr_k = HitRateAtK(k=1)
 >>> hr_k(indexes, preds, target)
 >>> hr_k.compute()
-... 0.5
+tensor(0.5)
 ```
 
 

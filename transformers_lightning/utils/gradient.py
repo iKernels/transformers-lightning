@@ -7,6 +7,7 @@ class RevGrad(Function):
 
     Reverse the gradient values (* -1) while doing backpropagation.
     """
+
     @staticmethod
     def forward(ctx, input_):
         ctx.save_for_backward(input_)
@@ -14,13 +15,11 @@ class RevGrad(Function):
         return output
 
     @staticmethod
-    def backward(ctx, grad_output):  # pragma: no cover
+    def backward(ctx, grad_output):    # pragma: no cover
         grad_input = None
         if ctx.needs_input_grad[0]:
             grad_input = -grad_output
         return grad_input
 
+
 revgrad = RevGrad.apply
-
-
-

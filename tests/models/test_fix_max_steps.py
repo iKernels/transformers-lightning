@@ -10,10 +10,10 @@ import pytorch_lightning as pl
 import torch
 from transformers_lightning import datamodules, models, adapters, utils
 from transformers import BertTokenizer
-from transformers.models.bert.modeling_bert import (BertConfig,
-                                        BertForSequenceClassification)
+from transformers.models.bert.modeling_bert import (BertConfig, BertForSequenceClassification)
 
 n_cpus = multiprocessing.cpu_count()
+
 
 class SimpleTransformerLikeModel(models.TransformersModel):
 
@@ -43,13 +43,14 @@ class ExampleAdapter(adapters.CSVAdapter):
     def preprocess_line(self, line: list) -> list:
 
         results = self.tokenizer.encode_plus(
-            line[3], line[4],
+            line[3],
+            line[4],
             add_special_tokens=True,
             padding='max_length',
             max_length=self.hparams.max_sequence_length,
             truncation=True
         )
-        res = { **results, 'labels': line[5].strip().lower() == "true" }
+        res = {**results, 'labels': line[5].strip().lower() == "true"}
         return res
 
 
@@ -57,23 +58,24 @@ class ExampleDataModule(datamodules.SuperDataModule):
 
     def __init__(self, *args, test_number=1, tokenizer=None, **kwargs):
         super().__init__(*args, **kwargs)
-        self.train_adapter = ExampleAdapter(self.hparams, f"tests/test_data/test{test_number}.tsv", delimiter="\t", tokenizer=tokenizer)        
+        self.train_adapter = ExampleAdapter(
+            self.hparams, f"tests/test_data/test{test_number}.tsv", delimiter="\t", tokenizer=tokenizer
+        )
 
 
 # Test if max_steps fix works correctly
 @pytest.mark.parametrize(
     ["max_epochs", "accumulate_grad_batches", "batch_size", "expected_max_steps", "ds_type"], [
-
-    [1,             1,                         4,            10,         'map'],
-    [1,             3,                         8,            2,          'map'],
-    [4,             2,                         12,           8,          'map'],
-    [4,             4,                         16,           4,          'map'],
-
-    [1,             1,                         4,            10,         'iter'],
-    [1,             3,                         8,            2,          'iter'],
-    [4,             4,                         16,           4,          'iter'],
-    [4,             2,                         12,           8,          'iter'],
-])
+        [1, 1, 4, 10, 'map'],
+        [1, 3, 8, 2, 'map'],
+        [4, 2, 12, 8, 'map'],
+        [4, 4, 16, 4, 'map'],
+        [1, 1, 4, 10, 'iter'],
+        [1, 3, 8, 2, 'iter'],
+        [4, 4, 16, 4, 'iter'],
+        [4, 2, 12, 8, 'iter'],
+    ]
+)
 def test_fix_max_steps_cpu(max_epochs, accumulate_grad_batches, batch_size, expected_max_steps, ds_type):
 
     hparams = Namespace(
@@ -100,7 +102,7 @@ def test_fix_max_steps_cpu(max_epochs, accumulate_grad_batches, batch_size, expe
     tokenizer = BertTokenizer.from_pretrained("bert-base-cased")
 
     # instantiate PL model
-    model = SimpleTransformerLikeModel(hparams)    
+    model = SimpleTransformerLikeModel(hparams)
 
     # Datasets
     datamodule = ExampleDataModule(hparams, tokenizer=tokenizer)
@@ -110,22 +112,20 @@ def test_fix_max_steps_cpu(max_epochs, accumulate_grad_batches, batch_size, expe
     assert model.computed_max_steps == expected_max_steps
 
 
-
 # Test if max_steps fix works correctly
 @pytest.mark.skipif(torch.cuda.device_count() < 2, reason="test requires multi-GPU machine")
 @pytest.mark.parametrize(
     ["max_epochs", "accumulate_grad_batches", "batch_size", "distributed_backend", "expected_max_steps"], [
-
-    [1,             1,                         4,            'dp',                  10],
-    [1,             3,                         8,            'dp',                  2],
-    [4,             2,                         12,           'dp',                  8],
-    [4,             4,                         16,           'dp',                  4],
-
-    [1,             1,                         4,            'ddp',                  5],
-    [1,             3,                         8,            'ddp',                  1],
-    [4,             2,                         12,           'ddp',                  4],
-    [4,             4,                         16,           'ddp',                  4],
-])
+        [1, 1, 4, 'dp', 10],
+        [1, 3, 8, 'dp', 2],
+        [4, 2, 12, 'dp', 8],
+        [4, 4, 16, 'dp', 4],
+        [1, 1, 4, 'ddp', 5],
+        [1, 3, 8, 'ddp', 1],
+        [4, 2, 12, 'ddp', 4],
+        [4, 4, 16, 'ddp', 4],
+    ]
+)
 def test_fix_max_steps_gpu(max_epochs, accumulate_grad_batches, batch_size, distributed_backend, expected_max_steps):
 
     time.sleep(5)
@@ -155,12 +155,12 @@ def test_fix_max_steps_gpu(max_epochs, accumulate_grad_batches, batch_size, dist
     )
 
     # instantiate PL model
-    model = SimpleTransformerLikeModel(hparams)    
+    model = SimpleTransformerLikeModel(hparams)
 
     # Datasets
     datamodule = ExampleDataModule(hparams, tokenizer=tokenizer)
 
     # Train!
     trainer.fit(model, datamodule=datamodule)
-    
+
     assert model.computed_max_steps == expected_max_steps

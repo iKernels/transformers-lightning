@@ -1,4 +1,3 @@
-
 from argparse import ArgumentParser
 
 
@@ -17,12 +16,32 @@ class DefaultConfig:
 
     @staticmethod
     def add_defaults_args(parser: ArgumentParser):
-        parser.add_argument('--output_dir', type=str, required=False, default=DefaultConfig.output_dir,
-                            help='Specify a different output folder')
-        parser.add_argument('--pre_trained_dir', type=str, required=False, default=DefaultConfig.pre_trained_dir,
-                            help="Default path to save transformer models to")
-        parser.add_argument('--tensorboard_dir', type=str, required=False, default=DefaultConfig.tensorboard_dir,
-                            help="Where tensorboard logs should be saved")
-        parser.add_argument('--checkpoints_dir', type=str, required=False, default=DefaultConfig.checkpoints_dir,
-                            help="Where checkpoints should be saved")
+        parser.add_argument(
+            '--output_dir',
+            type=str,
+            required=False,
+            default=DefaultConfig.output_dir,
+            help='Specify a different output folder'
+        )
+        parser.add_argument(
+            '--pre_trained_dir',
+            type=str,
+            required=False,
+            default=DefaultConfig.pre_trained_dir,
+            help="Default path to save transformer models to"
+        )
+        parser.add_argument(
+            '--tensorboard_dir',
+            type=str,
+            required=False,
+            default=DefaultConfig.tensorboard_dir,
+            help="Where tensorboard logs should be saved"
+        )
+        parser.add_argument(
+            '--checkpoints_dir',
+            type=str,
+            required=False,
+            default=DefaultConfig.checkpoints_dir,
+            help="Where checkpoints should be saved"
+        )
         return parser

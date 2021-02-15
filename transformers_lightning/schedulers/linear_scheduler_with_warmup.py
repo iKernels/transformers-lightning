@@ -40,7 +40,7 @@ class LinearSchedulerWithWarmup(_LRScheduler):
 
         if not isinstance(num_warmup_steps, int) or not num_warmup_steps >= 0:
             raise ValueError("`num_warmup_steps` must be an integer greater than 0")
-        
+
         self._num_warmup_steps = num_warmup_steps
         self._num_training_steps = num_training_steps
         self._beg_step = beg_step
@@ -58,13 +58,13 @@ class LinearSchedulerWithWarmup(_LRScheduler):
         if relative_curr_step < self._num_warmup_steps:
             return float(relative_curr_step) / float(max(1, self._num_warmup_steps))
         return max(
-            0.0, float(relative_num_training_steps - relative_curr_step) / float(max(1, relative_num_training_steps - self._num_warmup_steps))
+            0.0,
+            float(relative_num_training_steps - relative_curr_step) /
+            float(max(1, relative_num_training_steps - self._num_warmup_steps))
         )
 
     def get_lr(self):
         if not self._get_lr_called_within_step:
-            warnings.warn("To get the last learning rate computed by the scheduler, "
-                          "please use `get_last_lr()`.")
+            warnings.warn("To get the last learning rate computed by the scheduler, " "please use `get_last_lr()`.")
 
-        return [base_lr * self.lr_lambda(self.last_epoch)
-                for base_lr in self.base_lrs]
+        return [base_lr * self.lr_lambda(self.last_epoch) for base_lr in self.base_lrs]

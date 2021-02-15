@@ -33,6 +33,7 @@ def filter_generator(generator_in: Generator, step: int = 1, offset: int = 0) ->
         except:
             return
 
+
 def batch_filter(generator_in: Generator, size: int = 1) -> Generator:
     r"""
     By reading `size` elements at a time, we assure that no last iteration will have
