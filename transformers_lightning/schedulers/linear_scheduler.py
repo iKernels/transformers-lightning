@@ -30,7 +30,7 @@ class LinearScheduler(_LRScheduler):
     ):
         if not isinstance(num_training_steps, int) or not num_training_steps >= 0:
             raise ValueError("`num_training_steps` must be an integer greater than 0")
-        
+
         self.num_training_steps = num_training_steps
 
         super().__init__(optimizer, last_epoch, verbose)

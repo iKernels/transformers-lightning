@@ -45,8 +45,7 @@ class LinearSchedulerWithWarmup(_LRScheduler):
         self._num_training_steps = num_training_steps
         self._beg_step = beg_step
 
-
-        super().__init__(optimizer, last_epoch, verbose)
+        super().__init__(optimizer, last_epoch=last_epoch, verbose=verbose)
 
     def lr_lambda(self, current_step: int) -> int:
 
