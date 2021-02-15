@@ -49,11 +49,9 @@ class MaskedLanguageModeling(LanguageModel):
         self.mlm_probability = mlm_probability
         self.whole_word_masking = whole_word_masking
 
-    def __call__(
-        self,
-        inputs: torch.Tensor,        
-        words_tails: torch.Tensor = None
-    ) -> Tuple[torch.LongTensor, torch.LongTensor]:
+    def __call__(self,
+                 inputs: torch.Tensor,
+                 words_tails: torch.Tensor = None) -> Tuple[torch.LongTensor, torch.LongTensor]:
 
         if self.tokenizer.mask_token is None:
             raise ValueError(
@@ -61,10 +59,12 @@ class MaskedLanguageModeling(LanguageModel):
             )
 
         device = inputs.device
-        labels = inputs.clone()      
+        labels = inputs.clone()
 
         # We sample a few tokens in each sequence for masked-LM training (with probability mlm_probability defaults to 0.15 in Bert/RoBERTa)
-        probability_matrix = torch.full(labels.shape, fill_value=self.mlm_probability, dtype=torch.float32, device=device)
+        probability_matrix = torch.full(
+            labels.shape, fill_value=self.mlm_probability, dtype=torch.float32, device=device
+        )
 
         # create whole work masking mask -> True if the token starts with ## (following token in composed words)
         if words_tails is None and self.whole_word_masking:
@@ -87,22 +87,21 @@ class MaskedLanguageModeling(LanguageModel):
         # with whole word masking, assure all tokens in a word are either all masked or not
         if self.whole_word_masking:
             for i in range(1, masked_indices.shape[-1]):
-                masked_indices[:, i] = masked_indices[:, i] | (masked_indices[:, i-1] & words_tails[:, i])
+                masked_indices[:, i] = masked_indices[:, i] | (masked_indices[:, i - 1] & words_tails[:, i])
 
-        labels[~masked_indices] = IGNORE_IDX  # We only compute loss on masked tokens
+        labels[~masked_indices] = IGNORE_IDX    # We only compute loss on masked tokens
 
         # 80% of the time, we replace masked input tokens with tokenizer.mask_token ([MASK])
         indices_replaced = torch.bernoulli(torch.full(labels.shape, 0.8, device=device)).bool() & masked_indices
         inputs[indices_replaced] = self.tokenizer.mask_token_id
 
         # 10% of the time, we replace masked input tokens with random word
-        indices_random = torch.bernoulli(
-            torch.full(labels.shape, 0.5, device=device)
-        ).bool() & masked_indices & ~indices_replaced
+        indices_random = torch.bernoulli(torch.full(labels.shape, 0.5, device=device)
+                                        ).bool() & masked_indices & ~indices_replaced
         random_words = torch.randint(len(self.tokenizer), labels.shape, dtype=torch.long, device=device)
         inputs[indices_random] = random_words[indices_random]
 
         # The rest of the time (10% of the time) we keep the masked input tokens unchanged
         pass
-    
+
         return inputs, labels

@@ -21,33 +21,38 @@ class ExampleDataModule(SuperDataModule):
 
     def __init__(self, *args, test_number=1, tokenizer=None, **kwargs):
         super().__init__(*args, **kwargs)
-        self.train_adapter = ExampleAdapter(self.hparams, f"tests/test_data/test{test_number}.tsv", delimiter="\t", tokenizer=tokenizer)
-        self.valid_adapter = ExampleAdapter(self.hparams, f"tests/test_data/test{test_number}.tsv", delimiter="\t", tokenizer=tokenizer)
-        self.test_adapter = [ExampleAdapter(self.hparams, f"tests/test_data/test{test_number}.tsv", delimiter="\t", tokenizer=tokenizer) for _ in range(2)]
+        self.train_adapter = ExampleAdapter(
+            self.hparams, f"tests/test_data/test{test_number}.tsv", delimiter="\t", tokenizer=tokenizer
+        )
+        self.valid_adapter = ExampleAdapter(
+            self.hparams, f"tests/test_data/test{test_number}.tsv", delimiter="\t", tokenizer=tokenizer
+        )
+        self.test_adapter = [
+            ExampleAdapter(self.hparams, f"tests/test_data/test{test_number}.tsv", delimiter="\t", tokenizer=tokenizer)
+            for _ in range(2)
+        ]
 
 
 # Test iter dataset work correctly
 @pytest.mark.parametrize(
     ["epochs", "accumulate_grad_batches", "batch_size", "callback_interval", "val_callback", "expected_results"], [
-    [2,         3,                         4,            3,                   False,         ["hparams.json",
-                                                                                              "ckpt_epoch_0_step_3",
-                                                                                              "ckpt_epoch_0_step_6",
-                                                                                              "ckpt_epoch_0_step_8",
-                                                                                              "ckpt_epoch_1_step_9",
-                                                                                              "ckpt_epoch_1_step_12",
-                                                                                              "ckpt_epoch_1_step_15",
-                                                                                              "ckpt_epoch_1_step_16_final"]],
-    [1,         2,                         5,            6,                   False,         ["hparams.json",
-                                                                                              "ckpt_epoch_0_step_6",
-                                                                                              "ckpt_epoch_0_step_10_final"]],
-    [1,         2,                         5,            6,                   True,          ["hparams.json",
-                                                                                              "ckpt_epoch_0_step_1",
-                                                                                              "ckpt_epoch_0_step_3",
-                                                                                              "ckpt_epoch_0_step_5",
-                                                                                              "ckpt_epoch_0_step_6",
-                                                                                              "ckpt_epoch_0_step_8",
-                                                                                              "ckpt_epoch_0_step_10_final"]],
-])
+        [
+            2, 3, 4, 3, False,
+            [
+                "hparams.json", "ckpt_epoch_0_step_3", "ckpt_epoch_0_step_6", "ckpt_epoch_0_step_8",
+                "ckpt_epoch_1_step_9", "ckpt_epoch_1_step_12", "ckpt_epoch_1_step_15", "ckpt_epoch_1_step_16_final"
+            ]
+        ],
+        [1, 2, 5, 6, False, ["hparams.json", "ckpt_epoch_0_step_6", "ckpt_epoch_0_step_10_final"]],
+        [
+            1, 2, 5, 6, True,
+            [
+                "hparams.json", "ckpt_epoch_0_step_1", "ckpt_epoch_0_step_3", "ckpt_epoch_0_step_5",
+                "ckpt_epoch_0_step_6", "ckpt_epoch_0_step_8", "ckpt_epoch_0_step_10_final"
+            ]
+        ],
+    ]
+)
 def test_datamodule_cpu(epochs, accumulate_grad_batches, batch_size, callback_interval, val_callback, expected_results):
 
     os.environ["CUDA_VISIBLE_DEVICES"] = ""
@@ -86,7 +91,7 @@ def test_datamodule_cpu(epochs, accumulate_grad_batches, batch_size, callback_in
     )
 
     # instantiate PL model
-    model = SimpleTransformerLikeModel(hparams)    
+    model = SimpleTransformerLikeModel(hparams)
 
     # Datasets
     datamodule = ExampleDataModule(hparams, test_number=2, tokenizer=tokenizer)
@@ -98,6 +103,3 @@ def test_datamodule_cpu(epochs, accumulate_grad_batches, batch_size, callback_in
     listing = os.listdir(folder)
     shutil.rmtree(hparams.output_dir)
     assert set(listing) == set(expected_results), f"{listing} vs {set(expected_results)}"
-
-    
-

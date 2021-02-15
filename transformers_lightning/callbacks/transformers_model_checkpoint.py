@@ -68,8 +68,8 @@ class TransformersModelCheckpointCallback(Callback):
         """ Check model can be saved and save hparams to understand what kind of experiment it was. """
         if trainer.global_rank != 0:
             return
-        
-        if not os.path.isdir(self.destination) :
+
+        if not os.path.isdir(self.destination):
             os.makedirs(self.destination)
 
         self.save_params()
@@ -87,16 +87,12 @@ class TransformersModelCheckpointCallback(Callback):
 
         # if global step is not multiple of checkpoint_interval
         if (
-            (self.hparams.checkpoint_interval is None) or
-            ((pl_module.global_step + 1) % self.hparams.checkpoint_interval) != 0
-        ):  
+            (self.hparams.checkpoint_interval is None)
+            or ((pl_module.global_step + 1) % self.hparams.checkpoint_interval) != 0
+        ):
             return
 
-        self.save_model(
-            pl_module,
-            epoch=trainer.current_epoch,
-            step=pl_module.global_step + 1
-        )
+        self.save_model(pl_module, epoch=trainer.current_epoch, step=pl_module.global_step + 1)
 
     @rank_zero_only
     def on_epoch_end(self, trainer, pl_module):
@@ -104,16 +100,12 @@ class TransformersModelCheckpointCallback(Callback):
         # only run on main process
         if trainer.global_rank != 0:
             return
-        
+
         # not validation checkpointing if it is disabled
         if self.hparams.no_epoch_checkpointing:
             return
 
-        self.save_model(
-            pl_module,
-            epoch=trainer.current_epoch,
-            step=pl_module.global_step + 1
-        )
+        self.save_model(pl_module, epoch=trainer.current_epoch, step=pl_module.global_step + 1)
 
     @rank_zero_only
     def on_train_end(self, trainer, pl_module):
@@ -125,12 +117,7 @@ class TransformersModelCheckpointCallback(Callback):
         if trainer.global_rank != 0:
             return
 
-        self.save_model(
-            pl_module,
-            epoch=trainer.current_epoch,
-            step=pl_module.global_step,
-            final=True
-        )
+        self.save_model(pl_module, epoch=trainer.current_epoch, step=pl_module.global_step, final=True)
 
     @rank_zero_only
     def on_validation_end(self, trainer, pl_module):
@@ -146,18 +133,26 @@ class TransformersModelCheckpointCallback(Callback):
         if self.hparams.no_val_checkpointing:
             return
 
-        self.save_model(pl_module,
-            epoch=trainer.current_epoch,
-            step=pl_module.global_step + 1
-        )
+        self.save_model(pl_module, epoch=trainer.current_epoch, step=pl_module.global_step + 1)
 
     @staticmethod
     def add_callback_specific_args(parser):
         """ Add callback_specific arguments to parser. """
-        parser.add_argument('--checkpoint_interval', type=int, required=False, default=None,
-                            help="Save pre_trained models every steps. A None value means save only at the end of each epoch.")
-        parser.add_argument('--no_val_checkpointing', action="store_true",
-                            help="Disable transformers checkpointing at each validation end.")
-        parser.add_argument('--no_epoch_checkpointing', action="store_true",
-                            help="Disable transformers checkpointing at the end of each epoch.")
+        parser.add_argument(
+            '--checkpoint_interval',
+            type=int,
+            required=False,
+            default=None,
+            help="Save pre_trained models every steps. A None value means save only at the end of each epoch."
+        )
+        parser.add_argument(
+            '--no_val_checkpointing',
+            action="store_true",
+            help="Disable transformers checkpointing at each validation end."
+        )
+        parser.add_argument(
+            '--no_epoch_checkpointing',
+            action="store_true",
+            help="Disable transformers checkpointing at the end of each epoch."
+        )
         return parser

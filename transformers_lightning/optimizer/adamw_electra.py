@@ -31,23 +31,9 @@ class ElectraAdamW(AdamW):
         https://openreview.net/forum?id=ryQu7f-RZ
     """
 
-    def __init__(
-        self,
-        params,
-        lr=1e-4,
-        betas=(0.9, 0.999),
-        eps=1e-6,
-        weight_decay=0.0,
-        amsgrad=False
-    ):
-        super(ElectraAdamW, self).__init__(
-            params,
-            lr=lr,
-            betas=betas,
-            eps=eps,
-            weight_decay=weight_decay,
-            amsgrad=amsgrad
-        )
+    def __init__(self, params, lr=1e-4, betas=(0.9, 0.999), eps=1e-6, weight_decay=0.0, amsgrad=False):
+        super(ElectraAdamW,
+              self).__init__(params, lr=lr, betas=betas, eps=eps, weight_decay=weight_decay, amsgrad=amsgrad)
 
     @torch.no_grad()
     def step(self, closure=None):
@@ -90,16 +76,16 @@ class ElectraAdamW(AdamW):
                         state['max_exp_avg_sq'] = torch.zeros_like(p, memory_format=torch.preserve_format)
 
                 exp_avg, exp_avg_sq = state['exp_avg'], state['exp_avg_sq']
-                    
+
                 beta1, beta2 = group['betas']
 
                 state['step'] += 1
-                bias_correction1 = 1 - beta1 ** state['step']
-                bias_correction2 = 1 - beta2 ** state['step']
+                bias_correction1 = 1 - beta1**state['step']
+                bias_correction2 = 1 - beta2**state['step']
 
                 # Decay the first and second moment running average coefficient
                 exp_avg.mul_(beta1).add_(grad, alpha=1 - beta1)
-                exp_avg_sq.mul_(beta2).add_(grad.sqrt(), value=1 - beta2) # <-- fix is here
+                exp_avg_sq.mul_(beta2).add_(grad.sqrt(), value=1 - beta2)    # <-- fix is here
 
                 if amsgrad:
                     max_exp_avg_sq = state['max_exp_avg_sq']

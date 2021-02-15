@@ -14,28 +14,30 @@ n_cpus = multiprocessing.cpu_count()
 # Test iter dataset work correctly with dp
 @pytest.mark.skipif(torch.cuda.device_count() < 2, reason="test requires multi-GPU machine")
 @pytest.mark.parametrize(
-    ["ds_type", "num_workers", "distributed_backend", "gpus", "epochs", "dataset_idx"], [
+    ["ds_type", "num_workers", "distributed_backend", "gpus", "epochs", "dataset_idx"],
+    [
 
     # ITER dataset
     # num_workers with ddp
-    ['iter',     0,             'ddp',                  2,      1,      1],
-    ['iter',     1,             'ddp',                  2,      2,      1],
-    ['iter',     2,             'ddp',                  2,      2,      1],
-    ['iter',     0,             'ddp',                  2,      1,      2],
-    ['iter',     n_cpus,        'ddp',                  2,      5,     2],
+        ['iter', 0, 'ddp', 2, 1, 1],
+        ['iter', 1, 'ddp', 2, 2, 1],
+        ['iter', 2, 'ddp', 2, 2, 1],
+        ['iter', 0, 'ddp', 2, 1, 2],
+        ['iter', n_cpus, 'ddp', 2, 5, 2],
 
     # MAP dataset
     # num_workers with ddp
-    ['map',     0,             'ddp',                  2,      2,       1],
-    ['map',     1,             'ddp',                  2,      2,       1],
-    ['map',     2,             'ddp',                  2,      2,       1],
-    ['map',     0,             'ddp',                  2,      1,       2],
-    ['map',     n_cpus,        'ddp',                  2,      5,      3],
-])
+        ['map', 0, 'ddp', 2, 2, 1],
+        ['map', 1, 'ddp', 2, 2, 1],
+        ['map', 2, 'ddp', 2, 2, 1],
+        ['map', 0, 'ddp', 2, 1, 2],
+        ['map', n_cpus, 'ddp', 2, 5, 3],
+    ]
+)
 def test_datamodule_gpu_ddp_only(ds_type, num_workers, distributed_backend, gpus, epochs, dataset_idx):
 
     os.environ["CUDA_VISIBLE_DEVICES"] = "0,1"
-    time.sleep(2) # sleep for 5 second to be sure area is clean
+    time.sleep(2)    # sleep for 5 second to be sure area is clean
 
     hparams = Namespace(
         batch_size=4,
@@ -64,7 +66,7 @@ def test_datamodule_gpu_ddp_only(ds_type, num_workers, distributed_backend, gpus
     )
 
     # instantiate PL model
-    model = SimpleTransformerLikeModel(hparams, do_ids_check=(ds_type != 'map'))    
+    model = SimpleTransformerLikeModel(hparams, do_ids_check=(ds_type != 'map'))
 
     # Datasets
     datamodule = ExampleDataModule(hparams, test_number=1, tokenizer=tokenizer)

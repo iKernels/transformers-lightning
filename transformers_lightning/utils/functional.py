@@ -12,6 +12,7 @@ def remove_from_dict(dictionary: Dict, keys: List[str] = []) -> Dict:
         assert k in dictionary, f"{k} not in dict {dictionary}"
         del dictionary[k]
 
+
 def all_equal_in_iterable(iterable: Iterable) -> bool:
     r"""
     Check all items in an iterable 
@@ -21,11 +22,13 @@ def all_equal_in_iterable(iterable: Iterable) -> bool:
     else:
         return iterable.count(iterable[0]) == len(iterable)
 
+
 def flatten(list_of_lists: List[List]) -> List:
     r"""
     Unroll a list of lists
     """
     return [item for sublist in list_of_lists for item in sublist]
+
 
 def get_inner_type(parameter_list: List) -> type:
     r"""
@@ -39,6 +42,7 @@ def get_inner_type(parameter_list: List) -> type:
             assert parameter_type is type(param)
     return parameter_type
 
+
 def model_checksum(model: torch.nn.Module) -> torch.Tensor:
     r"""
     Return a checksum of a torch model by summing all the paramter values.
@@ -47,6 +51,7 @@ def model_checksum(model: torch.nn.Module) -> torch.Tensor:
     """
     return sum([x.data.sum() for x in model.parameters()])
 
+
 def model_gradient_checksum(model: torch.nn.Module) -> torch.Tensor:
     r"""
     Return a checksum of the gradients of a torch model by summing all the gradient values.
@@ -54,6 +59,7 @@ def model_gradient_checksum(model: torch.nn.Module) -> torch.Tensor:
     Be sure to print many significant digits to see substantial differences.
     """
     return sum([x.grad.sum() if x.grad is not None else 0.0 for x in model.parameters()])
+
 
 def concat_dict_values(data: List) -> Dict:
     r"""
@@ -69,12 +75,14 @@ def concat_dict_values(data: List) -> Dict:
                 res[key] = [dictionary[key]]
     return res
 
+
 def split(a: List, n: int) -> tuple:
     r"""
     Split a list in `n` equal parts (or similar, if `len(a) % n != 0`)
     """
     k, m = divmod(len(a), n)
     return (a[i * k + min(i, m):(i + 1) * k + min(i + 1, m)] for i in range(n))
+
 
 def safe_merge(dict_1: Dict, dict_2: Dict) -> Dict:
     r"""
@@ -89,6 +97,7 @@ def safe_merge(dict_1: Dict, dict_2: Dict) -> Dict:
         res[key] = value
     return res
 
+
 def collate_single_fn(data: List[Dict]) -> Dict[str, torch.Tensor]:
     r"""
     Merge n dicts with identical keys creating list of value tensors.
@@ -98,6 +107,7 @@ def collate_single_fn(data: List[Dict]) -> Dict[str, torch.Tensor]:
     res = {k: torch.tensor(v) for k, v in res.items()}
     return res
 
+
 def collate_multi_fn(data):
     r"""
     Concatenate the values of each batch dict of each dataset when using, for example, a `StackDataset`
@@ -105,12 +115,14 @@ def collate_multi_fn(data):
     res = [collate_single_fn(x) for x in zip(*data)]
     return res
 
+
 def concat_generators(*args: Iterable[Generator]) -> Generator:
     r"""
     Concat generators by yielding from first, second, ..., n-th
     """
     for gen in args:
         yield from gen
+
 
 def join_on_path(files_list: List[str], base_path: str) -> List[str]:
     r"""
@@ -121,21 +133,23 @@ def join_on_path(files_list: List[str], base_path: str) -> List[str]:
             type(files_list), type(base_path))
     return [os.path.join(base_path, f) for f in files_list]
 
+
 def uniform_distrib(size: Union[Tuple, List, torch.Size], **kwargs) -> torch.Tensor:
     r"""
     Return a vector containing uniform values such that the last axis sums to 1.0.
     """
-    return torch.full(size=size, fill_value=(1/size[-1]), **kwargs)
+    return torch.full(size=size, fill_value=(1 / size[-1]), **kwargs)
+
 
 def normalize_standard(x: torch.Tensor, dim: int = -1) -> torch.Tensor:
     r"""
     Do (x - E[x]) / ( E[x - E[x]] ) on axis specified by dim.
     """
     return torch.where(
-        (x.std(dim=dim) > 0).unsqueeze(-1),
-        (x - x.mean(dim=dim).unsqueeze(-1)) / x.std(dim=dim).unsqueeze(-1),
+        (x.std(dim=dim) > 0).unsqueeze(-1), (x - x.mean(dim=dim).unsqueeze(-1)) / x.std(dim=dim).unsqueeze(-1),
         (x - x.mean(dim=dim).unsqueeze(-1))
     )
+
 
 def normalize_linear(x: torch.Tensor, dim: int = -1) -> torch.Tensor:
     r"""
@@ -144,6 +158,7 @@ def normalize_linear(x: torch.Tensor, dim: int = -1) -> torch.Tensor:
     max_x = torch.max(x, dim=dim)
     min_x = torch.min(x, dim=dim)
     return (x - min_x) / (max_x - min_x)
+
 
 def concat_dict_tensors(*args: Iterable[Dict], dim: int = 0) -> Dict[str, torch.Tensor]:
     r"""
@@ -162,4 +177,3 @@ def concat_dict_tensors(*args: Iterable[Dict], dim: int = 0) -> Dict[str, torch.
 
     res = {k: torch.cat(v, dim=dim) for k, v in res.items()}
     return res
-
