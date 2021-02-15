@@ -1,4 +1,4 @@
 pytest
-pytorch-lightning >= 1.1.2
-transformers >= 4.0.1
-torch >= 1.6.0
+pytorch-lightning>=1.1.2
+transformers>=4.0.1
+torch>=1.6.0

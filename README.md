@@ -1,6 +1,6 @@
 # transformers-lightning
 
-A collection of `adapters`, `datasets`, `datamodules`, `callbacks`, `models`, `metrics`, `losses`, `language-modeling` techniques and `schedulers` to better intergrate the [PyTorch Lightning](https://pytorch-lightning.readthedocs.io/en/stable/lightning-module.html) and the [Transformers](https://huggingface.co/transformers/) libraries.
+A collection of `adapters`, `datasets`, `datamodules`, `callbacks`, `models`, `metrics`, `losses`, `language-modeling` techniques, `schedulers` and `optimizers` to better integrate the [PyTorch Lightning](https://pytorch-lightning.readthedocs.io/en/stable/lightning-module.html) and the [Transformers](https://huggingface.co/transformers/) libraries.
 
 
 # Table of contents
@@ -26,12 +26,12 @@ A collection of `adapters`, `datasets`, `datamodules`, `callbacks`, `models`, `m
 ## Install
 Install the last stable release with
 ```
-pip install git+https://github.com/lucadiliello/transformers-lightning.git --upgrade
+pip install transformers-lightning.git
 ```
 
-You can also install a particular version, for example the `0.3.0` by doing:
+You can also install a particular older version, for example the `0.3.0` by doing:
 ```
-pip install git+https://github.com/lucadiliello/transformers-lightning.git@0.3.0 --upgrade
+pip install git+https://github.com/iKernels/transformers-lightning.git@0.3.0 --upgrade
 ```
 
 

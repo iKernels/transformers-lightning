@@ -3,7 +3,7 @@ import json
 
 
 def load_long_description():
-    with open("README.md", "r") as fh:
+    with open("DESCRIPTION.md", "r") as fh:
         long_description = fh.read()
     return long_description
 
@@ -31,14 +31,17 @@ setuptools.setup(
     version=get_version(),
     description='Easily deploy Transformers models over Lightning',
     long_description=load_long_description(),
-    url='git@github.com:lucadiliello/transformers-lightning.git',
+    long_description_content_type="text/markdown",
+    url='https://github.com/lucadiliello/transformers-lightning.git',
     author='Luca Di Liello',
     author_email='luca.diliello@unitn.it',
     license='GNU v2',
     packages=setuptools.find_packages(),
     classifiers=[
         "Programming Language :: Python :: 3",
-        "License :: OSI Approved :: GNU v2 License",
+        "License :: OSI Approved :: GNU General Public License v2 (GPLv2)",
         "Operating System :: OS Independent",
+        "Development Status :: 4 - Beta",
+        "Natural Language :: English"
     ]
 )
