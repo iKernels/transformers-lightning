@@ -15,36 +15,36 @@ n_cpus = multiprocessing.cpu_count()
 # Test iter dataset work correctly with dp
 @pytest.mark.skipif(torch.cuda.device_count() < 2, reason="test requires multi-GPU machine")
 @pytest.mark.parametrize(
-    ["ds_type", "num_workers", "distributed_backend", "gpus", "epochs"], [
-    
+    ["ds_type", "num_workers", "distributed_backend", "gpus", "epochs"],
+    [
+
     # ITER dataset
     # num_workers with dp
-    ['iter',     0,             'dp',                   2,      2],
-    ['iter',     1,             'dp',                   2,      2],
-    ['iter',     2,             'dp',                   2,      2],
-    ['iter',     n_cpus,        'dp',                   2,      2],
-
-    ['iter',     0,             'dp',                   2,      1],
-    ['iter',     1,             'dp',                   2,      2],
-    ['iter',     2,             'dp',                   2,      4],
-    ['iter',     n_cpus,        'dp',                   2,      5],
+        ['iter', 0, 'dp', 2, 2],
+        ['iter', 1, 'dp', 2, 2],
+        ['iter', 2, 'dp', 2, 2],
+        ['iter', n_cpus, 'dp', 2, 2],
+        ['iter', 0, 'dp', 2, 1],
+        ['iter', 1, 'dp', 2, 2],
+        ['iter', 2, 'dp', 2, 4],
+        ['iter', n_cpus, 'dp', 2, 5],
 
     # MAP dataset
     # num_workers with dp
-    ['map',     0,             'dp',                   2,      2],
-    ['map',     1,             'dp',                   2,      2],
-    ['map',     2,             'dp',                   2,      2],
-    ['map',     n_cpus,        'dp',                   2,      2],
-
-    ['map',     0,             'dp',                   2,      1],
-    ['map',     1,             'dp',                   2,      2],
-    ['map',     2,             'dp',                   2,      4],
-    ['map',     n_cpus,        'dp',                   2,      5]
-])
+        ['map', 0, 'dp', 2, 2],
+        ['map', 1, 'dp', 2, 2],
+        ['map', 2, 'dp', 2, 2],
+        ['map', n_cpus, 'dp', 2, 2],
+        ['map', 0, 'dp', 2, 1],
+        ['map', 1, 'dp', 2, 2],
+        ['map', 2, 'dp', 2, 4],
+        ['map', n_cpus, 'dp', 2, 5]
+    ]
+)
 def test_datamodule_gpu_dp(ds_type, num_workers, distributed_backend, gpus, epochs):
 
-    os.environ["CUDA_VISIBLE_DEVICES"] = "0,1"    
-    time.sleep(2) # sleep for 5 second to be sure area is clean
+    os.environ["CUDA_VISIBLE_DEVICES"] = "0,1"
+    time.sleep(2)    # sleep for 5 second to be sure area is clean
 
     hparams = Namespace(
         batch_size=4,
@@ -73,11 +73,10 @@ def test_datamodule_gpu_dp(ds_type, num_workers, distributed_backend, gpus, epoc
     )
 
     # instantiate PL model
-    model = SimpleTransformerLikeModel(hparams)    
+    model = SimpleTransformerLikeModel(hparams)
 
     # Datasets
     datamodule = ExampleDataModule(hparams, test_number=1, tokenizer=tokenizer)
 
     model.datamodule = datamodule
     trainer.fit(model, datamodule=datamodule)
-

@@ -12,41 +12,43 @@ n_cpus = multiprocessing.cpu_count()
 
 # Test iter dataset work correctly
 @pytest.mark.parametrize(
-    ["ds_type", "num_workers", "gpus", "epochs"], [
-    
+    ["ds_type", "num_workers", "gpus", "epochs"],
+    [
+
     # ITER dataset
     # test different num_workers in single node on cpu
-    ['iter',     0,             0,   1],
-    ['iter',     1,             0,   1],
-    ['iter',     2,             0,   1],
-    ['iter',     n_cpus,        0,   1],
-    
+        ['iter', 0, 0, 1],
+        ['iter', 1, 0, 1],
+        ['iter', 2, 0, 1],
+        ['iter', n_cpus, 0, 1],
+
     # num_workers through epochs
-    ['iter',     0,             0,   1],
-    ['iter',     0,             0,   4],
-    ['iter',     0,             0,   2],
-    ['iter',     0,             0,   10],
-    ['iter',     2,             0,   1],
-    ['iter',     2,             0,   2],
-    ['iter',     2,             0,   4],
+        ['iter', 0, 0, 1],
+        ['iter', 0, 0, 4],
+        ['iter', 0, 0, 2],
+        ['iter', 0, 0, 10],
+        ['iter', 2, 0, 1],
+        ['iter', 2, 0, 2],
+        ['iter', 2, 0, 4],
 
     # MAP dataset
     # test different num_workers in single node on cpu
-    ['map',     0,             0,   1],
-    ['map',     1,             0,   1],
-    ['map',     2,             0,   1],
-    ['map',     n_cpus,        0,   1],
-    
+        ['map', 0, 0, 1],
+        ['map', 1, 0, 1],
+        ['map', 2, 0, 1],
+        ['map', n_cpus, 0, 1],
+
     # num_workers through epochs
-    ['map',     0,             0,   1],
-    ['map',     0,             0,   2],
-    ['map',     0,             0,   4],
-    ['map',     2,             0,   1],
-    ['map',     2,             0,   2],
-    ['map',     2,             0,   4],
-])
+        ['map', 0, 0, 1],
+        ['map', 0, 0, 2],
+        ['map', 0, 0, 4],
+        ['map', 2, 0, 1],
+        ['map', 2, 0, 2],
+        ['map', 2, 0, 4],
+    ]
+)
 def test_datamodule_cpu(ds_type, num_workers, gpus, epochs):
-    
+
     os.environ["CUDA_VISIBLE_DEVICES"] = ""
 
     hparams = Namespace(
@@ -75,7 +77,7 @@ def test_datamodule_cpu(ds_type, num_workers, gpus, epochs):
     )
 
     # instantiate PL model
-    model = SimpleTransformerLikeModel(hparams)    
+    model = SimpleTransformerLikeModel(hparams)
 
     # Datasets
     datamodule = ExampleDataModule(hparams, test_number=1, tokenizer=tokenizer)

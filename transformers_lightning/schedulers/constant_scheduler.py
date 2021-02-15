@@ -19,17 +19,11 @@ class ConstantScheduler(_LRScheduler):
         >>> scheduler = ConstantScheduler(optimizer)
     """
 
-    def __init__(
-        self,
-        optimizer: torch.optim.Optimizer,
-        last_epoch: int = -1,
-        verbose: bool = False
-    ):
+    def __init__(self, optimizer: torch.optim.Optimizer, last_epoch: int = -1, verbose: bool = False):
         super().__init__(optimizer, last_epoch, verbose)
 
     def get_lr(self):
         if not self._get_lr_called_within_step:
-            warnings.warn("To get the last learning rate computed by the scheduler, "
-                          "please use `get_last_lr()`.")
+            warnings.warn("To get the last learning rate computed by the scheduler, " "please use `get_last_lr()`.")
 
         return [base_lr for base_lr in self.base_lrs]

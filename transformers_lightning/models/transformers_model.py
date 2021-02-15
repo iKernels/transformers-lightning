@@ -55,24 +55,29 @@ class TransformersModel(LightningModule):
         ]
 
         # Define adam optimizer
-        optimizer = AdamW(optimizer_grouped_parameters,
-                          lr=self.hparams.learning_rate,
-                          eps=self.hparams.adam_epsilon,
-                          betas=self.hparams.adam_betas)
+        optimizer = AdamW(
+            optimizer_grouped_parameters,
+            lr=self.hparams.learning_rate,
+            eps=self.hparams.adam_epsilon,
+            betas=self.hparams.adam_betas
+        )
 
         # init scheduler after optional fp16 to get rid of strange warning about optimizer and scheduler steps order
-        scheduler = LinearSchedulerWithWarmup(optimizer,
-                                              num_warmup_steps=self.hparams.warmup_steps,
-                                              num_training_steps=max_steps,
-                                              beg_step=self.hparams.beg_scheduler_step)
+        scheduler = LinearSchedulerWithWarmup(
+            optimizer,
+            num_warmup_steps=self.hparams.warmup_steps,
+            num_training_steps=max_steps,
+            beg_step=self.hparams.beg_scheduler_step
+        )
 
         return {
             'optimizer': optimizer,
-            'lr_scheduler': {
-                'scheduler': scheduler, # The LR schduler
-                'interval': 'step', # The unit of the scheduler's step size
-                'frequency': 1, # The frequency of the scheduler
-            }
+            'lr_scheduler':
+                {
+                    'scheduler': scheduler,    # The LR schduler
+                    'interval': 'step',    # The unit of the scheduler's step size
+                    'frequency': 1,    # The frequency of the scheduler
+                }
         }
 
     @staticmethod

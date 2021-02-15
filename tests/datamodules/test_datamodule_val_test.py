@@ -15,35 +15,44 @@ class ExampleDataModule(datamodules.SuperDataModule):
 
     def __init__(self, *args, test_number=1, tokenizer=None, **kwargs):
         super().__init__(*args, **kwargs)
-        self.train_adapter = ExampleAdapter(self.hparams, f"tests/test_data/test{test_number}.tsv", delimiter="\t", tokenizer=tokenizer)
-        self.valid_adapter = ExampleAdapter(self.hparams, f"tests/test_data/test{test_number}.tsv", delimiter="\t", tokenizer=tokenizer)
-        self.test_adapter = [ExampleAdapter(self.hparams, f"tests/test_data/test{test_number}.tsv", delimiter="\t", tokenizer=tokenizer) for _ in range(2)]
+        self.train_adapter = ExampleAdapter(
+            self.hparams, f"tests/test_data/test{test_number}.tsv", delimiter="\t", tokenizer=tokenizer
+        )
+        self.valid_adapter = ExampleAdapter(
+            self.hparams, f"tests/test_data/test{test_number}.tsv", delimiter="\t", tokenizer=tokenizer
+        )
+        self.test_adapter = [
+            ExampleAdapter(self.hparams, f"tests/test_data/test{test_number}.tsv", delimiter="\t", tokenizer=tokenizer)
+            for _ in range(2)
+        ]
 
 
 # Test iter dataset work correctly
 @pytest.mark.parametrize(
-    ["ds_type", "num_workers", "gpus", "epochs"], [
-    
+    ["ds_type", "num_workers", "gpus", "epochs"],
+    [
+
     # ITER dataset
     # test different num_workers in single node on cpu
-    ['iter',     0,             0,   1],
-    ['iter',     n_cpus,        0,   1],
-    
+        ['iter', 0, 0, 1],
+        ['iter', n_cpus, 0, 1],
+
     # num_workers through epochs
-    ['iter',     0,             0,   1],
-    ['iter',     0,             0,   10],
+        ['iter', 0, 0, 1],
+        ['iter', 0, 0, 10],
 
     # MAP dataset
     # test different num_workers in single node on cpu
-    ['map',     0,             0,   1],
-    ['map',     n_cpus,        0,   1],
-    
+        ['map', 0, 0, 1],
+        ['map', n_cpus, 0, 1],
+
     # num_workers through epochs
-    ['map',     0,             0,   1],
-    ['map',     2,             0,   1],
-])
+        ['map', 0, 0, 1],
+        ['map', 2, 0, 1],
+    ]
+)
 def test_datamodule_cpu(ds_type, num_workers, gpus, epochs):
-    
+
     os.environ["CUDA_VISIBLE_DEVICES"] = ""
 
     hparams = Namespace(
@@ -72,7 +81,7 @@ def test_datamodule_cpu(ds_type, num_workers, gpus, epochs):
     )
 
     # instantiate PL model
-    model = SimpleTransformerLikeModel(hparams)    
+    model = SimpleTransformerLikeModel(hparams)
 
     # Datasets
     datamodule = ExampleDataModule(hparams, test_number=1, tokenizer=tokenizer)

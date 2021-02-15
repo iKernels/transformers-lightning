@@ -22,15 +22,11 @@ class ConstantSchedulerWithWarmup(_LRScheduler):
     """
 
     def __init__(
-        self,
-        optimizer: torch.optim.Optimizer,
-        num_warmup_steps: int = 0,
-        last_epoch: int = -1,
-        verbose: bool = False
+        self, optimizer: torch.optim.Optimizer, num_warmup_steps: int = 0, last_epoch: int = -1, verbose: bool = False
     ):
         if not isinstance(num_warmup_steps, int) or not num_warmup_steps >= 0:
             raise ValueError("`num_warmup_steps` must be an integer greater than 0")
-        
+
         self.num_warmup_steps = num_warmup_steps
 
         super().__init__(optimizer, last_epoch, verbose)
@@ -42,8 +38,6 @@ class ConstantSchedulerWithWarmup(_LRScheduler):
 
     def get_lr(self):
         if not self._get_lr_called_within_step:
-            warnings.warn("To get the last learning rate computed by the scheduler, "
-                          "please use `get_last_lr()`.")
+            warnings.warn("To get the last learning rate computed by the scheduler, " "please use `get_last_lr()`.")
 
-        return [base_lr * self.lr_lambda(self.last_epoch)
-                for base_lr in self.base_lrs]
+        return [base_lr * self.lr_lambda(self.last_epoch) for base_lr in self.base_lrs]

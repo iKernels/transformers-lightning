@@ -22,28 +22,20 @@ class LinearScheduler(_LRScheduler):
     """
 
     def __init__(
-        self,
-        optimizer: torch.optim.Optimizer,
-        num_training_steps: int,
-        last_epoch: int = -1,
-        verbose: bool = False
+        self, optimizer: torch.optim.Optimizer, num_training_steps: int, last_epoch: int = -1, verbose: bool = False
     ):
         if not isinstance(num_training_steps, int) or not num_training_steps >= 0:
             raise ValueError("`num_training_steps` must be an integer greater than 0")
-        
+
         self.num_training_steps = num_training_steps
 
         super().__init__(optimizer, last_epoch, verbose)
 
     def lr_lambda(self, current_step: int) -> int:
-        return max(
-            0.0, float(self.num_training_steps - current_step) / self.num_training_steps
-        )
+        return max(0.0, float(self.num_training_steps - current_step) / self.num_training_steps)
 
     def get_lr(self):
         if not self._get_lr_called_within_step:
-            warnings.warn("To get the last learning rate computed by the scheduler, "
-                          "please use `get_last_lr()`.")
+            warnings.warn("To get the last learning rate computed by the scheduler, " "please use `get_last_lr()`.")
 
-        return [base_lr * self.lr_lambda(self.last_epoch)
-                for base_lr in self.base_lrs]
+        return [base_lr * self.lr_lambda(self.last_epoch) for base_lr in self.base_lrs]
