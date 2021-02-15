@@ -90,7 +90,7 @@ class PolynomialLayerwiseDecaySchedulerWithWarmup(_LRScheduler):
         self.layerwise_lr_decay_power = layerwise_lr_decay_power
 
         # retrieve depth for each params group
-        self.depths = [group['depth'] for group in self.optimizer.param_groups]
+        self.depths = [group['depth'] for group in optimizer.param_groups]
 
         super().__init__(optimizer, last_epoch=last_epoch, verbose=verbose)
 
