@@ -17,6 +17,7 @@ A collection of `adapters`, `datasets`, `datamodules`, `callbacks`, `models`, `m
   * [2.7. Losses](transformers_lightning/losses)
   * [2.8. Language modeling](transformers_lightning/language_modeling)
   * [2.9. Schedulers](transformers_lightning/schedulers)
+  * [2.10. Optimizers](transformers_lightning/optimizers)
 
 **[3. Main file](#main)**
 
