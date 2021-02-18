@@ -1,5 +1,3 @@
-import math
-
 import torch
 from torch.optim import AdamW
 
@@ -8,7 +6,10 @@ class ElectraAdamW(AdamW):
     r"""Implements AdamW algorithm.
 
     The original Adam algorithm was proposed in `Adam: A Method for Stochastic Optimization`_.
-    The AdamW variant was proposed in `Decoupled Weight Decay Regularization`_.
+    The AdamW variant was proposed in `Decoupled Weight Decay Regularization`_. This version is
+    inspired to the version of AdamW proposed in `ELECTRA: PRE-TRAINING TEXT ENCODERS
+    AS DISCRIMINATORS RATHER THAN GENERATORS`. This code is the porting of the original
+    tensorflow code available `here <https://github.com/google-research/electra/blob/master/model/optimization.py>`_.
 
     Arguments:
         params (iterable): iterable of parameters to optimize or dicts defining
@@ -31,7 +32,7 @@ class ElectraAdamW(AdamW):
         https://openreview.net/forum?id=ryQu7f-RZ
     """
 
-    def __init__(self, params, lr=1e-4, betas=(0.9, 0.999), eps=1e-6, weight_decay=0.0, amsgrad=False):
+    def __init__(self, params, lr=1e-3, betas=(0.9, 0.999), eps=1e-6, weight_decay=1e-2, amsgrad=False):
         super(ElectraAdamW,
               self).__init__(params, lr=lr, betas=betas, eps=eps, weight_decay=weight_decay, amsgrad=amsgrad)
 
@@ -53,51 +54,33 @@ class ElectraAdamW(AdamW):
                 if p.grad is None:
                     continue
 
-                # Perform stepweight decay
-                p.mul_(1 - group['lr'] * group['weight_decay'])
-
                 # Perform optimization step
                 grad = p.grad
-                if grad.is_sparse:
-                    raise RuntimeError('AdamW does not support sparse gradients')
-                amsgrad = group['amsgrad']
-
                 state = self.state[p]
 
                 # State initialization
                 if len(state) == 0:
-                    state['step'] = 0
                     # Exponential moving average of gradient values
                     state['exp_avg'] = torch.zeros_like(p, memory_format=torch.preserve_format)
                     # Exponential moving average of squared gradient values
                     state['exp_avg_sq'] = torch.zeros_like(p, memory_format=torch.preserve_format)
-                    if amsgrad:
-                        # Maintains max of all exp. moving avg. of sq. grad. values
-                        state['max_exp_avg_sq'] = torch.zeros_like(p, memory_format=torch.preserve_format)
 
+                beta1, beta2 = group['beta1'], group['beta2']
                 exp_avg, exp_avg_sq = state['exp_avg'], state['exp_avg_sq']
 
-                beta1, beta2 = group['betas']
-
-                state['step'] += 1
-                bias_correction1 = 1 - beta1**state['step']
-                bias_correction2 = 1 - beta2**state['step']
+                next_exp_avg = beta1 * exp_avg + (1 - beta1) * grad
+                next_exp_avg_sq = beta2 * exp_avg_sq + (1 - beta2) * torch.square(grad)
 
                 # Decay the first and second moment running average coefficient
-                exp_avg.mul_(beta1).add_(grad, alpha=1 - beta1)
-                exp_avg_sq.mul_(beta2).add_(grad.sqrt(), alpha=1 - beta2)    # <-- fix is here
+                update = next_exp_avg / (torch.sqrt(next_exp_avg_sq) + group['eps'])
 
-                if amsgrad:
-                    max_exp_avg_sq = state['max_exp_avg_sq']
-                    # Maintains the maximum of all 2nd moment running avg. till now
-                    torch.maximum(max_exp_avg_sq, exp_avg_sq, out=max_exp_avg_sq)
-                    # Use the max. for normalizing running avg. of gradient
-                    denom = (max_exp_avg_sq.sqrt() / math.sqrt(bias_correction2)).add_(group['eps'])
-                else:
-                    denom = (exp_avg_sq.sqrt() / math.sqrt(bias_correction2)).add_(group['eps'])
+                # Perform stepweight decay
+                update += p * group['weight_decay']
 
-                step_size = group['lr'] / bias_correction1
+                # Update parameters
+                p.sub_(group['lr'] * update)
 
-                p.addcdiv_(exp_avg, denom, value=-step_size)
+                # Update internal state
+                state['exp_avg'], state['exp_avg_sq'] = next_exp_avg, next_exp_avg_sq
 
         return loss
