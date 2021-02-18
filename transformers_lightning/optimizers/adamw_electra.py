@@ -65,7 +65,7 @@ class ElectraAdamW(AdamW):
                     # Exponential moving average of squared gradient values
                     state['exp_avg_sq'] = torch.zeros_like(p, memory_format=torch.preserve_format)
 
-                beta1, beta2 = group['beta1'], group['beta2']
+                beta1, beta2 = group['betas']
                 exp_avg, exp_avg_sq = state['exp_avg'], state['exp_avg_sq']
 
                 next_exp_avg = beta1 * exp_avg + (1 - beta1) * grad
