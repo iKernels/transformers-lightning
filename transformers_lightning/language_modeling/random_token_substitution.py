@@ -55,6 +55,7 @@ class RandomTokenSubstitution(LanguageModel):
                  words_tails: torch.Tensor = None) -> Tuple[torch.LongTensor, torch.LongTensor]:
 
         device = inputs.device
+        inputs = inputs.clone()
         labels = torch.full(inputs.shape, fill_value=0, dtype=torch.long, device=device)
 
         # We sample a few tokens in each sequence for masked-LM training (with probability args.rts_probability defaults to 0.15 in Bert/RoBERTa)
