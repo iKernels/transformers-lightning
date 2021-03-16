@@ -54,9 +54,11 @@ class ElectraAdamW(AdamW):
                 if p.grad is None:
                     continue
 
-                # Perform optimization step
                 grad = p.grad
                 state = self.state[p]
+
+                # Perform stepweight decay
+                p.mul_(1 - group['lr'] * group['weight_decay'])
 
                 # State initialization
                 if len(state) == 0:
@@ -68,19 +70,14 @@ class ElectraAdamW(AdamW):
                 beta1, beta2 = group['betas']
                 exp_avg, exp_avg_sq = state['exp_avg'], state['exp_avg_sq']
 
-                next_exp_avg = beta1 * exp_avg + (1 - beta1) * grad
-                next_exp_avg_sq = beta2 * exp_avg_sq + (1 - beta2) * torch.square(grad)
+                # Update moving average and square average
+                exp_avg.mul_(beta1).add_(grad, alpha=1-beta1)
+                exp_avg_sq.mul_(beta2).addcmul_(grad, grad, value=1-beta2)
 
                 # Decay the first and second moment running average coefficient
-                update = next_exp_avg / (torch.sqrt(next_exp_avg_sq) + group['eps'])
-
-                # Perform stepweight decay
-                update += p * group['weight_decay']
-
-                # Update parameters
-                p.sub_(group['lr'] * update)
+                p.addcdiv_(exp_avg, exp_avg_sq.sqrt() + group['eps'], value=-group['lr'])
 
                 # Update internal state
-                state['exp_avg'], state['exp_avg_sq'] = next_exp_avg, next_exp_avg_sq
+                state['exp_avg'], state['exp_avg_sq'] = exp_avg, exp_avg_sq
 
         return loss
