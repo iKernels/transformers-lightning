@@ -9,12 +9,17 @@ from transformers_lightning.language_modeling.utils import whole_word_tails_mask
 
 class MaskedLanguageModeling(LanguageModel):
     r"""
-    Prepare masked tokens inputs/labels for masked language modeling: 80% MASK, 10% random, 10% original.
+    Prepare masked tokens inputs/labels for masked language modeling: 80% MASK, 10% random, 10% original (can be changed).
     If `whole_word_masking` is True, either every or no token in a word will be masked. This argument requires
     that `words_tails` are passed to the `__call__` method such that the model can understand which parts of a word
     are tails ('##..'-like tokens). `words_tails` must be a boolean tensor with the same shape as `inputs`
     and be True iff the corresponding tokens starts with `##`. Passing a None `words_tails` will make the model compute
     them, which is expensive. So, for performance reasons we strongly suggest to compute `words_tails` in adapters.
+
+    Args:
+        `probability`: probability that a token is chosen
+        `probability_masked`: probability that a chosen token is masked
+        `probability_replaced`: probability that a chosen token is replaced
 
     Usage example:
     >>> import torch
@@ -42,11 +47,24 @@ class MaskedLanguageModeling(LanguageModel):
     def __init__(
         self,
         tokenizer: transformers.PreTrainedTokenizer,
-        mlm_probability: float = 0.15,
+        probability: float = 0.15,
+        probability_masked: float = 0.80,
+        probability_replaced: float = 0.10,
         whole_word_masking: bool = False
     ):
-        super().__init__(tokenizer)
-        self.mlm_probability = mlm_probability
+        super().__init__(tokenizer, probability=probability)
+        if not 0.0 <= probability_masked <= 1.0:
+            raise ValueError(f"Argument `probability_masked` must be a float between 0.0 and 1.0, found: {probability_masked}")
+        if not 0.0 <= probability_replaced <= 1.0:
+            raise ValueError(f"Argument `probability_replaced` must be a float between 0.0 and 1.0, found: {probability_replaced}")
+        if not 0.0 <= (probability_replaced + probability_masked) <= 1.0:
+            raise ValueError(
+                f"Sum of arguments `probability_replaced` and `probability_masked`"
+                f"must be a float between 0.0 and 1.0, found: {probability_replaced}"
+            )
+
+        self.probability_masked = probability_masked
+        self.probability_replaced = probability_replaced
         self.whole_word_masking = whole_word_masking
 
     def __call__(self,
@@ -60,10 +78,11 @@ class MaskedLanguageModeling(LanguageModel):
 
         device = inputs.device
         labels = inputs.clone()
+        inputs = inputs.clone()
 
-        # We sample a few tokens in each sequence for masked-LM training (with probability mlm_probability defaults to 0.15 in Bert/RoBERTa)
+        # We sample a few tokens in each sequence for masked-LM training (with probability probability defaults to 0.15 in Bert/RoBERTa)
         probability_matrix = torch.full(
-            labels.shape, fill_value=self.mlm_probability, dtype=torch.float32, device=device
+            labels.shape, fill_value=self.probability, dtype=torch.float32, device=device
         )
 
         # create whole work masking mask -> True if the token starts with ## (following token in composed words)
@@ -92,11 +111,12 @@ class MaskedLanguageModeling(LanguageModel):
         labels[~masked_indices] = IGNORE_IDX    # We only compute loss on masked tokens
 
         # 80% of the time, we replace masked input tokens with tokenizer.mask_token ([MASK])
-        indices_replaced = torch.bernoulli(torch.full(labels.shape, 0.8, device=device)).bool() & masked_indices
+        indices_replaced = torch.bernoulli(torch.full(labels.shape, self.probability_masked, device=device)).bool() & masked_indices
         inputs[indices_replaced] = self.tokenizer.mask_token_id
 
+        probability_replaced_relative = self.probability_replaced / (1 - self.probability_masked)
         # 10% of the time, we replace masked input tokens with random word
-        indices_random = torch.bernoulli(torch.full(labels.shape, 0.5, device=device)
+        indices_random = torch.bernoulli(torch.full(labels.shape, probability_replaced_relative, device=device)
                                         ).bool() & masked_indices & ~indices_replaced
         random_words = torch.randint(len(self.tokenizer), labels.shape, dtype=torch.long, device=device)
         inputs[indices_random] = random_words[indices_random]

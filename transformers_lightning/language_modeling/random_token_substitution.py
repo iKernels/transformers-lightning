@@ -10,7 +10,7 @@ from transformers_lightning.language_modeling.utils import whole_word_tails_mask
 class RandomTokenSubstitution(LanguageModel):
     r"""
     Prepare tokens inputs/labels for random token substutition modeling.
-    We sample a few tokens in each sequence for RTS training (with probability `rts_probability` defaults to 0.15 in Bert/RoBERTa)
+    We sample a few tokens in each sequence for RTS training (with probability `probability` defaults to 0.15 in Bert/RoBERTa)
     If `whole_word_swapping` is True, either every or no token in a word will be masked. This argument requires
     that `words_tails` are passed to the `__call__` method such that the model can understand which parts of a word
     are tails ('##..'-like tokens). `words_tails` must be a boolean tensor with the same shape as `inputs`
@@ -43,11 +43,10 @@ class RandomTokenSubstitution(LanguageModel):
     def __init__(
         self,
         tokenizer: transformers.PreTrainedTokenizer,
-        rts_probability: float = 0.15,
+        probability: float = 0.15,
         whole_word_swapping: bool = False,
     ):
-        super().__init__(tokenizer)
-        self.rts_probability = rts_probability
+        super().__init__(tokenizer, probability=probability)
         self.whole_word_swapping = whole_word_swapping
 
     def __call__(self,
@@ -55,11 +54,12 @@ class RandomTokenSubstitution(LanguageModel):
                  words_tails: torch.Tensor = None) -> Tuple[torch.LongTensor, torch.LongTensor]:
 
         device = inputs.device
+        inputs = inputs.clone()
         labels = torch.full(inputs.shape, fill_value=0, dtype=torch.long, device=device)
 
-        # We sample a few tokens in each sequence for masked-LM training (with probability args.rts_probability defaults to 0.15 in Bert/RoBERTa)
+        # We sample a few tokens in each sequence for masked-LM training (with probability args.probability defaults to 0.15 in Bert/RoBERTa)
         probability_matrix = torch.full(
-            inputs.shape, fill_value=self.rts_probability, dtype=torch.float32, device=device
+            inputs.shape, fill_value=self.probability, dtype=torch.float32, device=device
         )
 
         # create whole work masking mask -> True if the token starts with ## (following token in composed words)
