@@ -1,14 +1,15 @@
-from argparse import Namespace
 import os
-import torch
+from argparse import Namespace
 
 import pytest
 import pytorch_lightning as pl
-from transformers_lightning.models import TransformersModel
-from transformers_lightning.adapters import SuperAdapter
-from transformers_lightning.datamodules import SuperDataModule
-from transformers_lightning.schedulers import CosineSchedulerWithWarmup
+import torch
 from transformers import AdamW
+
+from transformers_lightning.adapters import SuperAdapter
+from transformers_lightning.datamodules import AdaptersDataModule
+from transformers_lightning.models import TransformersModel
+from transformers_lightning.schedulers import CosineSchedulerWithWarmup
 
 
 class FakeModel(TransformersModel):
@@ -61,7 +62,7 @@ class FakeAdapter(SuperAdapter):
         return res
 
 
-class FakeDataModule(SuperDataModule):
+class FakeDataModule(AdaptersDataModule):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -93,7 +94,6 @@ def test_datamodule_cpu(num_training_steps, last_epoch, expected_lrs):
         last_epoch=last_epoch,
         max_sequence_length=10,
         gpus=0,
-        iterable_datasets=False,
         log_every_n_steps=1,
         learning_rate=1.0,
     )

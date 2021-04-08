@@ -3,11 +3,11 @@ from argparse import ArgumentParser, Namespace
 import torch
 from pytorch_lightning import LightningModule
 from pytorch_lightning import _logger as logger
+from pytorch_lightning.utilities.distributed import rank_zero_warn
 from transformers import AdamW
 
 from transformers_lightning import utils
-from transformers_lightning.schedulers.linear_scheduler_with_warmup import \
-    LinearSchedulerWithWarmup
+from transformers_lightning.schedulers.linear_scheduler_with_warmup import LinearSchedulerWithWarmup
 
 
 class TransformersModel(LightningModule):
@@ -97,6 +97,6 @@ class TransformersModel(LightningModule):
 
         tmp_args, _ = parser.parse_known_args()
         if tmp_args.learning_rate > 1:
-            logger.warning(f"You specified a huge learning rate! Learning rate: {tmp_args.learning_rate}")
+            rank_zero_warn(f"You specified a huge learning rate! Learning rate: {tmp_args.learning_rate}")
 
         return parser

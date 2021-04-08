@@ -1,20 +1,17 @@
-from pytorch_lightning import Trainer
+from compressed_dictionary import CompressedDictionary
 
-from transformers_lightning.adapters.super_adapter import SuperAdapter
 from transformers_lightning.datasets.super_dataset import SuperDataset
 
 
-class MapDataset(SuperDataset):
+class CompressedDataset(SuperDataset):
     r"""
-    Superclass of all map datasets. Tokenization is performed on the fly.
-    Dataset is completely read into memory.
+    Superclass of all dataset using new `CompressedDictionary`s.
+    Dataset is completely read into memory in a compressed way and decompression is done on-the-fly.
     """
 
-    def __init__(self, hparams, adapter: SuperAdapter, trainer: Trainer):
+    def __init__(self, hparams, filepath: str):
         super().__init__(hparams)
-        self.trainer = trainer
-        self.adapter = adapter
-        self.data = list(iter(adapter))
+        self.data = CompressedDictionary.load(filepath)
 
     def __len__(self):
         return len(self.data)
@@ -28,7 +25,4 @@ class MapDataset(SuperDataset):
 
         assert 0 <= idx < len(self), (f"Received index out of range {idx}, range: {0} <= idx < {len(self)}")
 
-        row = self.data[idx]
-        row_dict = self.adapter.preprocess_line(row)
-
-        return row_dict
+        return self.data[idx]

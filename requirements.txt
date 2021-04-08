@@ -2,3 +2,4 @@ pytest
 pytorch-lightning>=1.2.7
 transformers>=4.4.2
 torch>=1.8.1
+compressed-dictionary>=1.2.1

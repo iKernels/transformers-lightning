@@ -1,21 +1,23 @@
 import multiprocessing
-from argparse import Namespace
-
-from transformers import AdamW
-from tests import adapters
 import time
+from argparse import Namespace
 
 import pytest
 import pytorch_lightning as pl
 import torch
-from transformers_lightning import datamodules, models, adapters, utils
-from transformers import BertTokenizer
-from transformers.models.bert.modeling_bert import (BertConfig, BertForSequenceClassification)
+from transformers import AdamW, BertTokenizer
+from transformers.models.bert.modeling_bert import BertConfig, BertForSequenceClassification
+
+from tests import adapters
+from transformers_lightning import adapters, datamodules, models, utils
+from transformers_lightning.adapters import CSVAdapter
+from transformers_lightning.datamodules import AdaptersDataModule
+from transformers_lightning.models import TransformersModel
 
 n_cpus = multiprocessing.cpu_count()
 
 
-class SimpleTransformerLikeModel(models.TransformersModel):
+class SimpleTransformerLikeModel(TransformersModel):
 
     def __init__(self, hparams):
         super().__init__(hparams)
@@ -34,7 +36,7 @@ class SimpleTransformerLikeModel(models.TransformersModel):
         return results.loss
 
 
-class ExampleAdapter(adapters.CSVAdapter):
+class ExampleAdapter(CSVAdapter):
 
     def __init__(self, *args, tokenizer=None, **kwargs):
         super().__init__(*args, **kwargs)
@@ -54,7 +56,7 @@ class ExampleAdapter(adapters.CSVAdapter):
         return res
 
 
-class ExampleDataModule(datamodules.SuperDataModule):
+class ExampleDataModule(AdaptersDataModule):
 
     def __init__(self, *args, test_number=1, tokenizer=None, **kwargs):
         super().__init__(*args, **kwargs)
@@ -65,18 +67,18 @@ class ExampleDataModule(datamodules.SuperDataModule):
 
 # Test if max_steps fix works correctly
 @pytest.mark.parametrize(
-    ["max_epochs", "accumulate_grad_batches", "batch_size", "expected_max_steps", "ds_type"], [
-        [1, 1, 4, 10, 'map'],
-        [1, 3, 8, 2, 'map'],
-        [4, 2, 12, 8, 'map'],
-        [4, 4, 16, 4, 'map'],
-        [1, 1, 4, 10, 'iter'],
-        [1, 3, 8, 2, 'iter'],
-        [4, 4, 16, 4, 'iter'],
-        [4, 2, 12, 8, 'iter'],
+    ["max_epochs", "accumulate_grad_batches", "batch_size", "expected_max_steps"], [
+        [1, 1, 4, 10],
+        [1, 3, 8, 2],
+        [4, 2, 12, 8],
+        [4, 4, 16, 4],
+        [1, 1, 4, 10],
+        [1, 3, 8, 2],
+        [4, 4, 16, 4],
+        [4, 2, 12, 8],
     ]
 )
-def test_fix_max_steps_cpu(max_epochs, accumulate_grad_batches, batch_size, expected_max_steps, ds_type):
+def test_fix_max_steps_cpu(max_epochs, accumulate_grad_batches, batch_size, expected_max_steps):
 
     hparams = Namespace(
         batch_size=batch_size,
@@ -87,7 +89,6 @@ def test_fix_max_steps_cpu(max_epochs, accumulate_grad_batches, batch_size, expe
         max_steps=None,
         max_sequence_length=10,
         gpus=None,
-        iterable_datasets=ds_type == 'iter',
         skip_in_training=None
     )
 
@@ -139,7 +140,6 @@ def test_fix_max_steps_gpu(max_epochs, accumulate_grad_batches, batch_size, dist
         max_steps=None,
         max_sequence_length=10,
         gpus=2,
-        iterable_datasets=False,
         skip_in_training=None,
         accelerator=distributed_backend
     )

@@ -37,9 +37,6 @@ pip install git+https://github.com/iKernels/transformers-lightning.git@0.5.4 --u
 ## Documentation
 
 The documentation of each component is described in the relative folder.
-Follows a general schema that clearly explains connections between components and data flow.
-
-<img src="./pictures/transformers_lightning.svg">
 
 
 <a name="main"></a>

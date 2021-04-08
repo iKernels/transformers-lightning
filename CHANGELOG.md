@@ -7,6 +7,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 ## 0.6.0
 
+- Added `CompressedDataModule` based on `CompressedDataset`
+
+- Added `CompressedDataset` based on [`CompressedDictionary`](https://github.com/lucadiliello/compressed-dictionary)
+
+- Removed `IterableDataset`
+
 - Metrics has been moved to the `torchmetrics` library ([#81](https://github.com/iKernels/transformers-lightning/issues/81))
 
 - Removed losses package because it has been empty for months.

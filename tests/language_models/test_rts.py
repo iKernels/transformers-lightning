@@ -1,7 +1,7 @@
+import pytest
 import torch
 from transformers import BertTokenizer
 
-import pytest
 from transformers_lightning.language_modeling import IGNORE_IDX
 from transformers_lightning.language_modeling.random_token_substitution import RandomTokenSubstitution
 from transformers_lightning.language_modeling.utils import whole_word_tails_mask

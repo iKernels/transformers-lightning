@@ -1,5 +1,6 @@
 import os
 from argparse import Namespace
+
 from transformers_lightning.adapters.super_adapter import SuperAdapter
 
 
@@ -11,7 +12,8 @@ class FileAdapter(SuperAdapter):
 
     def __init__(self, hparams: Namespace, filepath: str) -> None:
         r"""
-        :param filepath: path of the file that should be loaded
+        Args:
+            filepath: path of the file that should be loaded
         """
         super().__init__(hparams)
 

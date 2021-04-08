@@ -1,5 +1,6 @@
-import setuptools
 import json
+
+import setuptools
 
 
 def load_long_description():

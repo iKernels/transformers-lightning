@@ -1,23 +1,23 @@
 import multiprocessing
-from argparse import Namespace
 import os
-from transformers_lightning.callbacks.transformers_model_checkpoint import TransformersModelCheckpointCallback
-from transformers_lightning.datamodules import SuperDataModule
-
-from transformers import BertTokenizer
 import shutil
+from argparse import Namespace
 
 import pytest
 import pytorch_lightning as pl
-from tests.datamodules.test_utils import SimpleTransformerLikeModel, ExampleAdapter
+from transformers import BertTokenizer
+
+from tests.datamodules.test_utils import ExampleAdapter, SimpleTransformerLikeModel
+from transformers_lightning.callbacks.transformers_model_checkpoint import TransformersModelCheckpointCallback
+from transformers_lightning.datamodules import AdaptersDataModule
 
 n_cpus = multiprocessing.cpu_count()
-OUTPUT_DIR = "tests/output"
+OUTPUT_DIR = "/tmp/tests"
 if os.path.isdir(OUTPUT_DIR):
     shutil.rmtree(OUTPUT_DIR)
 
 
-class ExampleDataModule(SuperDataModule):
+class ExampleDataModule(AdaptersDataModule):
 
     def __init__(self, *args, test_number=1, tokenizer=None, **kwargs):
         super().__init__(*args, **kwargs)
