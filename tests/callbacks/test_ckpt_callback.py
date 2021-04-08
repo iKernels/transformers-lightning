@@ -67,7 +67,6 @@ def test_datamodule_cpu(epochs, accumulate_grad_batches, batch_size, callback_in
         max_steps=None,
         max_sequence_length=10,
         gpus=0,
-        iterable_datasets=False,
         skip_in_training=None,
         checkpoint_interval=callback_interval,
         no_val_checkpointing=not val_callback,
