@@ -58,9 +58,7 @@ class RandomTokenSubstitution(LanguageModel):
         labels = torch.full(inputs.shape, fill_value=0, dtype=torch.long, device=device)
 
         # We sample a few tokens in each sequence for masked-LM training (with probability args.probability defaults to 0.15 in Bert/RoBERTa)
-        probability_matrix = torch.full(
-            inputs.shape, fill_value=self.probability, dtype=torch.float32, device=device
-        )
+        probability_matrix = torch.full(inputs.shape, fill_value=self.probability, dtype=torch.float32, device=device)
 
         # create whole work masking mask -> True if the token starts with ## (following token in composed words)
         if words_tails is None and self.whole_word_swapping:

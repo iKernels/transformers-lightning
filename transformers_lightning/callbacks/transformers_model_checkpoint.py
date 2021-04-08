@@ -95,8 +95,8 @@ class TransformersModelCheckpointCallback(Callback):
         self.save_model(pl_module, epoch=trainer.current_epoch, step=pl_module.global_step + 1)
 
     @rank_zero_only
-    def on_epoch_end(self, trainer, pl_module):
-        """Called when the epoch ends."""
+    def on_train_epoch_end(self, trainer, pl_module, outputs):
+        """Called when the train epoch ends."""
         # only run on main process
         if trainer.global_rank != 0:
             return

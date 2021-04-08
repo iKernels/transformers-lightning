@@ -54,9 +54,13 @@ class MaskedLanguageModeling(LanguageModel):
     ):
         super().__init__(tokenizer, probability=probability)
         if not 0.0 <= probability_masked <= 1.0:
-            raise ValueError(f"Argument `probability_masked` must be a float between 0.0 and 1.0, found: {probability_masked}")
+            raise ValueError(
+                f"Argument `probability_masked` must be a float between 0.0 and 1.0, found: {probability_masked}"
+            )
         if not 0.0 <= probability_replaced <= 1.0:
-            raise ValueError(f"Argument `probability_replaced` must be a float between 0.0 and 1.0, found: {probability_replaced}")
+            raise ValueError(
+                f"Argument `probability_replaced` must be a float between 0.0 and 1.0, found: {probability_replaced}"
+            )
         if not 0.0 <= (probability_replaced + probability_masked) <= 1.0:
             raise ValueError(
                 f"Sum of arguments `probability_replaced` and `probability_masked`"
@@ -81,9 +85,7 @@ class MaskedLanguageModeling(LanguageModel):
         inputs = inputs.clone()
 
         # We sample a few tokens in each sequence for masked-LM training (with probability probability defaults to 0.15 in Bert/RoBERTa)
-        probability_matrix = torch.full(
-            labels.shape, fill_value=self.probability, dtype=torch.float32, device=device
-        )
+        probability_matrix = torch.full(labels.shape, fill_value=self.probability, dtype=torch.float32, device=device)
 
         # create whole work masking mask -> True if the token starts with ## (following token in composed words)
         if words_tails is None and self.whole_word_masking:
@@ -111,7 +113,8 @@ class MaskedLanguageModeling(LanguageModel):
         labels[~masked_indices] = IGNORE_IDX    # We only compute loss on masked tokens
 
         # 80% of the time, we replace masked input tokens with tokenizer.mask_token ([MASK])
-        indices_replaced = torch.bernoulli(torch.full(labels.shape, self.probability_masked, device=device)).bool() & masked_indices
+        indices_replaced = torch.bernoulli(torch.full(labels.shape, self.probability_masked, device=device)
+                                          ).bool() & masked_indices
         inputs[indices_replaced] = self.tokenizer.mask_token_id
 
         probability_replaced_relative = self.probability_replaced / (1 - self.probability_masked)
