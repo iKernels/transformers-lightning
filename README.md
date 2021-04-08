@@ -1,6 +1,6 @@
 # transformers-lightning
 
-A collection of `adapters`, `datasets`, `datamodules`, `callbacks`, `models`, `metrics`, `losses`, `language-modeling` techniques, `schedulers` and `optimizers` to better integrate the [PyTorch Lightning](https://pytorch-lightning.readthedocs.io/en/stable/lightning-module.html) and the [Transformers](https://huggingface.co/transformers/) libraries.
+A collection of `adapters`, `datasets`, `datamodules`, `callbacks`, `models`, `language-modeling` techniques, `schedulers` and `optimizers` to better integrate the [PyTorch Lightning](https://pytorch-lightning.readthedocs.io/en/stable/lightning-module.html) and the [Transformers](https://huggingface.co/transformers/) libraries.
 
 
 # Table of contents
@@ -13,11 +13,9 @@ A collection of `adapters`, `datasets`, `datamodules`, `callbacks`, `models`, `m
   * [2.3. Datamodules](transformers_lightning/datamodules)
   * [2.4. Callbacks](transformers_lightning/callbacks)
   * [2.5. Models](transformers_lightning/models)
-  * [2.6. Metrics](transformers_lightning/metrics)
-  * [2.7. Losses](transformers_lightning/losses)
-  * [2.8. Language modeling](transformers_lightning/language_modeling)
-  * [2.9. Schedulers](transformers_lightning/schedulers)
-  * [2.10. Optimizers](transformers_lightning/optimizers)
+  * [2.6. Language modeling](transformers_lightning/language_modeling)
+  * [2.7. Schedulers](transformers_lightning/schedulers)
+  * [2.8. Optimizers](transformers_lightning/optimizers)
 
 **[3. Main file](#main)**
 
@@ -29,9 +27,9 @@ Install the last stable release with
 pip install transformers-lightning
 ```
 
-You can also install a particular older version, for example the `0.3.0` by doing:
+You can also install a particular older version, for example the `0.5.4` by doing:
 ```
-pip install git+https://github.com/iKernels/transformers-lightning.git@0.3.0 --upgrade
+pip install git+https://github.com/iKernels/transformers-lightning.git@0.5.4 --upgrade
 ```
 
 
@@ -77,7 +75,8 @@ def main(hparams):
 
     # default tensorboard logger
     test_tube_logger = pl.loggers.TestTubeLogger(
-        os.path.join(hparams.output_dir, hparams.tensorboard_dir), name=hparams.name)
+        os.path.join(hparams.output_dir, hparams.tensorboard_dir), name=hparams.name
+    )
 
     # Save pre-trained models to
     save_transformers_callback = callbacks.TransformersModelCheckpointCallback(hparams)
