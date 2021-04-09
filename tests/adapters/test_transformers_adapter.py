@@ -1,8 +1,9 @@
 from argparse import Namespace
 
-import transformers
-from transformers_lightning.adapters import TransformersAdapter
 import pytest
+import transformers
+
+from transformers_lightning.adapters import TransformersAdapter
 
 
 class ExampleAdapter(TransformersAdapter):

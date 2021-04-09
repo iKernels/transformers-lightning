@@ -1,17 +1,19 @@
 import multiprocessing
-from argparse import Namespace
 import os
-from transformers import BertTokenizer
+from argparse import Namespace
 
 import pytest
 import pytorch_lightning as pl
-from transformers_lightning import datamodules
-from .test_utils import SimpleTransformerLikeModel, ExampleAdapter
+from transformers import BertTokenizer
+
+from transformers_lightning.datamodules import AdaptersDataModule
+
+from .test_utils import ExampleAdapter, SimpleTransformerLikeModel
 
 n_cpus = multiprocessing.cpu_count()
 
 
-class ExampleDataModule(datamodules.SuperDataModule):
+class ExampleDataModule(AdaptersDataModule):
 
     def __init__(self, *args, test_number=1, tokenizer=None, **kwargs):
         super().__init__(*args, **kwargs)
@@ -29,29 +31,18 @@ class ExampleDataModule(datamodules.SuperDataModule):
 
 # Test iter dataset work correctly
 @pytest.mark.parametrize(
-    ["ds_type", "num_workers", "gpus", "epochs"],
+    ["num_workers", "gpus", "epochs"],
     [
-
-    # ITER dataset
     # test different num_workers in single node on cpu
-        ['iter', 0, 0, 1],
-        ['iter', n_cpus, 0, 1],
+        [0, 0, 1],
+        [n_cpus, 0, 1],
 
     # num_workers through epochs
-        ['iter', 0, 0, 1],
-        ['iter', 0, 0, 10],
-
-    # MAP dataset
-    # test different num_workers in single node on cpu
-        ['map', 0, 0, 1],
-        ['map', n_cpus, 0, 1],
-
-    # num_workers through epochs
-        ['map', 0, 0, 1],
-        ['map', 2, 0, 1],
+        [0, 0, 1],
+        [2, 0, 1],
     ]
 )
-def test_datamodule_cpu(ds_type, num_workers, gpus, epochs):
+def test_datamodule_cpu(num_workers, gpus, epochs):
 
     os.environ["CUDA_VISIBLE_DEVICES"] = ""
 
@@ -66,7 +57,6 @@ def test_datamodule_cpu(ds_type, num_workers, gpus, epochs):
         max_steps=None,
         max_sequence_length=10,
         gpus=gpus,
-        iterable_datasets=ds_type == 'iter',
         skip_in_training=None
     )
 

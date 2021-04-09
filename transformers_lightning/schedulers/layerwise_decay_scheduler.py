@@ -19,8 +19,8 @@ Modified from the original BERT code to allow for having separate learning
 rates for different layers of the network.
 """
 import math
-
 import warnings
+
 from torch.optim.lr_scheduler import _LRScheduler
 
 

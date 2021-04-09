@@ -1,6 +1,6 @@
 from typing import Tuple
-import torch
 
+import torch
 import transformers
 
 from transformers_lightning.language_modeling import IGNORE_IDX, LanguageModel

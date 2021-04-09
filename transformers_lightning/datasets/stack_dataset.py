@@ -1,11 +1,12 @@
 import torch
 from pytorch_lightning.utilities.distributed import rank_zero_warn
+
 from transformers_lightning import utils
 
 
 class StackDataset(torch.utils.data.Dataset):
     r"""Dataset as a stack of multiple datasets. (parallel)
-    This class is useful to assemble different existing datasets.
+    This class is useful to assemble different existing datasets in parallel.
     Arguments:
         datasets (sequence): List of datasets to be stacked
     """

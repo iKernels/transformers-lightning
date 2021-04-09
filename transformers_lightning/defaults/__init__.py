@@ -9,7 +9,6 @@ class DefaultConfig:
     """
 
     output_dir: str = "outputs"
-    results_dir: str = "results"
     pre_trained_dir: str = "pre_trained_models"
     tensorboard_dir: str = "tensorboard"
     checkpoints_dir: str = "checkpoints"

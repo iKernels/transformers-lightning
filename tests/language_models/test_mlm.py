@@ -1,8 +1,8 @@
+import pytest
 import torch
 from transformers import BertTokenizer
 
-import pytest
-from transformers_lightning.language_modeling.masked_language_modeling import MaskedLanguageModeling, IGNORE_IDX
+from transformers_lightning.language_modeling.masked_language_modeling import IGNORE_IDX, MaskedLanguageModeling
 from transformers_lightning.language_modeling.utils import whole_word_tails_mask
 
 tok = BertTokenizer.from_pretrained('bert-base-cased')

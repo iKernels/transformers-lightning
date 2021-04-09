@@ -1,6 +1,6 @@
 # DataModules
 
-A `DataModule` is a collection of at most `3` dataset to provide data for both training, validation and testing in a flexible way. For more information about a `DataLoader`, see the original implementation in the [`pytorch-lightning`](https://pytorch-lightning.readthedocs.io/en/stable/datamodules.html) repository. This folder extends the original `DataLoader` with some simple utilities to:
+A `DataModule` is a collection of at most `3` dataset to provide data for both `training`, `validation` and `testing` in a flexible way. For more information about a `DataModule`, see the original implementation in the [`pytorch-lightning`](https://pytorch-lightning.readthedocs.io/en/stable/datamodules.html) repository. This folder extends the original `DataModule` with some simple utilities to:
 - Do training only then a `train_dataloader` method is defined.
 - Same for test.
 

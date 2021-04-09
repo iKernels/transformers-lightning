@@ -1,6 +1,8 @@
 from argparse import Namespace
-from transformers_lightning.adapters import CSVAdapter
+
 import pytest
+
+from transformers_lightning.adapters import CSVAdapter
 
 
 class ExampleAdapter(CSVAdapter):
