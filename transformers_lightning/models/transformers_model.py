@@ -2,7 +2,6 @@ from argparse import ArgumentParser, Namespace
 
 import torch
 from pytorch_lightning import LightningModule
-from pytorch_lightning import _logger as logger
 from pytorch_lightning.utilities.distributed import rank_zero_warn
 from transformers import AdamW
 

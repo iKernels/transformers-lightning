@@ -87,9 +87,9 @@ class RandomTokenSubstitution(LanguageModel):
         # with whole word masking, assure all tokens in a word are either all masked or not
         if self.whole_word_swapping:
             for i in range(1, substituted_indices.shape[-1]):
-                substituted_indices[:,
-                                    i] = substituted_indices[:,
-                                                             i] | (substituted_indices[:, i - 1] & words_tails[:, i])
+                substituted_indices[:, i] = substituted_indices[:, i] | (
+                    substituted_indices[:, i - 1] & words_tails[:, i]
+                )
 
         random_words = torch.randint(len(self.tokenizer), inputs.shape, dtype=torch.long, device=device)
         inputs[substituted_indices] = random_words[substituted_indices]

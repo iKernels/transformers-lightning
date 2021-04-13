@@ -33,7 +33,7 @@ mlm = MaskedLanguageModeling(tok, whole_word_masking=True)
         ]
     ]
 )
-def test_datamodule_cpu(seed, sentence, masking):
+def test_language_model(seed, sentence, masking):
 
     torch.random.manual_seed(seed)
     torch.cuda.random.manual_seed(seed)

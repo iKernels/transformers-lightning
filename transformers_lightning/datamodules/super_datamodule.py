@@ -54,7 +54,8 @@ class SuperDataModule(pl.LightningDataModule):
             num_workers=self.hparams.num_workers,
             pin_memory=True,
             collate_fn=self.collate_fn,
-            shuffle=shuffle
+            shuffle=shuffle,
+            drop_last=False,
         )
 
     def train_dataloader(self):
