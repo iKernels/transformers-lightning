@@ -1,11 +1,8 @@
-import multiprocessing
 import os
 from argparse import ArgumentParser
 from typing import Callable
 
-import pytorch_lightning as pl
 from pytorch_lightning import _logger as logger
-from torch.utils.data import DataLoader
 
 from transformers_lightning import utils
 from transformers_lightning.datamodules.super_datamodule import SuperDataModule
@@ -22,7 +19,7 @@ class CompressedDataModule(SuperDataModule):
     valid_filepath: str = None
     test_filepath: str = None
 
-    def __init__(self, hparams, collate_fn: Callable = utils.collate_single_fn):
+    def __init__(self, hparams, collate_fn: Callable = utils.collate_single_fn, **kwargs):
         super().__init__(hparams, collate_fn)
 
         # instantiate eventual adapters passed from init method
@@ -41,6 +38,9 @@ class CompressedDataModule(SuperDataModule):
                 if not os.path.isfile(test_file):
                     raise ValueError(f"file `{test_file}` is not a valid test file")
             self.test_filepath = hparams.test_filepath
+
+        for kwarg in kwargs:
+            logger.warning(f'CompressedDataModule received unused parameter {kwarg}')
 
     # Optional, called for every GPU/machine (assigning state is OK)
     def setup(self, stage=None):
