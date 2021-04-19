@@ -28,7 +28,7 @@ rts = RandomTokenSubstitution(tok, whole_word_swapping=True)
         ]
     ]
 )
-def test_datamodule_cpu(seed, sentence, masking, new_ids):
+def test_language_model(seed, sentence, masking, new_ids):
 
     torch.random.manual_seed(seed)
     torch.cuda.random.manual_seed(seed)

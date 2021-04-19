@@ -18,10 +18,6 @@ class AdaptersDataModule(SuperDataModule):
     as arguments.
     """
 
-    train_adapter: SuperAdapter = None
-    valid_adapter: SuperAdapter = None
-    test_adapter: SuperAdapter = None
-
     def __init__(
         self,
         hparams: Namespace,

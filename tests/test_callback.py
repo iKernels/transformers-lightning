@@ -1,4 +1,3 @@
-import multiprocessing
 import os
 import shutil
 from argparse import Namespace
@@ -7,35 +6,13 @@ import pytest
 import pytorch_lightning as pl
 from transformers import BertTokenizer
 
-from tests.datamodules.test_utils import ExampleAdapter, SimpleTransformerLikeModel
+from tests.helpers import DummyDataModule, DummyTransformerModel, standard_args
 from transformers_lightning.callbacks.transformers_model_checkpoint import TransformersModelCheckpointCallback
-from transformers_lightning.datamodules import AdaptersDataModule
-
-n_cpus = multiprocessing.cpu_count()
-OUTPUT_DIR = "/tmp/tests"
-if os.path.isdir(OUTPUT_DIR):
-    shutil.rmtree(OUTPUT_DIR)
-
-
-class ExampleDataModule(AdaptersDataModule):
-
-    def __init__(self, *args, test_number=1, tokenizer=None, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.train_adapter = ExampleAdapter(
-            self.hparams, f"tests/test_data/test{test_number}.tsv", delimiter="\t", tokenizer=tokenizer
-        )
-        self.valid_adapter = ExampleAdapter(
-            self.hparams, f"tests/test_data/test{test_number}.tsv", delimiter="\t", tokenizer=tokenizer
-        )
-        self.test_adapter = [
-            ExampleAdapter(self.hparams, f"tests/test_data/test{test_number}.tsv", delimiter="\t", tokenizer=tokenizer)
-            for _ in range(2)
-        ]
 
 
 # Test iter dataset work correctly
 @pytest.mark.parametrize(
-    ["epochs", "accumulate_grad_batches", "batch_size", "callback_interval", "val_callback", "expected_results"], [
+    "epochs, accumulate_grad_batches, batch_size, callback_interval, val_callback, expected_results", (
         [
             2, 3, 4, 3, False,
             [
@@ -51,11 +28,9 @@ class ExampleDataModule(AdaptersDataModule):
                 "ckpt_epoch_0_step_6", "ckpt_epoch_0_step_8", "ckpt_epoch_0_step_10_final"
             ]
         ],
-    ]
+    )
 )
-def test_datamodule_cpu(epochs, accumulate_grad_batches, batch_size, callback_interval, val_callback, expected_results):
-
-    os.environ["CUDA_VISIBLE_DEVICES"] = ""
+def test_model_checkpointing_callback(epochs, accumulate_grad_batches, batch_size, callback_interval, val_callback, expected_results):
 
     hparams = Namespace(
         batch_size=batch_size,
@@ -65,16 +40,14 @@ def test_datamodule_cpu(epochs, accumulate_grad_batches, batch_size, callback_in
         num_workers=4,
         max_epochs=epochs,
         max_steps=None,
-        max_sequence_length=10,
         gpus=0,
-        skip_in_training=None,
         checkpoint_interval=callback_interval,
         no_val_checkpointing=not val_callback,
         no_epoch_checkpointing=False,
-        output_dir=OUTPUT_DIR,
         pre_trained_dir='pre_trained_name',
         name="test",
-        val_check_interval=0.25
+        val_check_interval=0.25,
+        **standard_args,
     )
 
     tokenizer = BertTokenizer.from_pretrained("bert-base-cased")
@@ -90,10 +63,10 @@ def test_datamodule_cpu(epochs, accumulate_grad_batches, batch_size, callback_in
     )
 
     # instantiate PL model
-    model = SimpleTransformerLikeModel(hparams)
+    model = DummyTransformerModel(hparams)
 
     # Datasets
-    datamodule = ExampleDataModule(hparams, test_number=2, tokenizer=tokenizer)
+    datamodule = DummyDataModule(hparams, test_number=2, tokenizer=tokenizer)
 
     model.datamodule = datamodule
     trainer.fit(model, datamodule=datamodule)
