@@ -19,8 +19,6 @@ class LinearSchedulerWithWarmup(_LRScheduler):
             The index of the last epoch when resuming training.
         verbose (bool): If ``True``, prints a message to stdout for
             each update. Default: ``False``.
-        beg_step (int): An integer that specifies the initial step 
-            of the scheduler. To be used when resuming the training. 
 
     Example:
         >>> scheduler = LinearSchedulerWithWarmup(optimizer, num_warmup_steps=10, num_training_steps=100)
@@ -30,7 +28,6 @@ class LinearSchedulerWithWarmup(_LRScheduler):
         self,
         optimizer: torch.optim.Optimizer,
         num_training_steps: int,
-        beg_step: int = 0,
         num_warmup_steps: int = 0,
         last_epoch: int = -1,
         verbose: bool = False
@@ -43,24 +40,20 @@ class LinearSchedulerWithWarmup(_LRScheduler):
 
         self._num_warmup_steps = num_warmup_steps
         self._num_training_steps = num_training_steps
-        self._beg_step = beg_step
 
         super().__init__(optimizer, last_epoch=last_epoch, verbose=verbose)
 
     def lr_lambda(self, current_step: int) -> int:
+        """ Compute lambda that is going to scale the learning rate. """
 
-        #assert current_step >= self.beg_step
         assert current_step <= self._num_training_steps
 
-        relative_curr_step = current_step - self._beg_step
-        relative_num_training_steps = self._num_training_steps - self._beg_step
-
-        if relative_curr_step < self._num_warmup_steps:
-            return float(relative_curr_step) / float(max(1, self._num_warmup_steps))
+        if current_step < self._num_warmup_steps:
+            return float(current_step) / float(max(1, self._num_warmup_steps))
         return max(
             0.0,
-            float(relative_num_training_steps - relative_curr_step) /
-            float(max(1, relative_num_training_steps - self._num_warmup_steps))
+            float(self._num_training_steps - current_step) /
+            float(max(1, self._num_training_steps - self._num_warmup_steps))
         )
 
     def get_lr(self):

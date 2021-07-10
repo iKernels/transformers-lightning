@@ -32,6 +32,8 @@ class ConstantSchedulerWithWarmup(_LRScheduler):
         super().__init__(optimizer, last_epoch, verbose)
 
     def lr_lambda(self, current_step: int) -> int:
+        """ Compute lambda that is going to scale the learning rate. """
+
         if current_step < self.num_warmup_steps:
             return float(current_step) / float(max(1, self.num_warmup_steps))
         return 1.0
