@@ -1,29 +1,8 @@
 import math
 from argparse import Namespace
 
-import torch
 from pytorch_lightning import Trainer
-from pytorch_lightning import _logger as logger
 from pytorch_lightning.utilities.distributed import rank_zero_warn
-
-from transformers_lightning import utils
-
-
-def get_total_devices(trainer):
-    r"""
-    Compute total number of devices on which training is being performed 
-    """
-    if trainer.use_dp:
-        return 1
-    if trainer.use_ddp or trainer.use_ddp2:
-        return torch.distributed.get_world_size()
-    if trainer.on_gpu:
-        return 1
-    if trainer.on_tpu:
-        return len(trainer.tpu_cores) * trainer.num_nodes
-    if trainer.distributed_backend == 'ddp_cpu':
-        return trainer.num_processes * trainer.num_nodes
-    return 1
 
 
 def compute_max_steps(hparams: Namespace, trainer: Trainer) -> int:
@@ -44,13 +23,18 @@ def compute_max_steps(hparams: Namespace, trainer: Trainer) -> int:
         return None
 
     dataset_len = len(trainer.datamodule.train_dataset)
-    total_devices = utils.get_total_devices(trainer=trainer)
+    total_devices = len(trainer.accelerator_connector.parallel_devices)
+    rank_zero_warn(
+        f"`compute_max_steps` found a total of {total_devices} devices"
+    )
 
-    num_training_batches = math.ceil(dataset_len / hparams.batch_size)
-    training_batches_per_epoch = num_training_batches // total_devices
+    num_training_batches = math.ceil(dataset_len / hparams.batch_size)  # assume drop_last=True in dataloader
+    training_batches_per_epoch = math.ceil(num_training_batches / total_devices)  # ddp
     steps_per_epoch = math.ceil(training_batches_per_epoch / hparams.accumulate_grad_batches)
     steps = hparams.max_epochs * steps_per_epoch
 
-    rank_zero_warn(f"Automagically computed max_steps={steps}. If it appears to be OK, ignore this warning")
+    rank_zero_warn(
+        f"Automagically computed max_steps={steps}. If it appears to be OK, ignore this warning"
+    )
 
     return steps

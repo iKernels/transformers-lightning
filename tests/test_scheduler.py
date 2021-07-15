@@ -1,19 +1,19 @@
 from argparse import Namespace
-import torch
 
 import pytest
 import pytorch_lightning as pl
-from transformers import BertTokenizer, AdamW
+import torch
+from transformers import AdamW, BertTokenizer
 
-from transformers_lightning.schedulers import (
-    ConstantSchedulerWithWarmup,
-    ConstantScheduler,
-    CosineSchedulerWithWarmupAndHardRestart,
-    CosineSchedulerWithWarmup,
-    LinearSchedulerWithWarmup,
-    LinearScheduler
-)
 from tests.helpers import DummyDataModule, DummyTransformerModel, standard_args
+from transformers_lightning.schedulers import (
+    ConstantScheduler,
+    ConstantSchedulerWithWarmup,
+    CosineSchedulerWithWarmup,
+    CosineSchedulerWithWarmupAndHardRestart,
+    LinearScheduler,
+    LinearSchedulerWithWarmup,
+)
 
 
 # Test iter dataset work correctly

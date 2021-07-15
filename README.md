@@ -2,6 +2,7 @@
 
 A collection of `adapters`, `datasets`, `datamodules`, `callbacks`, `models`, `language-modeling` techniques, `schedulers` and `optimizers` to better integrate the [PyTorch Lightning](https://pytorch-lightning.readthedocs.io/en/stable/lightning-module.html) and the [Transformers](https://huggingface.co/transformers/) libraries.
 
+I'm happy to announce that all the `metrics` contained in this package has been successfully integrated into [torchmetrics](https://github.com/PyTorchLightning/metrics/tree/master/torchmetrics/retrieval).
 
 # Table of contents
 **[1. Install](#install)**
@@ -63,12 +64,8 @@ torch.set_printoptions(precision=16)
 
 def main(hparams):
 
-    # tokenizer
-    # tokenizer
-    tokenizer = Tokenizer(...)
-
     # instantiate PL model
-    model = TransformerModel(hparams, tokenizer=tokenizer, ...)
+    model = TransformerModel(hparams)
 
     # default tensorboard logger
     test_tube_logger = pl.loggers.TestTubeLogger(
@@ -112,18 +109,18 @@ if __name__ == '__main__':
     from transformers_lightning.defaults import DefaultConfig
     parser = DefaultConfig.add_defaults_args(parser)
 
-    # add model specific args
+    # add model specific cli arguments
     parser = TransformerModel.add_model_specific_args(parser)
     parser = YourDataModule.add_datamodule_specific_args(parser)
 
-    # add callback / logger specific parameters
+    # add callback / logger specific cli arguments
     parser = callbacks.TransformersModelCheckpointCallback.add_callback_specific_args(parser)
 
     # add all the available trainer options to argparse
     # ie: now --gpus --num_nodes ... --fast_dev_run all work in the cli
     parser = pl.Trainer.add_argparse_args(parser)
 
-    # get NameSpace of paramters
+    # get NameSpace of parameters
     hparams = parser.parse_args()
 
     main(hparams)

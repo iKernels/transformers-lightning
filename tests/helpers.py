@@ -1,7 +1,7 @@
 from argparse import Namespace
-import torch
 
-from transformers import BertConfig, BertForSequenceClassification, AdamW
+import torch
+from transformers import AdamW, BertConfig, BertForSequenceClassification
 
 from transformers_lightning.adapters import CSVAdapter, TransformersAdapter
 from transformers_lightning.datamodules import AdaptersDataModule

@@ -61,12 +61,12 @@ class TransformersModel(LightningModule):
             betas=self.hparams.adam_betas
         )
 
-        # init scheduler after optional fp16 to get rid of strange warning about optimizer and scheduler steps order
+        # init scheduler after optional fp16 to get rid of strange warning 
+        # about optimizer and scheduler steps order
         scheduler = LinearSchedulerWithWarmup(
             optimizer,
             num_warmup_steps=self.hparams.warmup_steps,
             num_training_steps=max_steps,
-            beg_step=self.hparams.beg_scheduler_step
         )
 
         return {
@@ -90,9 +90,7 @@ class TransformersModel(LightningModule):
         parser.add_argument('--weight_decay', type=float, default=0.0)
         parser.add_argument('--adam_epsilon', type=float, default=1e-8)
         parser.add_argument('--adam_betas', nargs=2, type=float, default=[0.9, 0.999])
-        parser.add_argument('--max_grad_norm', type=float, default=1e-8)
         parser.add_argument('--warmup_steps', type=int, default=0)
-        parser.add_argument('--beg_scheduler_step', type=int, default=0)
 
         tmp_args, _ = parser.parse_known_args()
         if tmp_args.learning_rate > 1:
