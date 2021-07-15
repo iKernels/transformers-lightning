@@ -1,9 +1,9 @@
 import multiprocessing
-import torch
 from argparse import Namespace
 
 import pytest
 import pytorch_lightning as pl
+import torch
 from transformers import BertTokenizer
 
 from tests.helpers import DummyDataModule, DummyTransformerModel, standard_args

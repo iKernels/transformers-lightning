@@ -3,6 +3,7 @@ import shutil
 
 from pytorch_lightning.callbacks.base import Callback
 from pytorch_lightning.utilities import rank_zero_only
+from pytorch_lightning.utilities.distributed import rank_zero_warn
 
 from transformers_lightning.utils import dump_json, is_simple
 
@@ -31,7 +32,7 @@ class TransformersModelCheckpointCallback(Callback):
         """
         filepath = os.path.join(self.destination, PARAMS_FILENAME)
         dictionary = {k: v for k, v in vars(self.hparams).items() if is_simple(v)}
-        dump_json(filepath, dictionary)
+        dump_json(filepath, dictionary, complain=False)
 
     def save_model(self, pl_module, epoch=None, step=None, final=False):
         r"""
@@ -73,6 +74,22 @@ class TransformersModelCheckpointCallback(Callback):
         if not os.path.isdir(self.destination):
             os.makedirs(self.destination)
 
+        if not hasattr(pl_module, "config"):
+            rank_zero_warn(
+                f"LightningModule {pl_module.__class__.__name__} has no "
+                f"`config` attribute, then it will not be checkpointed."
+            )
+        if not hasattr(pl_module, "model"):
+            rank_zero_warn(
+                f"LightningModule {pl_module.__class__.__name__} has no "
+                f"`model` attribute, then it will not be checkpointed."
+            )
+        if not hasattr(pl_module, "tokenizer"):
+            rank_zero_warn(
+                f"LightningModule {pl_module.__class__.__name__} has no "
+                f"`tokenizer` attribute, then it will not be checkpointed."
+            )
+
         self.save_params()
 
     @rank_zero_only
@@ -96,7 +113,7 @@ class TransformersModelCheckpointCallback(Callback):
         self.save_model(pl_module, epoch=trainer.current_epoch, step=pl_module.global_step + 1)
 
     @rank_zero_only
-    def on_train_epoch_end(self, trainer, pl_module, outputs):
+    def on_train_epoch_end(self, trainer, pl_module):
         """Called when the train epoch ends."""
         # only run on main process
         if trainer.global_rank != 0:

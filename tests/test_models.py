@@ -1,12 +1,12 @@
 from argparse import Namespace
-from transformers_lightning import utils
 
 import pytest
 import torch
 from pytorch_lightning import Trainer
+from transformers import AdamW, BertTokenizer
 
-from transformers import BertTokenizer, AdamW
 from tests.helpers import DummyDataModule, DummyTransformerModel, standard_args
+from transformers_lightning import utils
 
 
 class TestTransformersModel(DummyTransformerModel):

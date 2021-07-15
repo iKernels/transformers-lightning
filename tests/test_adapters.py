@@ -1,6 +1,6 @@
 from argparse import Namespace
-import pytest
 
+import pytest
 from transformers import AutoTokenizer
 
 from tests.helpers import DummyCSVAdapter, DummyTransformersAdapter
