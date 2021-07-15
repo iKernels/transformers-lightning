@@ -47,7 +47,6 @@ def test_model_checkpointing_callback(epochs, accumulate_grad_batches, batch_siz
         pre_trained_dir='pre_trained_name',
         name="test",
         val_check_interval=0.25,
-        accelerator=None,
         **standard_args,
     )
 
