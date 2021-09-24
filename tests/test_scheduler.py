@@ -16,7 +16,6 @@ from transformers_lightning.schedulers import (
 )
 
 
-# Test iter dataset work correctly
 @pytest.mark.parametrize(
     "scheduler_class, parameters, expected_lrs", (
         [

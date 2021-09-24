@@ -10,7 +10,6 @@ tok = BertTokenizer.from_pretrained('bert-base-cased')
 rts = RandomTokenSubstitution(tok, whole_word_swapping=True)
 
 
-# Test iter dataset work correctly
 @pytest.mark.parametrize(
     ["seed", "sentence", "masking", "new_ids"], [
         [0, "how are you man?", [IGNORE_IDX, 0, 1, 1, 0, 0, IGNORE_IDX], [101, 1293, 28135, 17785, 1299, 136, 102]],

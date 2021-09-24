@@ -9,7 +9,6 @@ tok = BertTokenizer.from_pretrained('bert-base-cased')
 mlm = MaskedLanguageModeling(tok, whole_word_masking=True)
 
 
-# Test iter dataset work correctly
 @pytest.mark.parametrize(
     ["seed", "sentence", "masking"], [
         [0, "how are you man?", [IGNORE_IDX, IGNORE_IDX, 1132, 1128, IGNORE_IDX, IGNORE_IDX, IGNORE_IDX]],

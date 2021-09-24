@@ -16,7 +16,6 @@ def random_name():
     return ''.join(random.choices(string.ascii_uppercase + string.digits, k=20))
 
 
-# Test iter dataset work correctly
 @pytest.mark.parametrize(
     "epochs, accumulate_grad_batches, batch_size, callback_interval, no_val_callback, expected_results", (
         [

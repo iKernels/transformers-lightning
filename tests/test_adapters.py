@@ -5,7 +5,6 @@ import pytest
 from tests.helpers import DummyCSVAdapter
 
 
-# Test iter dataset work correctly with dp
 @pytest.mark.parametrize(
     "test_file, line_number, expected_line, total_len", (
         ["tests/data/file-1.tsv", 3, [3, 33115, 4156, "This is a question 3", "This is an answer 3", True], 17],
