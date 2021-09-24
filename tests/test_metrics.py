@@ -1,5 +1,6 @@
 import pytest
 import torch
+
 from transformers_lightning.metrics import HitRate
 
 
@@ -43,7 +44,7 @@ from transformers_lightning.metrics import HitRate
             torch.tensor([0.3, 0.7, 0.5, 0.4, 0.9, 0.2, 0.4, 0.5, 0.0], dtype=torch.float),
             torch.tensor([True, False, True, False, False, False, False, True, False], dtype=torch.bool),
             torch.tensor([0, 0, 0, 1, 1, 1, 2, 2, 2], dtype=torch.long),
-            torch.tensor(2/3)
+            torch.tensor(2 / 3)
         ],
     )
 )

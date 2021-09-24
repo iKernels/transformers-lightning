@@ -1,4 +1,4 @@
-from argparse import Namespace
+from argparse import ArgumentParser, Namespace
 
 import pytest
 import pytorch_lightning as pl
@@ -86,6 +86,8 @@ def test_schedulers(scheduler_class, parameters, expected_lrs):
         **standard_args,
         **parameters,
     )
+
+    scheduler_class.add_scheduler_specific_args(ArgumentParser())
 
     class SchedulerModel(DummyTransformerModel):
 

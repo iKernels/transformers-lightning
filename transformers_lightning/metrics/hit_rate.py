@@ -1,8 +1,9 @@
 from typing import Any, Callable, Optional
 
-from transformers_lightning.metrics.functional.hit_rate import retrieval_hit_rate
 from torch import Tensor
 from torchmetrics.retrieval.retrieval_metric import RetrievalMetric
+
+from transformers_lightning.metrics.functional.hit_rate import retrieval_hit_rate
 
 
 class HitRate(RetrievalMetric):

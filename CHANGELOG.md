@@ -4,7 +4,17 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
-## 0.7.0
+
+## 0.7.2
+
+- Added tests for `optimizers` package.
+
+- Fixed some imports.
+
+- Fixed some calls to **super** method in optimizers and schedulers.
+
+
+## 0.7.1
 
 - Fixed `metrics` package imports and added tests.
 

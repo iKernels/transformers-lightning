@@ -103,7 +103,7 @@ class ElectraAdamWOptimizer(SuperOptimizer, ElectraAdamW):
         )
 
     def add_optimizer_specific_args(parser: ArgumentParser):
-        super(SuperOptimizer, SuperOptimizer).add_optimizer_specific_args(parser)
+        super(ElectraAdamWOptimizer, ElectraAdamWOptimizer).add_optimizer_specific_args(parser)
         parser.add_argument('--learning_rate', type=float, default=1e-3)
         parser.add_argument('--weight_decay', type=float, default=0.01)
         parser.add_argument('--adam_epsilon', type=float, default=1e-6)

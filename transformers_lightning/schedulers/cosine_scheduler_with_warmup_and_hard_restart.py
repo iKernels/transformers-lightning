@@ -59,6 +59,8 @@ class CosineSchedulerWithWarmupAndHardRestart(SuperScheduler):
     @staticmethod
     def add_scheduler_specific_args(parser: ArgumentParser):
         r""" Add here the hyperparameters specific of the scheduler like the number of warmup steps. """
-        super(SuperScheduler, SuperScheduler).add_scheduler_specific_args(parser)
+        super(
+            CosineSchedulerWithWarmupAndHardRestart, CosineSchedulerWithWarmupAndHardRestart
+        ).add_scheduler_specific_args(parser)
         parser.add_argument('--num_warmup_steps', type=int, default=0)
         parser.add_argument('--num_cycles', type=float, default=1.0)

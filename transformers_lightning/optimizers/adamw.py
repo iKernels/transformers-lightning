@@ -20,7 +20,7 @@ class AdamWOptimizer(SuperOptimizer, AdamW):
         )
 
     def add_optimizer_specific_args(parser: ArgumentParser):
-        super(SuperOptimizer, SuperOptimizer).add_optimizer_specific_args(parser)
+        super(AdamWOptimizer, AdamWOptimizer).add_optimizer_specific_args(parser)
         parser.add_argument('--learning_rate', type=float, default=1e-4)
         parser.add_argument('--weight_decay', type=float, default=0.0)
         parser.add_argument('--adam_epsilon', type=float, default=1e-8)

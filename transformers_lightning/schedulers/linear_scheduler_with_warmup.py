@@ -1,4 +1,4 @@
-from argparse import Namespace
+from argparse import ArgumentParser, Namespace
 
 import torch
 from pytorch_lightning.utilities import rank_zero_warn
@@ -56,3 +56,9 @@ class LinearSchedulerWithWarmup(SuperScheduler):
             rank_zero_warn("To get the last learning rate computed by the scheduler, " "please use `get_last_lr()`.")
 
         return [base_lr * self.lr_lambda(self.last_epoch) for base_lr in self.base_lrs]
+
+    @staticmethod
+    def add_scheduler_specific_args(parser: ArgumentParser):
+        r""" Add here the hyperparameters specific of the scheduler like the number of warmup steps. """
+        super(LinearSchedulerWithWarmup, LinearSchedulerWithWarmup).add_scheduler_specific_args(parser)
+        parser.add_argument('--num_warmup_steps', type=int, default=0)
