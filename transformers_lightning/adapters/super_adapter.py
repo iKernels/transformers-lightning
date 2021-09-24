@@ -9,24 +9,23 @@ class SuperAdapter:
     for the training phase. An Adapter should read some input data in the correct
     way, pre-process lines if needed (no tokenization) for example by removing
     useless spaces or empty lines. Finally, it should return an iterator over the
-    ready-to-be-consumed data. 
+    ready-to-be-consumed data.
     """
 
-    def __init__(self, hparams: Namespace) -> None:
+    def __init__(self, hyperparameters: Namespace) -> None:
         r"""
-        :param hparams: global namespace containing all the useful hyper-parameters
+        :param hyperparameters: global namespace containing all the useful hyper-parameters
         """
-        assert isinstance(hparams, Namespace), f"Argument `hparams` must be of type `Namespace`"
-        self.hparams = hparams
+        self.hyperparameters = hyperparameters
 
     @abc.abstractmethod
     def __iter__(self) -> Iterable:
         r"""
-        This function should use the arguments in `hparams` to read the file
+        This function should use the arguments in `hyperparameters` to read the file
         from the disk and return an iterator over the (parsed) lines.
         This is the right place to parse csv files and yield each parsed line for example.
 
-        >>> with open(self.hparams.filepath, "r") as fi:
+        >>> with open(self.hyperparameters.filepath, "r") as fi:
         >>>     for line in csv.reader(fi):
         >>>         yield line
         """
@@ -37,13 +36,13 @@ class SuperAdapter:
         Process a line. The structure of each line is exactly
         the same returned by the __iter__ method. Here you should do data preparation
         for the actual model being trained. This is a good place to do batch tokenization,
-        padding and so on.
+        padding and so on. If you want to prepare data somewhere else, just return `line`.
 
         >>> sentences = line[0]
-        >>> results = self.hparams.tokenizer.encode_plus(sentences,
+        >>> results = self.hyperparameters.tokenizer.encode_plus(line[0], line[1],
                                                          truncation=True,
                                                          add_special_tokens=True,
                                                          padding='max_length',
-                                                         max_length=self.hparams.max_sequence_length)
+                                                         max_length=128)
         >>> return results
         """

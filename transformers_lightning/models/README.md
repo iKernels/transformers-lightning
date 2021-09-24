@@ -9,7 +9,8 @@ This package containts two high-level models that can be used to inherit some us
 
 Example:
 ```python
->>> parser = TransformerModel.add_model_specific_args(parser)
->>> save_transformers_callback = callbacks.TransformersModelCheckpointCallback(hparams)
->>> hparams = parser.parse_args()
+>>> parser = ArgumentParser()
+>>> TransformerModel.add_model_specific_args(parser)
+>>> save_transformers_callback = callbacks.TransformersModelCheckpointCallback(hyperparameters)
+>>> hyperparameters = parser.parse_args()
 ```

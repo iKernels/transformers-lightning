@@ -3,9 +3,9 @@ from argparse import ArgumentParser
 
 class DefaultConfig:
     """
-    Keeping all default values together improves readability and editability. 
+    Keeping all default values together improves readability and editability.
     Do not touch this tfile unless you want to add something. Possibly subclass this class
-    if you want to add some foundamental parameter.
+    if you want to add some parameters.
     """
 
     output_dir: str = "outputs"
@@ -43,4 +43,3 @@ class DefaultConfig:
             default=DefaultConfig.checkpoints_dir,
             help="Where checkpoints should be saved"
         )
-        return parser

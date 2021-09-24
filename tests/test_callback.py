@@ -1,38 +1,46 @@
 import os
+import random
 import shutil
+import string
 from argparse import Namespace
 
 import pytest
 import pytorch_lightning as pl
 from transformers import BertTokenizer
 
-from tests.helpers import DummyDataModule, DummyTransformerModel, standard_args
+from tests.helpers import DummyDataModule, DummyTransformerModelWithOptim, standard_args
 from transformers_lightning.callbacks.transformers_model_checkpoint import TransformersModelCheckpointCallback
+
+
+def random_name():
+    return ''.join(random.choices(string.ascii_uppercase + string.digits, k=20))
 
 
 # Test iter dataset work correctly
 @pytest.mark.parametrize(
-    "epochs, accumulate_grad_batches, batch_size, callback_interval, val_callback, expected_results", (
+    "epochs, accumulate_grad_batches, batch_size, callback_interval, no_val_callback, expected_results", (
         [
-            2, 3, 4, 3, False,
+            2, 3, 4, 3, True,
             [
-                "hparams.json", "ckpt_epoch_0_step_3", "ckpt_epoch_0_step_6", "ckpt_epoch_0_step_8",
+                "hyperparameters.json", "ckpt_epoch_0_step_3", "ckpt_epoch_0_step_6", "ckpt_epoch_0_step_8",
                 "ckpt_epoch_1_step_9", "ckpt_epoch_1_step_12", "ckpt_epoch_1_step_15", "ckpt_epoch_1_step_16_final"
             ]
         ],
-        [1, 2, 5, 6, False, ["hparams.json", "ckpt_epoch_0_step_6", "ckpt_epoch_0_step_10_final"]],
+        [1, 2, 5, 6, True, ["hyperparameters.json", "ckpt_epoch_0_step_6", "ckpt_epoch_0_step_10_final"]],
         [
-            1, 2, 5, 6, True,
+            1, 2, 5, 6, False,
             [
-                "hparams.json", "ckpt_epoch_0_step_1", "ckpt_epoch_0_step_3", "ckpt_epoch_0_step_5",
-                "ckpt_epoch_0_step_6", "ckpt_epoch_0_step_8", "ckpt_epoch_0_step_10_final"
+                "hyperparameters.json", "ckpt_epoch_0_step_3", "ckpt_epoch_0_step_5", "ckpt_epoch_0_step_6",
+                "ckpt_epoch_0_step_8", "ckpt_epoch_0_step_10_final"
             ]
         ],
     )
 )
-def test_model_checkpointing_callback(epochs, accumulate_grad_batches, batch_size, callback_interval, val_callback, expected_results):
+def test_model_checkpointing_callback(
+    epochs, accumulate_grad_batches, batch_size, callback_interval, no_val_callback, expected_results
+):
 
-    hparams = Namespace(
+    hyperparameters = Namespace(
         batch_size=batch_size,
         val_batch_size=batch_size,
         test_batch_size=batch_size,
@@ -41,37 +49,37 @@ def test_model_checkpointing_callback(epochs, accumulate_grad_batches, batch_siz
         max_epochs=epochs,
         max_steps=None,
         gpus=0,
+        iterable=False,
         checkpoint_interval=callback_interval,
-        no_val_checkpointing=not val_callback,
+        no_val_checkpointing=no_val_callback,
         no_epoch_checkpointing=False,
         pre_trained_dir='pre_trained_name',
-        name="test",
+        name=random_name(),
         val_check_interval=0.25,
         **standard_args,
     )
 
     tokenizer = BertTokenizer.from_pretrained("bert-base-cased")
-
-    callback = TransformersModelCheckpointCallback(hparams)
+    callback = TransformersModelCheckpointCallback(hyperparameters)
 
     # instantiate PL trainer
     trainer = pl.Trainer.from_argparse_args(
-        hparams,
+        hyperparameters,
         profiler='simple',
         logger=None,
         callbacks=[callback],
     )
 
     # instantiate PL model
-    model = DummyTransformerModel(hparams)
+    model = DummyTransformerModelWithOptim(hyperparameters)
 
     # Datasets
-    datamodule = DummyDataModule(hparams, test_number=2, tokenizer=tokenizer)
+    datamodule = DummyDataModule(hyperparameters, train_number=2, valid_number=2, test_number=2, tokenizer=tokenizer)
 
     model.datamodule = datamodule
     trainer.fit(model, datamodule=datamodule)
 
-    folder = os.path.join(hparams.output_dir, hparams.pre_trained_dir, hparams.name)
+    folder = os.path.join(hyperparameters.output_dir, hyperparameters.pre_trained_dir, hyperparameters.name)
     listing = os.listdir(folder)
-    shutil.rmtree(hparams.output_dir)
+    shutil.rmtree(folder)
     assert set(listing) == set(expected_results), f"{listing} vs {set(expected_results)}"

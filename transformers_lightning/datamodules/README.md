@@ -13,8 +13,8 @@ The general schema is the following:
 A simple `PersonalDataModule` can be defined in either way:
 
 ```python
-train_adapter = SomeAdapter(hparams, ...)
-test_adapter = SomeAdapter(hparams, ...)
+train_adapter = SomeAdapter(hyperparameters, ...)
+test_adapter = SomeAdapter(hyperparameters, ...)
 
 PersonalDataModule = SuperDataModule 
 
@@ -31,8 +31,8 @@ class PersonalDataModule(SuperDataModule):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.train_adapter = SomeAdapter(self.hparams, ...)
-        self.test_adapter = SomeAdapter(self.hparams, ...)
+        self.train_adapter = SomeAdapter(self.hyperparameters, ...)
+        self.test_adapter = SomeAdapter(self.hyperparameters, ...)
 
 datamodule = PersonalDataModule()
 ```
@@ -53,8 +53,8 @@ datamodule.do_test():
 If your `Adapters` return some strange data structure that is not a simple `dictionary`, you should define the appropriate collate function to merge entries together:
 ```pytho
 
-train_adapter = SomeAdapterWithCustomOutput(hparams, ...)
-test_adapter = SomeAdapterWithCustomOutput(hparams, ...)
+train_adapter = SomeAdapterWithCustomOutput(hyperparameters, ...)
+test_adapter = SomeAdapterWithCustomOutput(hyperparameters, ...)
 
 PersonalDataModule = SuperDataModule 
 

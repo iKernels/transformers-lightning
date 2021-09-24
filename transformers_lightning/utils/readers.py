@@ -1,10 +1,12 @@
 import json
+import logging
 import os
 from argparse import Namespace
 from typing import Dict, Generator, Iterable, Union
 
 import yaml
-from pytorch_lightning import _logger as logger
+
+logger = logging.getLogger("pytorch_lightning")
 
 
 def load_yaml(filename: str, to_namespace: bool = True) -> Union[Dict, Namespace]:
@@ -50,5 +52,6 @@ def strip_lines(iterable: Iterable[str]) -> Generator:
     Remove blank lines from iterable over strings and return new generator.
     """
     for line in iterable:
-        if line.strip():
+        line = line.strip()
+        if line:
             yield line

@@ -1,63 +1,58 @@
+from argparse import Namespace
+
 import torch
-from torch.optim.lr_scheduler import _LRScheduler, warnings
+from pytorch_lightning.utilities import rank_zero_warn
+
+from transformers_lightning.schedulers.super_scheduler import SuperScheduler
 
 
-class LinearSchedulerWithWarmup(_LRScheduler):
+class LinearSchedulerWithWarmup(SuperScheduler):
     r"""
     Create a schedule with a learning rate that decreases linearly from the initial lr set in the optimizer to 0, after
     a warmup period during which it increases linearly from 0 to the initial lr set in the optimizer.
-    More informations about the default parameters can be found on the documentation of `_LRScheduler` in the `torch` project.
-    
+    More informations about the default parameters can be found on the documentation of
+    `_LRScheduler` in the `torch` project.
+
     Args:
+        hyperparameters: (:class:`~argparse.Namespace`):
+            Collection of training hyperparameters.
         optimizer (:class:`~torch.optim.Optimizer`):
             The optimizer for which to schedule the learning rate.
+
+    Args through CLI:
         num_warmup_steps (:obj:`int`):
             The number of steps for the warmup phase.
-        num_training_steps (:obj:`int`):
-            The total number of training steps.
         last_epoch (:obj:`int`, `optional`, defaults to -1):
             The index of the last epoch when resuming training.
         verbose (bool): If ``True``, prints a message to stdout for
             each update. Default: ``False``.
 
     Example:
-        >>> scheduler = LinearSchedulerWithWarmup(optimizer, num_warmup_steps=10, num_training_steps=100)
+        >>> scheduler = LinearSchedulerWithWarmup(hyperparameters, optimizer)
     """
 
-    def __init__(
-        self,
-        optimizer: torch.optim.Optimizer,
-        num_training_steps: int,
-        num_warmup_steps: int = 0,
-        last_epoch: int = -1,
-        verbose: bool = False
-    ):
-        if not isinstance(num_training_steps, int) or not num_training_steps >= 0:
-            raise ValueError("`num_training_steps` must be an integer greater than 0")
+    def __init__(self, hyperparameters: Namespace, optimizer: torch.optim.Optimizer):
+        super().__init__(hyperparameters, optimizer)
 
-        if not isinstance(num_warmup_steps, int) or not num_warmup_steps >= 0:
+        if not isinstance(hyperparameters.num_warmup_steps, int) or not hyperparameters.num_warmup_steps >= 0:
             raise ValueError("`num_warmup_steps` must be an integer greater than 0")
-
-        self._num_warmup_steps = num_warmup_steps
-        self._num_training_steps = num_training_steps
-
-        super().__init__(optimizer, last_epoch=last_epoch, verbose=verbose)
 
     def lr_lambda(self, current_step: int) -> int:
         """ Compute lambda that is going to scale the learning rate. """
 
-        assert current_step <= self._num_training_steps
+        assert current_step <= self.num_training_steps
 
-        if current_step < self._num_warmup_steps:
-            return float(current_step) / float(max(1, self._num_warmup_steps))
+        if current_step < self.hyperparameters.num_warmup_steps:
+            return float(current_step) / float(max(1, self.hyperparameters.num_warmup_steps))
         return max(
             0.0,
-            float(self._num_training_steps - current_step) /
-            float(max(1, self._num_training_steps - self._num_warmup_steps))
+            float(self.num_training_steps - current_step) / float(
+                max(1, self.num_training_steps - self.hyperparameters.num_warmup_steps)
+            )
         )
 
     def get_lr(self):
         if not self._get_lr_called_within_step:
-            warnings.warn("To get the last learning rate computed by the scheduler, " "please use `get_last_lr()`.")
+            rank_zero_warn("To get the last learning rate computed by the scheduler, " "please use `get_last_lr()`.")
 
         return [base_lr * self.lr_lambda(self.last_epoch) for base_lr in self.base_lrs]

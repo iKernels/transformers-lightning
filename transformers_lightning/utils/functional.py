@@ -15,7 +15,7 @@ def remove_from_dict(dictionary: Dict, keys: List[str] = []) -> Dict:
 
 def all_equal_in_iterable(iterable: Iterable) -> bool:
     r"""
-    Check all items in an iterable 
+    Check all items in an iterable.
     """
     if len(iterable) == 0:
         return True
@@ -93,7 +93,7 @@ def safe_merge(dict_1: Dict, dict_2: Dict) -> Dict:
         res[key] = value
 
     for key, value in dict_2.items():
-        assert not key in res, f"Key {key} is duplicate"
+        assert key not in res, f"Key {key} is duplicate"
         res[key] = value
     return res
 

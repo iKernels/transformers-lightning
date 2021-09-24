@@ -1,7 +1,7 @@
 from typing import Tuple
 
 import torch
-import transformers
+from transformers.tokenization_utils_base import PreTrainedTokenizerBase
 
 from transformers_lightning.language_modeling import IGNORE_IDX, LanguageModel
 from transformers_lightning.language_modeling.utils import whole_word_tails_mask
@@ -10,7 +10,8 @@ from transformers_lightning.language_modeling.utils import whole_word_tails_mask
 class RandomTokenSubstitution(LanguageModel):
     r"""
     Prepare tokens inputs/labels for random token substutition modeling.
-    We sample a few tokens in each sequence for RTS training (with probability `probability` defaults to 0.15 in Bert/RoBERTa)
+    We sample a few tokens in each sequence for RTS training (with probability `probability`
+    defaults to 0.15 in Bert/RoBERTa)
     If `whole_word_swapping` is True, either every or no token in a word will be masked. This argument requires
     that `words_tails` are passed to the `__call__` method such that the model can understand which parts of a word
     are tails ('##..'-like tokens). `words_tails` must be a boolean tensor with the same shape as `inputs`
@@ -35,14 +36,14 @@ class RandomTokenSubstitution(LanguageModel):
     ... tensor([[-100, 1, 0, -100]]) # -100 = IGNORE_IDX
 
     >>> # notice that `inputs` are modified by calling `__call__`
-    >>> # even if they are returned as a new output. 
+    >>> # even if they are returned as a new output.
     >>> input_ids is swapped
     ... True
     """
 
     def __init__(
         self,
-        tokenizer: transformers.PreTrainedTokenizer,
+        tokenizer: PreTrainedTokenizerBase,
         probability: float = 0.15,
         whole_word_swapping: bool = False,
     ):
@@ -57,7 +58,8 @@ class RandomTokenSubstitution(LanguageModel):
         inputs = inputs.clone()
         labels = torch.full(inputs.shape, fill_value=0, dtype=torch.long, device=device)
 
-        # We sample a few tokens in each sequence for masked-LM training (with probability args.probability defaults to 0.15 in Bert/RoBERTa)
+        # We sample a few tokens in each sequence for masked-LM training
+        # (with probability args.probability defaults to 0.15 in Bert/RoBERTa)
         probability_matrix = torch.full(inputs.shape, fill_value=self.probability, dtype=torch.float32, device=device)
 
         # create whole work masking mask -> True if the token starts with ## (following token in composed words)
@@ -87,9 +89,9 @@ class RandomTokenSubstitution(LanguageModel):
         # with whole word masking, assure all tokens in a word are either all masked or not
         if self.whole_word_swapping:
             for i in range(1, substituted_indices.shape[-1]):
-                substituted_indices[:, i] = substituted_indices[:, i] | (
-                    substituted_indices[:, i - 1] & words_tails[:, i]
-                )
+                substituted_indices[:,
+                                    i] = substituted_indices[:,
+                                                             i] | (substituted_indices[:, i - 1] & words_tails[:, i])
 
         random_words = torch.randint(len(self.tokenizer), inputs.shape, dtype=torch.long, device=device)
         inputs[substituted_indices] = random_words[substituted_indices]

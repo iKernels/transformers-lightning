@@ -1,32 +1,94 @@
+import math
 from argparse import ArgumentParser, Namespace
 
-import torch
 from pytorch_lightning import LightningModule
-from pytorch_lightning.utilities.distributed import rank_zero_warn
-from transformers import AdamW
+from pytorch_lightning.utilities import rank_zero_warn
+from pytorch_lightning.utilities.data import has_len
+from transformers.configuration_utils import PretrainedConfig
+from transformers.modeling_utils import PreTrainedModel
+from transformers.tokenization_utils_base import PreTrainedTokenizerBase
 
-from transformers_lightning import utils
-from transformers_lightning.schedulers.linear_scheduler_with_warmup import LinearSchedulerWithWarmup
+from transformers_lightning import optimizers, schedulers
+from transformers_lightning.optimizers.super_optimizer import SuperOptimizer
+from transformers_lightning.schedulers.super_scheduler import SuperScheduler
+from transformers_lightning.utils.inspectors import get_classes_from_module
+
+all_optimizers = get_classes_from_module(optimizers)
+all_schedulers = get_classes_from_module(schedulers)
 
 
 class TransformersModel(LightningModule):
     r"""
-    `TransformersModel` add a ready-to-be-used optimizer function and adds some parameters to
-    the command line parser for usual training hyperparameters.
+    `TransformersModel` add a ready-to-be-used optimizer and scheduler functions.
     """
 
-    model: torch.nn.Module
-    hparams: Namespace
+    model: PreTrainedModel
+    tokenizer: PreTrainedTokenizerBase
+    config: PretrainedConfig
+    hyperparameters: Namespace
 
-    def __init__(self, hparams):
+    def __init__(self, hyperparameters):
         super().__init__()
-        self.save_hyperparameters(hparams)
+        self.hyperparameters = hyperparameters
 
-    def forward(self, *args, **kwargs) -> dict:
+    def forward(self, *args, **kwargs):
         r"""
         Simply call the `model` attribute with the given args and kwargs
         """
         return self.model(*args, **kwargs)
+
+    def get_optimizer(self) -> SuperOptimizer:
+        r""" Get optimizer as defined by hyperparameters. """
+        optim_class = all_optimizers[self.hyperparameters.optimizer_class]
+        return optim_class(self.hyperparameters, self.named_parameters())
+
+    def get_scheduler(self, optimizer) -> SuperScheduler:
+        r""" Get scheduler as defined by hyperparameters. """
+        sched_class = all_schedulers[self.hyperparameters.scheduler_class]
+        return sched_class(self.hyperparameters, optimizer)
+
+    @property
+    def num_training_steps(self) -> int:
+        r"""Total training steps inferred from datasets length, nodes and devices."""
+        if self.trainer.max_steps:
+            return self.trainer.max_steps
+
+        if not has_len(self.trainer.datamodule.train_dataset):
+            rank_zero_warn("Using IterableDataset, cannot compute max_steps, returning None")
+            return None
+
+        # train samples
+        train_samples = len(self.trainer.datamodule.train_dataset)
+
+        # number of training devices
+        total_devices = (
+            len(self.trainer.accelerator_connector.parallel_devices) * self.trainer.accelerator_connector.num_nodes
+        )
+        if self.trainer.accelerator_connector.use_dp or self.trainer.accelerator_connector.use_ddp2:
+            total_devices = 1    # with dp, a single batch is divided across many gpus
+
+        # number of training samples for each device
+        train_samples_per_device = train_samples // total_devices
+
+        # train batches from the dataloader
+        div_fn = math.floor if self.hyperparameters.drop_last else math.ceil
+        train_batches_per_device = div_fn(train_samples_per_device / self.hyperparameters.batch_size)
+
+        # eventually limit train batches
+        limit_batches = self.trainer.limit_train_batches
+        train_batches_per_device = (
+            min(train_batches_per_device, limit_batches)
+            if isinstance(limit_batches, int) else int(limit_batches * train_batches_per_device)
+        )
+
+        # train steps for each device
+        train_steps_per_device = math.ceil(train_batches_per_device / self.trainer.accumulate_grad_batches)
+
+        # total train steps across all epochs
+        total_train_steps = train_steps_per_device * self.trainer.max_epochs
+        rank_zero_warn(f"Automatically computed total steps equal to {total_train_steps}")
+
+        return total_train_steps
 
     def configure_optimizers(self):
         r"""
@@ -35,65 +97,37 @@ class TransformersModel(LightningModule):
         """
 
         # fix max number of steps
-        max_steps = utils.compute_max_steps(self.hparams, self.trainer)
+        self.hyperparameters.max_steps = self.num_training_steps
 
-        # get all parameters with names
-        all_named_parameters = self.model.named_parameters()
-
-        # Prepare optimizer and schedule (linear warmup and decay)
-        no_decay = ["bias", "LayerNorm.weight"]
-        optimizer_grouped_parameters = [
-            {
-                "params": [p for n, p in all_named_parameters if not any(nd in n for nd in no_decay)],
-                "weight_decay": self.hparams.weight_decay,
-            },
-            {
-                "params": [p for n, p in all_named_parameters if any(nd in n for nd in no_decay)],
-                "weight_decay": 0.0
-            },
-        ]
-
-        # Define adam optimizer
-        optimizer = AdamW(
-            optimizer_grouped_parameters,
-            lr=self.hparams.learning_rate,
-            eps=self.hparams.adam_epsilon,
-            betas=self.hparams.adam_betas
-        )
-
-        # init scheduler after optional fp16 to get rid of strange warning 
-        # about optimizer and scheduler steps order
-        scheduler = LinearSchedulerWithWarmup(
-            optimizer,
-            num_warmup_steps=self.hparams.warmup_steps,
-            num_training_steps=max_steps,
-        )
+        optimizer = self.get_optimizer()
+        scheduler = self.get_scheduler(optimizer)
 
         return {
             'optimizer': optimizer,
             'lr_scheduler':
                 {
                     'scheduler': scheduler,    # The LR schduler
-                    'interval': 'step',    # The unit of the scheduler's step size
-                    'frequency': 1,    # The frequency of the scheduler
+                    'interval': self.hyperparameters.scheduler_interval,    # The unit of the scheduler's step size
+                    'frequency': self.hyperparameters.scheduler_frequency,    # The frequency of the scheduler
                 }
         }
 
     @staticmethod
     def add_model_specific_args(parser: ArgumentParser):
-        r"""
-        Usual parameters used by AdamW and LinearScheduler. Moreover, it checks the learning rate is at
-        reasonable values.
-        """
-        parser.add_argument('--learning_rate', type=float, default=1e-4)
-        parser.add_argument('--max_sequence_length', type=int, default=128)
-        parser.add_argument('--weight_decay', type=float, default=0.0)
-        parser.add_argument('--adam_epsilon', type=float, default=1e-8)
-        parser.add_argument('--adam_betas', nargs=2, type=float, default=[0.9, 0.999])
-        parser.add_argument('--warmup_steps', type=int, default=0)
+        parser.add_argument('--optimizer_class', type=str, default='AdamWOptimizer', choices=all_optimizers.keys())
+        parser.add_argument(
+            '--scheduler_class', type=str, default='LinearSchedulerWithWarmup', choices=all_schedulers.keys()
+        )
+        parser.add_argument('--scheduler_interval', type=str, default='step', choices=['step', 'epoch'])
+        parser.add_argument('--scheduler_frequency', type=int, default=1)
 
-        tmp_args, _ = parser.parse_known_args()
-        if tmp_args.learning_rate > 1:
-            rank_zero_warn(f"You specified a huge learning rate! Learning rate: {tmp_args.learning_rate}")
+        # retrieving model with temporary parsered arguments
+        tmp_params, _ = parser.parse_known_args()
 
-        return parser
+        # get pl_model_class in advance to know which params it needs, same for the datamodule
+        optim_class = all_optimizers[tmp_params.optimizer_class]
+        sched_class = all_schedulers[tmp_params.scheduler_class]
+
+        # add optimizer and scheduler specific args
+        optim_class.add_optimizer_specific_args(parser)
+        sched_class.add_scheduler_specific_args(parser)

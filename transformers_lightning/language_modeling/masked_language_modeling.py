@@ -9,7 +9,8 @@ from transformers_lightning.language_modeling.utils import whole_word_tails_mask
 
 class MaskedLanguageModeling(LanguageModel):
     r"""
-    Prepare masked tokens inputs/labels for masked language modeling: 80% MASK, 10% random, 10% original (can be changed).
+    Prepare masked tokens inputs/labels for masked language modeling: 80% MASK, 10% random,
+    10% original (can be changed).
     If `whole_word_masking` is True, either every or no token in a word will be masked. This argument requires
     that `words_tails` are passed to the `__call__` method such that the model can understand which parts of a word
     are tails ('##..'-like tokens). `words_tails` must be a boolean tensor with the same shape as `inputs`
@@ -39,7 +40,7 @@ class MaskedLanguageModeling(LanguageModel):
     ... tensor([[-100, 2774, -100, -100]]) # -100 = IGNORE_IDX
 
     >>> # notice that `inputs` are modified by calling `__call__`
-    >>> # even if they are returned as a new output. 
+    >>> # even if they are returned as a new output.
     >>> input_ids is masked
     ... True
     """
@@ -84,7 +85,8 @@ class MaskedLanguageModeling(LanguageModel):
         labels = inputs.clone()
         inputs = inputs.clone()
 
-        # We sample a few tokens in each sequence for masked-LM training (with probability probability defaults to 0.15 in Bert/RoBERTa)
+        # We sample a few tokens in each sequence for masked-LM training
+        # (with probability probability defaults to 0.15 in Bert/RoBERTa)
         probability_matrix = torch.full(labels.shape, fill_value=self.probability, dtype=torch.float32, device=device)
 
         # create whole work masking mask -> True if the token starts with ## (following token in composed words)
@@ -113,14 +115,16 @@ class MaskedLanguageModeling(LanguageModel):
         labels[~masked_indices] = IGNORE_IDX    # We only compute loss on masked tokens
 
         # 80% of the time, we replace masked input tokens with tokenizer.mask_token ([MASK])
-        indices_replaced = torch.bernoulli(torch.full(labels.shape, self.probability_masked, device=device)
-                                          ).bool() & masked_indices
+        indices_replaced = torch.bernoulli(
+            torch.full(labels.shape, self.probability_masked, device=device)
+        ).bool() & masked_indices
         inputs[indices_replaced] = self.tokenizer.mask_token_id
 
         probability_replaced_relative = self.probability_replaced / (1 - self.probability_masked)
         # 10% of the time, we replace masked input tokens with random word
-        indices_random = torch.bernoulli(torch.full(labels.shape, probability_replaced_relative, device=device)
-                                        ).bool() & masked_indices & ~indices_replaced
+        indices_random = torch.bernoulli(
+            torch.full(labels.shape, probability_replaced_relative, device=device)
+        ).bool() & masked_indices & ~indices_replaced
         random_words = torch.randint(len(self.tokenizer), labels.shape, dtype=torch.long, device=device)
         inputs[indices_random] = random_words[indices_random]
 

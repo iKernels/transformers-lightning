@@ -1,7 +1,7 @@
 from typing import Tuple
 
 import torch
-import transformers
+from transformers.tokenization_utils_base import PreTrainedTokenizerBase
 
 
 class LanguageModel:
@@ -17,10 +17,10 @@ class LanguageModel:
     The `__call__` method should be overidden and implemented by subclasses.
     """
 
-    def __init__(self, tokenizer: transformers.PreTrainedTokenizer, probability: float = 0.15):
+    def __init__(self, tokenizer: PreTrainedTokenizerBase, probability: float = 0.15):
         self.tokenizer = tokenizer
 
-        if not 0.0 <= probability <= 1.0:
+        if not (0.0 <= probability <= 1.0):
             raise ValueError(f"Argument `probability` must be a float between 0.0 and 1.0, found: {probability}")
         self.probability = probability
 

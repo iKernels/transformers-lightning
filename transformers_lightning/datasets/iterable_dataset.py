@@ -1,4 +1,5 @@
 import torch
+from pytorch_lightning.utilities.distributed import distributed_available
 from torch.utils.data import IterableDataset
 
 from transformers_lightning import utils
@@ -58,7 +59,7 @@ class TransformersIterableDataset(SuperDataset, IterableDataset):
         reader = iter(self.adapter)
 
         # add distributed training logic
-        if torch.distributed.is_initialized():
+        if distributed_available():
 
             world_size = torch.distributed.get_world_size()
             rank = torch.distributed.get_rank()
@@ -73,5 +74,6 @@ class TransformersIterableDataset(SuperDataset, IterableDataset):
 
         # pre-process data and return
         for line in reader:
-            preprocessed_data = self.adapter.preprocess_line(line)
-            yield preprocessed_data
+            if self.do_preprocessing:
+                line = self.adapter.preprocess_line(line)
+            yield line

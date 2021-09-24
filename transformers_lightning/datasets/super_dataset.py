@@ -7,14 +7,21 @@ from transformers_lightning.adapters.super_adapter import SuperAdapter
 
 class SuperDataset:
     r"""
-    Superclass of all datasets. Only implements some instantiations. 
+    Superclass of all datasets. Only implements some instantiations.
     """
 
-    hparams: Namespace = None
+    hyperparameters: Namespace = None
     adapter: SuperAdapter = None
     trainer: Trainer = None
 
-    def __init__(self, hparams: Namespace, adapter: SuperAdapter = None, trainer: Trainer = None):
-        self.hparams = hparams
+    def __init__(
+        self,
+        hyperparameters: Namespace,
+        adapter: SuperAdapter = None,
+        trainer: Trainer = None,
+        do_preprocessing: bool = True
+    ):
+        self.hyperparameters = hyperparameters
         self.adapter = adapter
         self.trainer = trainer
+        self.do_preprocessing = do_preprocessing

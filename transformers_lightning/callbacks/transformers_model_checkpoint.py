@@ -1,37 +1,40 @@
 import os
 import shutil
+from argparse import ArgumentParser
 
 from pytorch_lightning.callbacks.base import Callback
-from pytorch_lightning.utilities import rank_zero_only
-from pytorch_lightning.utilities.distributed import rank_zero_warn
+from pytorch_lightning.utilities import rank_zero_only, rank_zero_warn
 
 from transformers_lightning.utils import dump_json, is_simple
 
-PARAMS_FILENAME = "hparams.json"
+PARAMS_FILENAME = "hyperparameters.json"
 
 
 class TransformersModelCheckpointCallback(Callback):
     r"""
         This class allow transformer-based models (inherited from the huggingface lib)
         to be saved and re-used with `--pre_trained_name` argument.
-        
+
         Command line args:
-        `--checkpoint_interval`: Save pre_trained models every steps. A None value means save only at the end of each epoch.
+        `--checkpoint_interval`: Save pre_trained models every given steps.
+            A None value means save only at the end of each epoch.
         `--no_val_checkpointing`: Disable transformers checkpointing at each validation epoch end.
     """
 
-    def __init__(self, hparams, *args, **kwargs):
+    def __init__(self, hyperparameters, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.hparams = hparams
-        self.destination = os.path.join(hparams.output_dir, hparams.pre_trained_dir, hparams.name)
+        self.hyperparameters = hyperparameters
+        self.destination = os.path.join(
+            hyperparameters.output_dir, hyperparameters.pre_trained_dir, hyperparameters.name
+        )
 
     def save_params(self):
         r"""
-        Save a checkpoint of the training parameters (hparams)
+        Save a checkpoint of the training parameters (hyperparameters)
         This function is very useful to remeber the type of experiment among all the checkpoints
         """
         filepath = os.path.join(self.destination, PARAMS_FILENAME)
-        dictionary = {k: v for k, v in vars(self.hparams).items() if is_simple(v)}
+        dictionary = {k: v for k, v in vars(self.hyperparameters).items() if is_simple(v)}
         dump_json(filepath, dictionary, complain=False)
 
     def save_model(self, pl_module, epoch=None, step=None, final=False):
@@ -39,7 +42,7 @@ class TransformersModelCheckpointCallback(Callback):
         Called when the a checkpoint should be saved. Here models trained in the
         LightningModule will be saved to disk to be re-used.
         """
-        basename = f"ckpt"
+        basename = "ckpt"
         if epoch is not None:
             basename += f"_epoch_{epoch}"
         if step is not None:
@@ -67,7 +70,7 @@ class TransformersModelCheckpointCallback(Callback):
 
     @rank_zero_only
     def on_train_start(self, trainer, pl_module):
-        """ Check model can be saved and save hparams to understand what kind of experiment it was. """
+        """ Check model can be saved and save hyperparameters to understand what kind of experiment it was. """
         if trainer.global_rank != 0:
             return
 
@@ -99,14 +102,14 @@ class TransformersModelCheckpointCallback(Callback):
         if trainer.global_rank != 0:
             return
 
-        # only on last accumulated batch
+        # save only on last accumulated batch
         if ((batch_idx + 1) % trainer.accumulate_grad_batches) != 0:
             return
 
-        # if global step is not multiple of checkpoint_interval
+        # save only when global step is multiple of checkpoint_interval
         if (
-            (self.hparams.checkpoint_interval is None)
-            or ((pl_module.global_step + 1) % self.hparams.checkpoint_interval) != 0
+            (self.hyperparameters.checkpoint_interval is None)
+            or ((pl_module.global_step + 1) % self.hyperparameters.checkpoint_interval) != 0
         ):
             return
 
@@ -119,11 +122,11 @@ class TransformersModelCheckpointCallback(Callback):
         if trainer.global_rank != 0:
             return
 
-        # not validation checkpointing if it is disabled
-        if self.hparams.no_epoch_checkpointing:
+        # not epoch checkpointing if it is disabled
+        if self.hyperparameters.no_epoch_checkpointing:
             return
 
-        self.save_model(pl_module, epoch=trainer.current_epoch, step=pl_module.global_step + 1)
+        self.save_model(pl_module, epoch=trainer.current_epoch, step=pl_module.global_step)
 
     @rank_zero_only
     def on_train_end(self, trainer, pl_module):
@@ -147,14 +150,18 @@ class TransformersModelCheckpointCallback(Callback):
         if trainer.global_rank != 0:
             return
 
+        # this probably was val_check control loop
+        if pl_module.global_step == 0:
+            return
+
         # not validation checkpointing if it is disabled
-        if self.hparams.no_val_checkpointing:
+        if self.hyperparameters.no_val_checkpointing:
             return
 
         self.save_model(pl_module, epoch=trainer.current_epoch, step=pl_module.global_step + 1)
 
     @staticmethod
-    def add_callback_specific_args(parser):
+    def add_callback_specific_args(parser: ArgumentParser):
         """ Add callback_specific arguments to parser. """
         parser.add_argument(
             '--checkpoint_interval',
@@ -173,4 +180,3 @@ class TransformersModelCheckpointCallback(Callback):
             action="store_true",
             help="Disable transformers checkpointing at the end of each epoch."
         )
-        return parser

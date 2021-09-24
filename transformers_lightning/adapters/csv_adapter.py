@@ -12,9 +12,15 @@ class CSVAdapter(FileAdapter):
     """
 
     def __init__(
-        self, hparams: Namespace, filepath: str, delimiter="\t", quoting=csv.QUOTE_MINIMAL, quotechar='"', **kwargs
+        self,
+        hyperparameters: Namespace,
+        filepath: str,
+        delimiter="\t",
+        quoting=csv.QUOTE_MINIMAL,
+        quotechar='"',
+        **kwargs
     ):
-        super().__init__(hparams, filepath)
+        super().__init__(hyperparameters, filepath)
         self.csv_kwargs = {'delimiter': delimiter, 'quoting': quoting, 'quotechar': quotechar, **kwargs}
 
     def __iter__(self) -> Iterable:

@@ -9,8 +9,8 @@ class CompressedDataset(SuperDataset):
     Dataset is completely read into memory in a compressed way and decompression is done on-the-fly.
     """
 
-    def __init__(self, hparams, filepath: str):
-        super().__init__(hparams)
+    def __init__(self, hyperparameters, filepath: str):
+        super().__init__(hyperparameters)
         self.data = CompressedDictionary.load(filepath)
 
     def __len__(self):

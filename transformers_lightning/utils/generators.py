@@ -14,11 +14,11 @@ def filter_generator(generator_in: Generator, step: int = 1, offset: int = 0) ->
     for _ in range(offset):
         try:
             next(generator_in)
-        except:
+        except StopIteration:
             return
     try:
         yield next(generator_in)
-    except:
+    except StopIteration:
         return
 
     while True:
@@ -26,11 +26,11 @@ def filter_generator(generator_in: Generator, step: int = 1, offset: int = 0) ->
         for _ in range(step - 1):
             try:
                 next(generator_in)
-            except:
+            except StopIteration:
                 return
         try:
             yield next(generator_in)
-        except:
+        except StopIteration:
             return
 
 
@@ -45,7 +45,7 @@ def batch_filter(generator_in: Generator, size: int = 1) -> Generator:
         for i in range(size):
             try:
                 res.append(next(generator_in))
-            except:
+            except StopIteration:
                 return
         for i in res:
             yield i

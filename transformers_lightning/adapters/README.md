@@ -6,5 +6,5 @@ An `Adapter` must override at least two methods of the superclass `SuperAdapter`
 
 The following example illustrates how to build an `Adapter` to read data from a `tsv` file and how to implement tokenization in the `preprocess_line` method.
 
-The `__iter__` method does not has arguments other than `self`. Parameters should be retrieved through `self.hparams`.
+The `__iter__` method does not has arguments other than `self`. Parameters should be retrieved through `self.hyperparameters`.
 `preprocess_line` instead receives a line at a time and is strongly recommended to return a `dict`. `dict` improves readability and values are automagically concatenated by the `SuperDataModule` class.

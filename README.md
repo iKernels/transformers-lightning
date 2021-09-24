@@ -1,6 +1,6 @@
 # transformers-lightning
 
-A collection of `adapters`, `datasets`, `datamodules`, `callbacks`, `models`, `language-modeling` techniques, `schedulers` and `optimizers` to better integrate the [PyTorch Lightning](https://pytorch-lightning.readthedocs.io/en/stable/lightning-module.html) and the [Transformers](https://huggingface.co/transformers/) libraries.
+A collection of `adapters`, `callbacks`, `datamodules`, `datasets`, `language-modeling`, `metrics`, `models`, `schedulers` and `optimizers` to better integrate the [PyTorch Lightning](https://pytorch-lightning.readthedocs.io/en/stable/lightning-module.html) and the [Transformers](https://huggingface.co/transformers/) libraries.
 
 I'm happy to announce that all the `metrics` contained in this package has been successfully integrated into [torchmetrics](https://github.com/PyTorchLightning/metrics/tree/master/torchmetrics/retrieval).
 
@@ -17,6 +17,7 @@ I'm happy to announce that all the `metrics` contained in this package has been 
   * [2.6. Language modeling](transformers_lightning/language_modeling)
   * [2.7. Schedulers](transformers_lightning/schedulers)
   * [2.8. Optimizers](transformers_lightning/optimizers)
+  * [2.9. Metrics](transformers_lightning/metrics)
 
 **[3. Main file](#main)**
 
@@ -57,28 +58,29 @@ import models
 import datamodules
 
 from transformers_lightning import utils, callbacks, datamodules
+from transformers_lightning.defaults import DefaultConfig
 
 
 # Print high precision tensor values
 torch.set_printoptions(precision=16)
 
-def main(hparams):
+def main(hyperparameters):
 
     # instantiate PL model
-    model = TransformerModel(hparams)
+    model = TransformerModel(hyperparameters)
 
     # default tensorboard logger
     test_tube_logger = pl.loggers.TestTubeLogger(
-        os.path.join(hparams.output_dir, hparams.tensorboard_dir), name=hparams.name
+        os.path.join(hyperparameters.output_dir, hyperparameters.tensorboard_dir), name=hyperparameters.name
     )
 
     # Save pre-trained models to
-    save_transformers_callback = callbacks.TransformersModelCheckpointCallback(hparams)
+    save_transformers_callback = callbacks.TransformersModelCheckpointCallback(hyperparameters)
 
     # instantiate PL trainer
     trainer = pl.Trainer.from_argparse_args(
-        hparams,
-        default_root_dir=hparams.output_dir,
+        hyperparameters,
+        default_root_dir=hyperparameters.output_dir,
         profiler=True,
         logger=test_tube_logger,
         callbacks=[save_transformers_callback],
@@ -87,7 +89,7 @@ def main(hparams):
     )
 
     # Datasets
-    datamodule = YourDataModule(hparams, model, trainer)
+    datamodule = YourDataModule(hyperparameters, model, trainer)
 
     # Train!
     if datamodule.do_train():
@@ -106,24 +108,22 @@ if __name__ == '__main__':
     parser.add_argument('--name', type=str, required=True, help='Name of the experiment, well be used to correctly retrieve checkpoints and logs')
 
     # I/O folders
-    from transformers_lightning.defaults import DefaultConfig
-    parser = DefaultConfig.add_defaults_args(parser)
+    DefaultConfig.add_defaults_args(parser)
 
     # add model specific cli arguments
-    parser = TransformerModel.add_model_specific_args(parser)
-    parser = YourDataModule.add_datamodule_specific_args(parser)
+    TransformerModel.add_model_specific_args(parser)
+    YourDataModule.add_datamodule_specific_args(parser)
 
     # add callback / logger specific cli arguments
-    parser = callbacks.TransformersModelCheckpointCallback.add_callback_specific_args(parser)
+    callbacks.TransformersModelCheckpointCallback.add_callback_specific_args(parser)
 
     # add all the available trainer options to argparse
     # ie: now --gpus --num_nodes ... --fast_dev_run all work in the cli
-    parser = pl.Trainer.add_argparse_args(parser)
+    pl.Trainer.add_argparse_args(parser)
 
     # get NameSpace of parameters
-    hparams = parser.parse_args()
-
-    main(hparams)
+    hyperparameters = parser.parse_args()
+    main(hyperparameters)
 
 ```
 

@@ -1,5 +1,11 @@
+from argparse import ArgumentParser, Namespace
+from typing import Generator
+
 import torch
 from torch.optim import AdamW
+
+from transformers_lightning.optimizers.super_optimizer import SuperOptimizer
+from transformers_lightning.optimizers.utils import named_parameters_to_parameters
 
 
 class ElectraAdamW(AdamW):
@@ -81,3 +87,25 @@ class ElectraAdamW(AdamW):
                 state['exp_avg'], state['exp_avg_sq'] = exp_avg, exp_avg_sq
 
         return loss
+
+
+class ElectraAdamWOptimizer(SuperOptimizer, ElectraAdamW):
+
+    def __init__(self, hyperparameters: Namespace, named_parameters: Generator):
+        super().__init__(
+            hyperparameters,
+            named_parameters_to_parameters(named_parameters),
+            lr=hyperparameters.learning_rate,
+            betas=hyperparameters.adam_betas,
+            eps=hyperparameters.adam_epsilon,
+            weight_decay=hyperparameters.weight_decay,
+            amsgrad=hyperparameters.amsgrad
+        )
+
+    def add_optimizer_specific_args(parser: ArgumentParser):
+        super(SuperOptimizer, SuperOptimizer).add_optimizer_specific_args(parser)
+        parser.add_argument('--learning_rate', type=float, default=1e-3)
+        parser.add_argument('--weight_decay', type=float, default=0.01)
+        parser.add_argument('--adam_epsilon', type=float, default=1e-6)
+        parser.add_argument('--adam_betas', nargs=2, type=float, default=[0.9, 0.999])
+        parser.add_argument('--amsgrad', action='store_true')

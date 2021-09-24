@@ -13,8 +13,8 @@ A `MapDataset` by default expects only an `Adapter` as input. I will completely 
 To create a MapDataset, you have only to to the following:
 ```python
 trainer = pl.Trainer(...)
-adapter = ExampleAdapter(hparams)
-dataset = MapDataset(hparams, adapter, trainer=trainer)
+adapter = ExampleAdapter(hyperparameters)
+dataset = MapDataset(hyperparameters, adapter, trainer=trainer)
 ```
 
 Normally, you should not implement `Datasets` directly since they are automagically added by [`SuperDataModule`](/transformers-lightning/datamodules).
@@ -73,8 +73,8 @@ This can be solved by reading at least `world_size` (2 in this case) elements fo
 The `IterableDataset` offers also a last **experimental** feature: jump the first `start_from_step` steps to resume exactly from a checkpoint. This will compute the effective `batch_size` by taking into account the number of nodes in distributed training and the `accumulate_grad_batches` parameter and will skip data read in the first `start_from_step` steps.
 
 ```python
-adapter = ExampleAdapter(hparams)
-dataset = IterableDataset(hparams, adapter, start_from_step=10)
+adapter = ExampleAdapter(hyperparameters)
+dataset = IterableDataset(hyperparameters, adapter, start_from_step=10)
 ```
 
 Please do not provide a `start_from_step` longer than an epoch!
@@ -86,11 +86,11 @@ A simple dataset that emulates the behaviour of the `zip` built-in command in py
 
 Example:
 ```python
-adapter_1 = ExampleAdapter(hparams)
-dataset_1 = MapDataset(hparams, adapter_1)
+adapter_1 = ExampleAdapter(hyperparameters)
+dataset_1 = MapDataset(hyperparameters, adapter_1)
 
-adapter_2 = ExampleAdapter(hparams)
-dataset_2 = MapDataset(hparams, adapter_2)
+adapter_2 = ExampleAdapter(hyperparameters)
+dataset_2 = MapDataset(hyperparameters, adapter_2)
 
 dataset = StackDataset(dataset_1, dataset_2)
 
