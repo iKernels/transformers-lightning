@@ -80,7 +80,7 @@ class PolynomialLayerwiseDecaySchedulerWithWarmup(SuperScheduler):
         self.depths = [group['depth'] for group in optimizer.param_groups]
 
     def _layerwise_decay(self, lrs):
-        """
+        r"""
         Have lower learning rates for layers closer to the input.
         Requires that groups passed to the Optimizer are already sorted from the
         closer to the input to the closer the output.

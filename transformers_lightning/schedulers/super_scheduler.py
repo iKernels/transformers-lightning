@@ -14,7 +14,7 @@ class SuperScheduler(_LRScheduler):
 
     @property
     def num_training_steps(self):
-        """Get the current voltage."""
+        r"""Get the current voltage."""
         if self.hyperparameters.max_steps is not None and self.hyperparameters.max_steps > 0:
             return self.hyperparameters.max_steps
         else:

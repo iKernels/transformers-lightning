@@ -4,7 +4,7 @@ from torchmetrics.utilities.checks import _check_retrieval_functional_inputs
 
 
 def retrieval_hit_rate(preds: Tensor, target: Tensor, k: int = None) -> Tensor:
-    """
+    r"""
     Computes the hit rate (for information retrieval).
     The hit rate is 1.0 if there is at least one relevant document among all the top `k` retrieved documents.
 

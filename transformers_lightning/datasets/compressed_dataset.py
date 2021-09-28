@@ -17,7 +17,7 @@ class CompressedDataset(SuperDataset):
         return len(self.data)
 
     def __getitem__(self, idx) -> dict:
-        """ Get dict of data at a given position. """
+        r""" Get dict of data at a given position. """
         if idx < 0:
             if -idx > len(self):
                 raise ValueError("absolute value of index should not exceed dataset length")

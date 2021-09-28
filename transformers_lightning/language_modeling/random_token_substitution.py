@@ -64,7 +64,7 @@ class RandomTokenSubstitution(LanguageModel):
 
         # create whole work masking mask -> True if the token starts with ## (following token in composed words)
         if words_tails is None and self.whole_word_swapping:
-            words_tails = whole_word_tails_mask(inputs, self.tokenizer, device=device)
+            words_tails = whole_word_tails_mask(inputs, self.tokenizer)
 
         if self.whole_word_swapping:
             # with whole word masking probability matrix should average probability over the entire word
@@ -89,9 +89,9 @@ class RandomTokenSubstitution(LanguageModel):
         # with whole word masking, assure all tokens in a word are either all masked or not
         if self.whole_word_swapping:
             for i in range(1, substituted_indices.shape[-1]):
-                substituted_indices[:,
-                                    i] = substituted_indices[:,
-                                                             i] | (substituted_indices[:, i - 1] & words_tails[:, i])
+                substituted_indices[:, i] = substituted_indices[:, i] | (
+                    substituted_indices[:, i - 1] & words_tails[:, i]
+                )
 
         random_words = torch.randint(len(self.tokenizer), inputs.shape, dtype=torch.long, device=device)
         inputs[substituted_indices] = random_words[substituted_indices]

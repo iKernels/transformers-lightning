@@ -38,7 +38,7 @@ class ConstantSchedulerWithWarmup(SuperScheduler):
             raise ValueError("`num_warmup_steps` must be an integer greater than 0")
 
     def lr_lambda(self, current_step: int) -> int:
-        """ Compute lambda that is going to scale the learning rate. """
+        r""" Compute lambda that is going to scale the learning rate. """
         if current_step < self.hyperparameters.num_warmup_steps:
             return float(current_step) / float(max(1, self.hyperparameters.num_warmup_steps))
         return 1.0

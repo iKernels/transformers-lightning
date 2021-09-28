@@ -2,7 +2,7 @@ from argparse import ArgumentParser
 
 
 class DefaultConfig:
-    """
+    r"""
     Keeping all default values together improves readability and editability.
     Do not touch this tfile unless you want to add something. Possibly subclass this class
     if you want to add some parameters.

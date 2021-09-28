@@ -70,7 +70,7 @@ class TransformersModelCheckpointCallback(Callback):
 
     @rank_zero_only
     def on_train_start(self, trainer, pl_module):
-        """ Check model can be saved and save hyperparameters to understand what kind of experiment it was. """
+        r""" Check model can be saved and save hyperparameters to understand what kind of experiment it was. """
         if trainer.global_rank != 0:
             return
 
@@ -97,7 +97,7 @@ class TransformersModelCheckpointCallback(Callback):
 
     @rank_zero_only
     def on_train_batch_end(self, trainer, pl_module, outputs, batch, batch_idx, dataloader_idx):
-        """Called when the training batch ends. """
+        r"""Called when the training batch ends. """
         # only run on main process
         if trainer.global_rank != 0:
             return
@@ -117,7 +117,7 @@ class TransformersModelCheckpointCallback(Callback):
 
     @rank_zero_only
     def on_train_epoch_end(self, trainer, pl_module):
-        """Called when the train epoch ends."""
+        r"""Called when the train epoch ends."""
         # only run on main process
         if trainer.global_rank != 0:
             return
@@ -130,7 +130,7 @@ class TransformersModelCheckpointCallback(Callback):
 
     @rank_zero_only
     def on_train_end(self, trainer, pl_module):
-        """
+        r"""
         Called when the train ends. Here models trained in the
         LightningModule will be saved to disk to be re-used.
         """
@@ -142,7 +142,7 @@ class TransformersModelCheckpointCallback(Callback):
 
     @rank_zero_only
     def on_validation_end(self, trainer, pl_module):
-        """
+        r"""
         Called when the validation ends. Here models trained in the
         LightningModule will be saved to disk to be re-used.
         """
@@ -162,7 +162,7 @@ class TransformersModelCheckpointCallback(Callback):
 
     @staticmethod
     def add_callback_specific_args(parser: ArgumentParser):
-        """ Add callback_specific arguments to parser. """
+        r""" Add callback_specific arguments to parser. """
         parser.add_argument(
             '--checkpoint_interval',
             type=int,
