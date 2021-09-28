@@ -53,7 +53,7 @@ class SuperDataModule(pl.LightningDataModule):
     def do_predict(self):
         r""" Whether to do predictions. """
 
-    def default_dataloader(self, dataset: Dataset, batch_size: int, sampler: Sampler = None):
+    def default_dataloader(self, dataset: Dataset, batch_size: int, sampler: Sampler = None, **kwargs):
         r""" Return a dataloader with all usual default parameters. """
 
         if sampler is not None:
@@ -73,6 +73,7 @@ class SuperDataModule(pl.LightningDataModule):
             pin_memory=True,
             collate_fn=self.collate_fn,
             sampler=sampler,
+            **kwargs,
         )
 
     def train_dataloader(self):
