@@ -4,13 +4,15 @@ from argparse import ArgumentParser, Namespace
 from typing import Callable
 
 import pytorch_lightning as pl
+from pytorch_lightning.utilities import rank_zero_warn
 from torch.utils.data import DataLoader, Dataset
+from torch.utils.data.sampler import Sampler
 
 from transformers_lightning import utils
 
 
 class SuperDataModule(pl.LightningDataModule):
-    """
+    r"""
     SuperDataModule should be the superclass of all the DataModule in your project.
     It implements some simple methods to check whether training, val or testing is required.
     Moreover, it adds to the command line parameters the basic arguments used by Dataset,
@@ -37,59 +39,70 @@ class SuperDataModule(pl.LightningDataModule):
 
     @abstractmethod
     def do_train(self) -> bool:
-        """ Whether to do training. """
+        r""" Whether to do training. """
 
     @abstractmethod
     def do_validation(self) -> bool:
-        """ Whether to do validation. """
+        r""" Whether to do validation. """
 
     @abstractmethod
     def do_test(self):
-        """ Whether to do testing. """
+        r""" Whether to do testing. """
 
     @abstractmethod
     def do_predict(self):
-        """ Whether to do predictions. """
+        r""" Whether to do predictions. """
 
-    def default_dataloader(self, dataset: Dataset, batch_size: int, shuffle: bool = True):
-        """ Return a dataloader with all usual default parameters. """
+    def default_dataloader(self, dataset: Dataset, batch_size: int, sampler: Sampler = None, **kwargs):
+        r""" Return a dataloader with all usual default parameters. """
+
+        if sampler is not None:
+            rank_zero_warn(
+                "Using a custom sampler may change the total number of steps, check model.num_training_steps"
+            )
+            if self.hyperparameters.replace_sampler_ddp is True:
+                rank_zero_warn(
+                    "You provided a custom sampler but lightning will override."
+                    " You should set replace_sampler_ddp=False"
+                )
+
         return DataLoader(
             dataset,
             batch_size=batch_size,
             num_workers=self.hyperparameters.num_workers,
             pin_memory=True,
             collate_fn=self.collate_fn,
-            shuffle=shuffle,
-            drop_last=self.hyperparameters.drop_last,
+            sampler=sampler,
+            **kwargs,
         )
 
     def train_dataloader(self):
-        """ Return the training dataloader. """
+        r""" Return the training dataloader. """
         if self.do_train():
             return self.default_dataloader(
-                self.train_dataset, self.hyperparameters.batch_size, shuffle=not self.hyperparameters.iterable
+                self.train_dataset, self.hyperparameters.batch_size
             )
         return None
 
     def val_dataloader(self):
-        """ Return the validation dataloader. """
+        r""" Return the validation dataloader. """
         if self.do_validation():
-            return self.default_dataloader(self.valid_dataset, self.hyperparameters.val_batch_size, shuffle=False)
+            return self.default_dataloader(self.valid_dataset, self.hyperparameters.val_batch_size)
         return None
 
     def test_dataloader(self):
-        """ Return the test dataloader. """
+        r""" Return the test dataloader. """
         if self.do_test():
             return [
-                self.default_dataloader(dataset, self.hyperparameters.test_batch_size, shuffle=False)
+                self.default_dataloader(dataset, self.hyperparameters.test_batch_size)
                 for dataset in self.test_dataset
             ]
         return None
 
     def predict_dataloader(self):
-        """ Return the validation dataloader. """
+        r""" Return the validation dataloader. """
         if self.do_predict():
-            return self.default_dataloader(self.predict_dataset, self.hyperparameters.predict_batch_size, shuffle=False)
+            return self.default_dataloader(self.predict_dataset, self.hyperparameters.predict_batch_size)
         return None
 
     @staticmethod
@@ -101,7 +114,6 @@ class SuperDataModule(pl.LightningDataModule):
             type=int,
             help='Number of workers to be used to load datasets'
         )
-        parser.add_argument('--drop_last', action="store_true")
         parser.add_argument('--batch_size', type=int, default=32)
         parser.add_argument('--val_batch_size', type=int, default=256)
         parser.add_argument('--test_batch_size', type=int, default=256)

@@ -38,8 +38,7 @@ class LinearSchedulerWithWarmup(SuperScheduler):
             raise ValueError("`num_warmup_steps` must be an integer greater than 0")
 
     def lr_lambda(self, current_step: int) -> int:
-        """ Compute lambda that is going to scale the learning rate. """
-
+        r""" Compute lambda that is going to scale the learning rate. """
         assert current_step <= self.num_training_steps
 
         if current_step < self.hyperparameters.num_warmup_steps:

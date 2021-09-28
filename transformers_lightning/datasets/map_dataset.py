@@ -18,7 +18,7 @@ class MapDataset(SuperDataset):
         return len(self.data)
 
     def _get_sample(self, idx):
-        """ Get dict of data at a given position without preprocessing. """
+        r""" Get dict of data at a given position without preprocessing. """
         if idx < 0:
             if -idx > len(self):
                 raise ValueError("absolute value of index should not exceed dataset length")
@@ -30,7 +30,7 @@ class MapDataset(SuperDataset):
         return row
 
     def __getitem__(self, idx) -> dict:
-        """ Get dict of data at a given position. """
+        r""" Get dict of data at a given position. """
         row = self._get_sample(idx)
         if self.do_preprocessing:
             row = self.adapter.preprocess_line(row)

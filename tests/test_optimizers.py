@@ -5,10 +5,7 @@ import pytorch_lightning as pl
 from transformers import BertTokenizer
 
 from tests.helpers import DummyDataModule, DummyTransformerModel, standard_args
-from transformers_lightning.optimizers import (
-    AdamWOptimizer,
-    ElectraAdamWOptimizer,
-)
+from transformers_lightning.optimizers import AdamWOptimizer, ElectraAdamWOptimizer
 
 
 class OptimModel(DummyTransformerModel):
@@ -27,9 +24,8 @@ class OptimModel(DummyTransformerModel):
 
 
 @pytest.mark.parametrize("optimizer_class", [AdamWOptimizer, ElectraAdamWOptimizer])
-@pytest.mark.parametrize("learning_rate", [1e-06, 1e-05, 1e-04])
 @pytest.mark.parametrize("batch_size", [1, 4, 11])
-def test_optimizers(optimizer_class, learning_rate, batch_size):
+def test_optimizers(optimizer_class, batch_size):
 
     hyperparameters = Namespace(
         batch_size=batch_size,

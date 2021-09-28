@@ -23,7 +23,6 @@ standard_args = dict(
     weight_decay=0.1,
     padding='max_length',
     max_length=5,
-    drop_last=False,
 )
 
 
@@ -142,4 +141,5 @@ class DummyTransformerModel(TransformersModel):
 class DummyTransformerModelWithOptim(DummyTransformerModel):
 
     def configure_optimizers(self):
+        self.computed_steps = self.num_training_steps
         return AdamW(self.model.parameters())

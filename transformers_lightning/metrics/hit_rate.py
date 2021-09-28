@@ -7,7 +7,7 @@ from transformers_lightning.metrics.functional.hit_rate import retrieval_hit_rat
 
 
 class HitRate(RetrievalMetric):
-    """
+    r"""
     Computes Hit Rate @ k, where 1.0 is given to queries where a relevant document is in the top `k`.
 
     Works with binary target data. Accepts float predictions from a model output.

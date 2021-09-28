@@ -1,5 +1,6 @@
 import pytest
 import torch
+from pytorch_lightning import seed_everything
 from transformers import BertTokenizer
 
 from transformers_lightning.language_modeling.masked_language_modeling import IGNORE_IDX, MaskedLanguageModeling
@@ -34,8 +35,7 @@ mlm = MaskedLanguageModeling(tok, whole_word_masking=True)
 )
 def test_language_model(seed, sentence, masking):
 
-    torch.random.manual_seed(seed)
-    torch.cuda.random.manual_seed(seed)
+    seed_everything(seed)
 
     input_ids = torch.tensor([tok.encode(sentence)])
     words_tails_mask = whole_word_tails_mask(input_ids, tok)

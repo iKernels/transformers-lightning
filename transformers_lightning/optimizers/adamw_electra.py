@@ -44,7 +44,7 @@ class ElectraAdamW(AdamW):
 
     @torch.no_grad()
     def step(self, closure=None):
-        """Performs a single optimization step.
+        r"""Performs a single optimization step.
 
         Arguments:
             closure (callable, optional): A closure that reevaluates the model

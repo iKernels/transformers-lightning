@@ -91,7 +91,7 @@ class MaskedLanguageModeling(LanguageModel):
 
         # create whole work masking mask -> True if the token starts with ## (following token in composed words)
         if words_tails is None and self.whole_word_masking:
-            words_tails = whole_word_tails_mask(inputs, self.tokenizer, device=device)
+            words_tails = whole_word_tails_mask(inputs, self.tokenizer)
 
         if self.whole_word_masking:
             # with whole word masking probability matrix should average probability over the entire word

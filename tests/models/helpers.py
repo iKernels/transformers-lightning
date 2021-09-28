@@ -6,7 +6,7 @@ from transformers import BertTokenizer
 from tests.helpers import DummyDataModule, DummyTransformerModelWithOptim, get_random_gpus_list, standard_args
 
 
-def do_test_fix_max_steps(max_epochs, accumulate_grad_batches, batch_size, expected_max_steps, **kwargs):
+def do_test_fix_max_steps(max_epochs, accumulate_grad_batches, batch_size, **kwargs):
 
     hyperparameters = Namespace(
         batch_size=batch_size,
@@ -35,5 +35,6 @@ def do_test_fix_max_steps(max_epochs, accumulate_grad_batches, batch_size, expec
     datamodule = DummyDataModule(hyperparameters, train_number=3, test_number=3, valid_number=3, tokenizer=tokenizer)
     trainer.fit(model, datamodule=datamodule)
 
-    # Assert max steps computed correctly
-    assert model.num_training_steps == expected_max_steps
+    assert trainer.global_step == model.computed_steps, (
+        f"global {trainer.global_step} steps but computed {model.computed_steps}"
+    )

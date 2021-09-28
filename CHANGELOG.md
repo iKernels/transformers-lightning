@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 
+## 0.7.3
+
+- Added `get_dataset` method to `AdaptersDataModule` to facilitate creation of dataset from adapters.
+
+- Dropped support for `drop_last` in every dataloader: lightning uses `False` everywhere by default.
+
+- Fixed `TransformersModel.num_training_steps` that in some cases was providing slightly wrong numbers due to rounding.
+
+- Fixed `whole_words_tail_mask` in `language_modeling` which was not working correctly.
+
+- Improved testing of `models` and `language_models`.
+
+
 ## 0.7.2
 
 - Added tests for `optimizers` package.

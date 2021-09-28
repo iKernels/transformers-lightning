@@ -61,18 +61,19 @@ class TransformersModel(LightningModule):
         train_samples = len(self.trainer.datamodule.train_dataset)
 
         # number of training devices
-        total_devices = (
-            len(self.trainer.accelerator_connector.parallel_devices) * self.trainer.accelerator_connector.num_nodes
-        )
-        if self.trainer.accelerator_connector.use_dp or self.trainer.accelerator_connector.use_ddp2:
+        if self.trainer.accelerator_connector.use_dp:
             total_devices = 1    # with dp, a single batch is divided across many gpus
+        elif self.trainer.accelerator_connector.use_ddp2:
+            total_devices = self.trainer.num_nodes
+        else:
+            total_devices = self.trainer.num_processes * self.trainer.num_nodes
 
-        # number of training samples for each device
-        train_samples_per_device = train_samples // total_devices
+        # the number of training samples may be modified in distributed training
+        # to be divisible by the number of GPUs...
+        train_samples_per_device = math.ceil(train_samples / total_devices)
 
         # train batches from the dataloader
-        div_fn = math.floor if self.hyperparameters.drop_last else math.ceil
-        train_batches_per_device = div_fn(train_samples_per_device / self.hyperparameters.batch_size)
+        train_batches_per_device = math.ceil(train_samples_per_device / self.hyperparameters.batch_size)
 
         # eventually limit train batches
         limit_batches = self.trainer.limit_train_batches
