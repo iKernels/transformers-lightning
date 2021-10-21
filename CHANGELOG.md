@@ -5,6 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 
+## 0.7.4
+
+- Added `SortingLanguageModeling` technique and tests.
+
+- Added `SwappingLanguageModeling` technique and tests.
+
+- Added `add_adapter_specific_args` method to `SuperAdapter` to allow adding parameters to the CLI.
+
+- Fixed typo with which `AdapterDataModule` was not receiving `collate_fn` argument.
+
+- Fixed typos in `imports`.
+
+- Refactored `datamodules` section.
+
+
 ## 0.7.3
 
 - Added `get_dataset` method to `AdaptersDataModule` to facilitate creation of dataset from adapters.
