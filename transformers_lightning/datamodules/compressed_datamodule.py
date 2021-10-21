@@ -3,6 +3,8 @@ import os
 from argparse import ArgumentParser
 from typing import Callable
 
+from pytorch_lightning.trainer.states import TrainerFn
+
 from transformers_lightning import utils
 from transformers_lightning.datamodules.super_datamodule import SuperDataModule
 from transformers_lightning.datasets.compressed_dataset import CompressedDataset
@@ -55,8 +57,7 @@ class CompressedDataModule(SuperDataModule):
         Load datasets only if respective file is defined.
         This implementation should be enough for most subclasses.
         """
-
-        if stage == 'fit':
+        if stage == TrainerFn.FITTING.value or TrainerFn.VALIDATING.value:
             if self.do_train():
                 logger.info("Loading training dataset from CompressedDictionary...")
                 self.train_dataset = CompressedDataset(self.hyperparameters, self.train_filepath)
@@ -64,14 +65,14 @@ class CompressedDataModule(SuperDataModule):
                 logger.info("Loading validation dataset from CompressedDictionary...")
                 self.valid_dataset = CompressedDataset(self.hyperparameters, self.valid_filepath)
 
-        elif stage == 'test':
+        elif stage == TrainerFn.TESTING.value:
             if self.do_test():
                 logger.info("Loading test dataset from CompressedDictionary...")
                 self.test_dataset = [
                     CompressedDataset(self.hyperparameters, filepath) for filepath in self.test_filepath
                 ]
 
-        elif stage == 'predict':
+        elif stage == TrainerFn.PREDICTING.value:
             if self.do_predict():
                 logger.info("Loading predict dataset from CompressedDictionary...")
                 self.predict_dataset = CompressedDataset(self.hyperparameters, self.predict_filepath)
