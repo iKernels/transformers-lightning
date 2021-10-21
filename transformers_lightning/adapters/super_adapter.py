@@ -1,5 +1,5 @@
 import abc
-from argparse import Namespace
+from argparse import ArgumentParser, Namespace
 from typing import Iterable
 
 
@@ -46,3 +46,7 @@ class SuperAdapter:
                                                          max_length=128)
         >>> return results
         """
+
+    @staticmethod
+    def add_adapter_specific_args(parser: ArgumentParser) -> ArgumentParser:
+        r""" Add here arguments that will be available from the command line. """
