@@ -1,7 +1,11 @@
+import transformers_lightning.adapters  # noqa: F401
 import transformers_lightning.callbacks  # noqa: F401
 import transformers_lightning.datamodules  # noqa: F401
 import transformers_lightning.datasets  # noqa: F401
 import transformers_lightning.defaults  # noqa: F401
 import transformers_lightning.language_modeling  # noqa: F401
+import transformers_lightning.metrics  # noqa: F401
 import transformers_lightning.models  # noqa: F401
+import transformers_lightning.optimizers  # noqa: F401
+import transformers_lightning.schedulers  # noqa: F401
 import transformers_lightning.utils  # noqa: F401
