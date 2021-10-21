@@ -49,3 +49,27 @@ def whole_word_tails_mask(inputs: List[Any], tokenizer: PreTrainedTokenizerBase)
         res = torch.tensor(res).to(device=device)
 
     return res
+
+
+def create_position_ids_from_input_ids(input_ids, padding_idx=None, past_key_values_length=0):
+    """
+    Replace non-padding symbols with their position numbers. Position numbers begin at padding_idx+1. Padding symbols
+    are ignored. This is modified from fairseq's `utils.make_positions` and modified again by lucadiliello
+    to improve performance because many type conversions are useless.
+
+    Args:
+        x: torch.Tensor x
+        padding_idx: integer representing padding token
+        past_key_values_length: positions already encoded (start from this position)
+
+    Returns: torch.Tensor
+    """
+    # The series of casts and type-conversions here are carefully balanced to both work with ONNX export and XLA.
+    if padding_idx is not None:
+        mask = (input_ids != padding_idx)
+        incremental_indices = (torch.cumsum(mask, dim=1) + past_key_values_length) * mask
+        return incremental_indices + padding_idx
+    else:
+        batch_size, max_sequence_length = input_ids.shape
+        return torch.arange(past_key_values_length,
+                            max_sequence_length + past_key_values_length).unsqueeze(0).repeat(batch_size, 1)
