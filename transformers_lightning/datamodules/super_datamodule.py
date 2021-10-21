@@ -1,5 +1,5 @@
 import multiprocessing
-from abc import abstractmethod
+from abc import ABC, abstractmethod
 from argparse import ArgumentParser, Namespace
 from typing import Callable
 
@@ -11,7 +11,7 @@ from torch.utils.data.sampler import Sampler
 from transformers_lightning import utils
 
 
-class SuperDataModule(pl.LightningDataModule):
+class SuperDataModule(pl.LightningDataModule, ABC):
     r"""
     SuperDataModule should be the superclass of all the DataModule in your project.
     It implements some simple methods to check whether training, val or testing is required.
@@ -55,7 +55,6 @@ class SuperDataModule(pl.LightningDataModule):
 
     def default_dataloader(self, dataset: Dataset, batch_size: int, sampler: Sampler = None, **kwargs):
         r""" Return a dataloader with all usual default parameters. """
-
         if sampler is not None:
             rank_zero_warn(
                 "Using a custom sampler may change the total number of steps, check model.num_training_steps"
@@ -78,32 +77,24 @@ class SuperDataModule(pl.LightningDataModule):
 
     def train_dataloader(self):
         r""" Return the training dataloader. """
-        if self.do_train():
-            return self.default_dataloader(
-                self.train_dataset, self.hyperparameters.batch_size
-            )
-        return None
+        return self.default_dataloader(
+            self.train_dataset, self.hyperparameters.batch_size
+        )
 
     def val_dataloader(self):
         r""" Return the validation dataloader. """
-        if self.do_validation():
-            return self.default_dataloader(self.valid_dataset, self.hyperparameters.val_batch_size)
-        return None
+        return self.default_dataloader(self.valid_dataset, self.hyperparameters.val_batch_size)
 
     def test_dataloader(self):
         r""" Return the test dataloader. """
-        if self.do_test():
-            return [
-                self.default_dataloader(dataset, self.hyperparameters.test_batch_size)
-                for dataset in self.test_dataset
-            ]
-        return None
+        return [
+            self.default_dataloader(dataset, self.hyperparameters.test_batch_size)
+            for dataset in self.test_dataset
+        ]
 
     def predict_dataloader(self):
         r""" Return the validation dataloader. """
-        if self.do_predict():
-            return self.default_dataloader(self.predict_dataset, self.hyperparameters.predict_batch_size)
-        return None
+        return self.default_dataloader(self.predict_dataset, self.hyperparameters.predict_batch_size)
 
     @staticmethod
     def add_datamodule_specific_args(parser: ArgumentParser):
