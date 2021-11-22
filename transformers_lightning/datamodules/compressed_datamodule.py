@@ -86,22 +86,30 @@ class CompressedDataModule(SuperDataModule):
 
     def train_dataloader(self):
         r""" Return the training dataloader. """
-        return self.default_dataloader(self.train_dataset, self.hyperparameters.batch_size, shuffle=True)
+        if self.do_train():
+            return self.default_dataloader(self.train_dataset, self.hyperparameters.batch_size, shuffle=True)
+        return None
 
     def val_dataloader(self):
         r""" Return the validation dataloader. """
-        return self.default_dataloader(self.valid_dataset, self.hyperparameters.val_batch_size, shuffle=False)
+        if self.do_validation():
+            return self.default_dataloader(self.valid_dataset, self.hyperparameters.val_batch_size, shuffle=False)
+        return None
 
     def test_dataloader(self):
         r""" Return the test dataloader. """
-        return [
-            self.default_dataloader(dataset, self.hyperparameters.test_batch_size, shuffle=False)
-            for dataset in self.test_dataset
-        ]
+        if self.do_test():
+            return [
+                self.default_dataloader(dataset, self.hyperparameters.test_batch_size, shuffle=False)
+                for dataset in self.test_dataset
+            ]
+        return None
 
     def predict_dataloader(self):
         r""" Return the validation dataloader. """
-        return self.default_dataloader(self.predict_dataset, self.hyperparameters.predict_batch_size, shuffle=False)
+        if self.do_predict():
+            return self.default_dataloader(self.predict_dataset, self.hyperparameters.predict_batch_size, shuffle=False)
+        return None
 
     def do_train(self):
         return self.train_filepath is not None
