@@ -86,9 +86,7 @@ class CompressedDataModule(SuperDataModule):
 
     def train_dataloader(self):
         r""" Return the training dataloader. """
-        return self.default_dataloader(
-            self.train_dataset, self.hyperparameters.batch_size, shuffle=True,
-        )
+        return self.default_dataloader(self.train_dataset, self.hyperparameters.batch_size, shuffle=True)
 
     def val_dataloader(self):
         r""" Return the validation dataloader. """
