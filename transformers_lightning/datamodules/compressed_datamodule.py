@@ -58,6 +58,10 @@ class CompressedDataModule(SuperDataModule):
         for kwarg in kwargs:
             logger.warning(f'CompressedDataModule received unused parameter {kwarg}')
 
+        assert self.hyperparameters.iterable is False, (
+            f"Cannot use IterableDataset with CompressedDataModule"
+        )
+
     # Optional, called for every GPU/machine (assigning state is OK)
     def setup(self, stage=None):
         r"""

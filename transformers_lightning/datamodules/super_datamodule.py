@@ -67,6 +67,11 @@ class SuperDataModule(pl.LightningDataModule, ABC):
                     " You should set --replace_sampler_ddp=False"
                 )
 
+        if self.hyperparameters.iterable and 'shuffle' in kwargs:
+            raise ValueError(
+                f"Found shuffle={kwargs['shuffle']} while using IterableDataset"
+            )
+
         return DataLoader(
             dataset,
             batch_size=batch_size,
@@ -79,20 +84,23 @@ class SuperDataModule(pl.LightningDataModule, ABC):
     def train_dataloader(self):
         r""" Return the training dataloader. """
         if self.do_train():
-            return self.default_dataloader(self.train_dataset, self.hyperparameters.batch_size, shuffle=True)
+            params = dict(shuffle=True) if not self.hyperparameters.iterable else dict()
+            return self.default_dataloader(self.train_dataset, self.hyperparameters.batch_size, **params)
         return None
 
     def val_dataloader(self):
         r""" Return the validation dataloader. """
         if self.do_validation():
-            return self.default_dataloader(self.valid_dataset, self.hyperparameters.val_batch_size, shuffle=False)
+            params = dict(shuffle=False) if not self.hyperparameters.iterable else dict()
+            return self.default_dataloader(self.valid_dataset, self.hyperparameters.val_batch_size, **params)
         return None
 
     def test_dataloader(self):
         r""" Return the test dataloader. """
         if self.do_test():
+            params = dict(shuffle=False) if not self.hyperparameters.iterable else dict()
             return [
-                self.default_dataloader(dataset, self.hyperparameters.test_batch_size, shuffle=False)
+                self.default_dataloader(dataset, self.hyperparameters.test_batch_size, **params)
                 for dataset in self.test_dataset
             ]
         return None
@@ -100,7 +108,8 @@ class SuperDataModule(pl.LightningDataModule, ABC):
     def predict_dataloader(self):
         r""" Return the validation dataloader. """
         if self.do_predict():
-            return self.default_dataloader(self.predict_dataset, self.hyperparameters.predict_batch_size, shuffle=False)
+            params = dict(shuffle=False) if not self.hyperparameters.iterable else dict()
+            return self.default_dataloader(self.predict_dataset, self.hyperparameters.predict_batch_size, **params)
         return None
 
     @staticmethod
