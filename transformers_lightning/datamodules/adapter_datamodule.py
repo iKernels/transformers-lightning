@@ -2,12 +2,13 @@ from argparse import Namespace
 from typing import Callable, Union
 
 from pytorch_lightning.trainer.states import TrainerFn
+from pytorch_lightning.trainer.trainer import Trainer
 
-from transformers_lightning import utils
 from transformers_lightning.adapters.super_adapter import SuperAdapter
 from transformers_lightning.datamodules.super_datamodule import SuperDataModule
 from transformers_lightning.datasets.iterable_dataset import TransformersIterableDataset
-from transformers_lightning.datasets.map_dataset import MapDataset
+from transformers_lightning.datasets.map_dataset import TransformersMapDataset
+from transformers_lightning.utils.functional import collate_single_fn
 
 
 class AdaptersDataModule(SuperDataModule):
@@ -21,13 +22,14 @@ class AdaptersDataModule(SuperDataModule):
     def __init__(
         self,
         hyperparameters: Namespace,
-        collate_fn: Callable = utils.collate_single_fn,
+        trainer: Trainer,
+        collate_fn: Callable = collate_single_fn,
         train_adapter: SuperAdapter = None,
         valid_adapter: SuperAdapter = None,
         test_adapter: SuperAdapter = None,
         predict_adapter: SuperAdapter = None,
     ):
-        super().__init__(hyperparameters, collate_fn)
+        super().__init__(hyperparameters, trainer, collate_fn)
 
         # instantiate eventual adapters passed from init method
         if train_adapter is not None:
@@ -65,12 +67,12 @@ class AdaptersDataModule(SuperDataModule):
         >>> self.predict_adapter = CSVAdapter(self.hyperparameters, "pre-training/predict.tsv", delimiter="\t")
         """
 
-    def get_dataset(self, adapter: SuperAdapter) -> Union[MapDataset, TransformersIterableDataset]:
+    def get_dataset(self, adapter: SuperAdapter) -> Union[TransformersMapDataset, TransformersIterableDataset]:
         r""" Return iterable or map dataset from adapter. """
         if self.hyperparameters.iterable:
             return TransformersIterableDataset(self.hyperparameters, adapter, self.trainer)
         else:
-            return MapDataset(self.hyperparameters, adapter, self.trainer)
+            return TransformersMapDataset(self.hyperparameters, adapter, self.trainer)
 
     # Optional, called for every GPU/machine (assigning state is OK)
     def setup(self, stage=None):

@@ -65,8 +65,8 @@ class DummyTransformersAdapter(CSVAdapter):
 # DataModules
 class DummyDataModule(AdaptersDataModule):
 
-    def __init__(self, hyperparameters, train_number=1, valid_number=1, test_number=1, tokenizer=None):
-        super().__init__(hyperparameters)
+    def __init__(self, hyperparameters, trainer=None, train_number=1, valid_number=1, test_number=1, tokenizer=None):
+        super().__init__(hyperparameters, trainer)
         self.train_adapter = DummyTransformersAdapter(
             self.hyperparameters, f"tests/data/file-{train_number}.tsv", delimiter="\t", tokenizer=tokenizer
         )

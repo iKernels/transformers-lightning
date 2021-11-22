@@ -1,13 +1,14 @@
 import logging
 import os
-from argparse import ArgumentParser
+from argparse import ArgumentParser, Namespace
 from typing import Callable
 
+from pytorch_lightning.trainer import Trainer
 from pytorch_lightning.trainer.states import TrainerFn
 
-from transformers_lightning import utils
 from transformers_lightning.datamodules.super_datamodule import SuperDataModule
 from transformers_lightning.datasets.compressed_dataset import CompressedDataset
+from transformers_lightning.utils.functional import collate_single_fn
 
 logger = logging.getLogger("pytorch_lightning")
 
@@ -23,8 +24,14 @@ class CompressedDataModule(SuperDataModule):
     test_filepath: str = None
     predict_filepath: str = None
 
-    def __init__(self, hyperparameters, collate_fn: Callable = utils.collate_single_fn, **kwargs):
-        super().__init__(hyperparameters, collate_fn)
+    def __init__(
+        self,
+        hyperparameters: Namespace,
+        trainer: Trainer,
+        collate_fn: Callable = collate_single_fn,
+        **kwargs,
+    ):
+        super().__init__(hyperparameters, trainer, collate_fn)
 
         # instantiate eventual adapters passed from init method
         if hyperparameters.train_filepath is not None:
@@ -51,6 +58,10 @@ class CompressedDataModule(SuperDataModule):
         for kwarg in kwargs:
             logger.warning(f'CompressedDataModule received unused parameter {kwarg}')
 
+        assert self.hyperparameters.iterable is False, (
+            f"Cannot use IterableDataset with CompressedDataModule"
+        )
+
     # Optional, called for every GPU/machine (assigning state is OK)
     def setup(self, stage=None):
         r"""
@@ -76,6 +87,33 @@ class CompressedDataModule(SuperDataModule):
             if self.do_predict():
                 logger.info("Loading predict dataset from CompressedDictionary...")
                 self.predict_dataset = CompressedDataset(self.hyperparameters, self.predict_filepath)
+
+    def train_dataloader(self):
+        r""" Return the training dataloader. """
+        if self.do_train():
+            return self.default_dataloader(self.train_dataset, self.hyperparameters.batch_size, shuffle=True)
+        return None
+
+    def val_dataloader(self):
+        r""" Return the validation dataloader. """
+        if self.do_validation():
+            return self.default_dataloader(self.valid_dataset, self.hyperparameters.val_batch_size, shuffle=False)
+        return None
+
+    def test_dataloader(self):
+        r""" Return the test dataloader. """
+        if self.do_test():
+            return [
+                self.default_dataloader(dataset, self.hyperparameters.test_batch_size, shuffle=False)
+                for dataset in self.test_dataset
+            ]
+        return None
+
+    def predict_dataloader(self):
+        r""" Return the validation dataloader. """
+        if self.do_predict():
+            return self.default_dataloader(self.predict_dataset, self.hyperparameters.predict_batch_size, shuffle=False)
+        return None
 
     def do_train(self):
         return self.train_filepath is not None

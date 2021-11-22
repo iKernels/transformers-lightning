@@ -4,11 +4,11 @@ from argparse import ArgumentParser, Namespace
 from typing import Callable
 
 import pytorch_lightning as pl
+from pytorch_lightning.trainer import Trainer
 from pytorch_lightning.utilities import rank_zero_warn
 from torch.utils.data import DataLoader, Dataset
-from torch.utils.data.sampler import Sampler
 
-from transformers_lightning import utils
+from transformers_lightning.utils.functional import collate_single_fn
 
 
 class SuperDataModule(pl.LightningDataModule, ABC):
@@ -32,9 +32,10 @@ class SuperDataModule(pl.LightningDataModule, ABC):
     test_dataset: Dataset = None
     predict_dataset: Dataset = None
 
-    def __init__(self, hyperparameters: Namespace, collate_fn: Callable = utils.collate_single_fn):
+    def __init__(self, hyperparameters: Namespace, trainer: Trainer, collate_fn: Callable = collate_single_fn):
         super().__init__()
         self.hyperparameters = hyperparameters
+        self.trainer = trainer
         self.collate_fn = collate_fn
 
     @abstractmethod
@@ -53,17 +54,23 @@ class SuperDataModule(pl.LightningDataModule, ABC):
     def do_predict(self):
         r""" Whether to do predictions. """
 
-    def default_dataloader(self, dataset: Dataset, batch_size: int, sampler: Sampler = None, **kwargs):
+    def default_dataloader(self, dataset: Dataset, batch_size: int, **kwargs):
         r""" Return a dataloader with all usual default parameters. """
-        if sampler is not None:
+
+        if 'sampler' in kwargs and kwargs['sampler'] is not None:
             rank_zero_warn(
                 "Using a custom sampler may change the total number of steps, check model.num_training_steps"
             )
             if self.hyperparameters.replace_sampler_ddp is True:
                 rank_zero_warn(
-                    "You provided a custom sampler but lightning will override."
-                    " You should set replace_sampler_ddp=False"
+                    "You provided a custom sampler but lightning will override it."
+                    " You should set --replace_sampler_ddp=False"
                 )
+
+        if self.hyperparameters.iterable and 'shuffle' in kwargs:
+            raise ValueError(
+                f"Found shuffle={kwargs['shuffle']} while using IterableDataset"
+            )
 
         return DataLoader(
             dataset,
@@ -71,30 +78,39 @@ class SuperDataModule(pl.LightningDataModule, ABC):
             num_workers=self.hyperparameters.num_workers,
             pin_memory=True,
             collate_fn=self.collate_fn,
-            sampler=sampler,
             **kwargs,
         )
 
     def train_dataloader(self):
         r""" Return the training dataloader. """
-        return self.default_dataloader(
-            self.train_dataset, self.hyperparameters.batch_size
-        )
+        if self.do_train():
+            params = dict(shuffle=True) if not self.hyperparameters.iterable else dict()
+            return self.default_dataloader(self.train_dataset, self.hyperparameters.batch_size, **params)
+        return None
 
     def val_dataloader(self):
         r""" Return the validation dataloader. """
-        return self.default_dataloader(self.valid_dataset, self.hyperparameters.val_batch_size)
+        if self.do_validation():
+            params = dict(shuffle=False) if not self.hyperparameters.iterable else dict()
+            return self.default_dataloader(self.valid_dataset, self.hyperparameters.val_batch_size, **params)
+        return None
 
     def test_dataloader(self):
         r""" Return the test dataloader. """
-        return [
-            self.default_dataloader(dataset, self.hyperparameters.test_batch_size)
-            for dataset in self.test_dataset
-        ]
+        if self.do_test():
+            params = dict(shuffle=False) if not self.hyperparameters.iterable else dict()
+            return [
+                self.default_dataloader(dataset, self.hyperparameters.test_batch_size, **params)
+                for dataset in self.test_dataset
+            ]
+        return None
 
     def predict_dataloader(self):
         r""" Return the validation dataloader. """
-        return self.default_dataloader(self.predict_dataset, self.hyperparameters.predict_batch_size)
+        if self.do_predict():
+            params = dict(shuffle=False) if not self.hyperparameters.iterable else dict()
+            return self.default_dataloader(self.predict_dataset, self.hyperparameters.predict_batch_size, **params)
+        return None
 
     @staticmethod
     def add_datamodule_specific_args(parser: ArgumentParser):
