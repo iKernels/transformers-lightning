@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 
+## 0.7.5
+
+- Added `trainer` as second positional argument of every DataModule.
+
+- Renamed `MapDataset` to `TransformersMapDataset`.
+
+- Fixed typo about default shuffling in `SuperDataModule` and `CompressedDataModule`.
+
+
 ## 0.7.4
 
 - Added `SortingLanguageModeling` technique and tests.
@@ -59,7 +68,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 - Added `do_predict()` and `predict_dataloader()` to `SuperDataModule`.
 
-- Added `do_preprocessing` init argument to `MapDataset` and `IterableDataset` to eventually avoid calling the preprocessing function defined in the `Adapter`.
+- Added `do_preprocessing` init argument to `MapDataset` and `TransformersIterableDataset` to eventually avoid calling the preprocessing function defined in the `Adapter`.
 
 - Added check over tokenizer type in `whole_word_tails_mask()`.
 

@@ -1,20 +1,20 @@
 # Datasets
 
 `Datasets` are a convinient way to manage data and return the right row only when needed.
-This folder contains two main datasets: (i) a simple `MapDataset` that behaves exactly like a list and can be indexed and (ii) a `CompressedDataset` that store data in a `CompressedDictionary` and uses much less memory. It also can be indexes and the length is well-defined. It substitutes the old `IterableDataset` that cause many troubles. The library provides also a simple `StackDataset` to emulate the `zip` command of `python`.
+This folder contains two main datasets: (i) a simple `TransformersMapDataset` that behaves exactly like a list and can be indexed and (ii) a `CompressedDataset` that store data in a `CompressedDictionary` and uses much less memory. It also can be indexes and the length is well-defined. It substitutes the old `IterableDataset` that cause many troubles. The library provides also a simple `StackDataset` to emulate the `zip` command of `python`.
 
-To preprocess each entry of the dataset, the `MapDataset` will call `adapter.preprocess_line` by default. `CompressedDataset`  is instead usually used with already-preprocessed data that are stored in a `CompressedDictionary`.
+To preprocess each entry of the dataset, the `TransformersMapDataset` will call `adapter.preprocess_line` by default. `CompressedDataset`  is instead usually used with already-preprocessed data that are stored in a `CompressedDictionary`.
 
 
-## MapDataset
+## TransformersMapDataset
 
-A `MapDataset` by default expects only an `Adapter` as input. I will completely read the `adapter` into memory and then it will provide primitives to read the dataset length and for indexing. When doing distributed training, the `Sampler` added by `PyTorch Lightning` will index the right data on each node, making life of the user extremely simple.
+A `TransformersMapDataset` by default expects only an `Adapter` as input. I will completely read the `adapter` into memory and then it will provide primitives to read the dataset length and for indexing. When doing distributed training, the `Sampler` added by `PyTorch Lightning` will index the right data on each node, making life of the user extremely simple.
 
-To create a MapDataset, you have only to to the following:
+To create a TransformersMapDataset, you have only to to the following:
 ```python
 trainer = pl.Trainer(...)
 adapter = ExampleAdapter(hyperparameters)
-dataset = MapDataset(hyperparameters, adapter, trainer=trainer)
+dataset = TransformersMapDataset(hyperparameters, adapter, trainer=trainer)
 ```
 
 Normally, you should not implement `Datasets` directly since they are automagically added by [`SuperDataModule`](/transformers-lightning/datamodules).
@@ -22,7 +22,7 @@ Normally, you should not implement `Datasets` directly since they are automagica
 
 ## CompressedDataset
 
-A `CompressedDataset` reads a `CompressedDictionary` from the disk and then behaves exactly like a `MapDataset` (indexing, length, ...).
+A `CompressedDataset` reads a `CompressedDictionary` from the disk and then behaves exactly like a `TransformersMapDataset` (indexing, length, ...).
 See [here](https://github.com/lucadiliello/compressed-dictionary) for more details.
 
 
@@ -82,15 +82,15 @@ Please do not provide a `start_from_step` longer than an epoch!
 
 ## StackDataset
 
-A simple dataset that emulates the behaviour of the `zip` built-in command in python: it returns a tuple of entries, one for each `MapDataset` that is given as input.
+A simple dataset that emulates the behaviour of the `zip` built-in command in python: it returns a tuple of entries, one for each `TransformersMapDataset` that is given as input.
 
 Example:
 ```python
 adapter_1 = ExampleAdapter(hyperparameters)
-dataset_1 = MapDataset(hyperparameters, adapter_1)
+dataset_1 = TransformersMapDataset(hyperparameters, adapter_1)
 
 adapter_2 = ExampleAdapter(hyperparameters)
-dataset_2 = MapDataset(hyperparameters, adapter_2)
+dataset_2 = TransformersMapDataset(hyperparameters, adapter_2)
 
 dataset = StackDataset(dataset_1, dataset_2)
 

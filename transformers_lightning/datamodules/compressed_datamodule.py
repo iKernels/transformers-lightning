@@ -1,13 +1,14 @@
 import logging
 import os
-from argparse import ArgumentParser
+from argparse import ArgumentParser, Namespace
 from typing import Callable
 
+from pytorch_lightning.trainer import Trainer
 from pytorch_lightning.trainer.states import TrainerFn
 
-from transformers_lightning import utils
 from transformers_lightning.datamodules.super_datamodule import SuperDataModule
 from transformers_lightning.datasets.compressed_dataset import CompressedDataset
+from transformers_lightning.utils.functional import collate_single_fn
 
 logger = logging.getLogger("pytorch_lightning")
 
@@ -23,8 +24,14 @@ class CompressedDataModule(SuperDataModule):
     test_filepath: str = None
     predict_filepath: str = None
 
-    def __init__(self, hyperparameters, collate_fn: Callable = utils.collate_single_fn, **kwargs):
-        super().__init__(hyperparameters, collate_fn)
+    def __init__(
+        self,
+        hyperparameters: Namespace,
+        trainer: Trainer,
+        collate_fn: Callable = collate_single_fn,
+        **kwargs,
+    ):
+        super().__init__(hyperparameters, trainer, collate_fn)
 
         # instantiate eventual adapters passed from init method
         if hyperparameters.train_filepath is not None:
@@ -76,6 +83,27 @@ class CompressedDataModule(SuperDataModule):
             if self.do_predict():
                 logger.info("Loading predict dataset from CompressedDictionary...")
                 self.predict_dataset = CompressedDataset(self.hyperparameters, self.predict_filepath)
+
+    def train_dataloader(self):
+        r""" Return the training dataloader. """
+        return self.default_dataloader(
+            self.train_dataset, self.hyperparameters.batch_size, shuffle=True,
+        )
+
+    def val_dataloader(self):
+        r""" Return the validation dataloader. """
+        return self.default_dataloader(self.valid_dataset, self.hyperparameters.val_batch_size, shuffle=False)
+
+    def test_dataloader(self):
+        r""" Return the test dataloader. """
+        return [
+            self.default_dataloader(dataset, self.hyperparameters.test_batch_size, shuffle=False)
+            for dataset in self.test_dataset
+        ]
+
+    def predict_dataloader(self):
+        r""" Return the validation dataloader. """
+        return self.default_dataloader(self.predict_dataset, self.hyperparameters.predict_batch_size, shuffle=False)
 
     def do_train(self):
         return self.train_filepath is not None

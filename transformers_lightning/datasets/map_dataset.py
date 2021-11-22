@@ -4,7 +4,7 @@ from transformers_lightning.adapters.super_adapter import SuperAdapter
 from transformers_lightning.datasets.super_dataset import SuperDataset
 
 
-class MapDataset(SuperDataset):
+class TransformersMapDataset(SuperDataset):
     r"""
     Superclass of all map datasets. Tokenization is performed on the fly.
     Dataset is completely read into memory.
