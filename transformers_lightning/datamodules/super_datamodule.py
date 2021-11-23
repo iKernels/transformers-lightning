@@ -67,9 +67,9 @@ class SuperDataModule(pl.LightningDataModule, ABC):
                     " You should set --replace_sampler_ddp=False"
                 )
 
-        if self.hyperparameters.iterable and 'shuffle' in kwargs:
+        if self.hyperparameters.iterable and 'shuffle' in kwargs and kwargs['shuffle'] is True:
             raise ValueError(
-                f"Found shuffle={kwargs['shuffle']} while using IterableDataset"
+                "Found shuffle=True while using IterableDataset"
             )
 
         return DataLoader(
