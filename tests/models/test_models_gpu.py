@@ -14,5 +14,6 @@ def test_fix_max_steps_gpu(max_epochs, accumulate_grad_batches, batch_size):
         max_epochs,
         accumulate_grad_batches,
         batch_size,
-        gpus=1,
+        devices=1,
+        accelerator='gpu',
     )

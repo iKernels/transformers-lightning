@@ -47,10 +47,9 @@ class TransformersModel(LightningModule):
         sched_class = all_schedulers[self.hyperparameters.scheduler_class]
         return sched_class(self.hyperparameters, optimizer)
 
-    @property
     def num_training_steps(self) -> int:
-        r"""Total training steps inferred from datasets length, nodes and devices."""
-        if self.trainer.max_steps:
+        r""" Total training steps inferred from datasets length, nodes and devices. """
+        if self.trainer.max_steps is not None and self.trainer.max_steps >= 0:
             return self.trainer.max_steps
 
         if not has_len(self.trainer.datamodule.train_dataset):
@@ -61,9 +60,9 @@ class TransformersModel(LightningModule):
         train_samples = len(self.trainer.datamodule.train_dataset)
 
         # number of training devices
-        if self.trainer.accelerator_connector.use_dp:
+        if self.trainer._accelerator_connector.use_dp:
             total_devices = 1    # with dp, a single batch is divided across many gpus
-        elif self.trainer.accelerator_connector.use_ddp2:
+        elif self.trainer._accelerator_connector.use_ddp2:
             total_devices = self.trainer.num_nodes
         else:
             total_devices = self.trainer.num_processes * self.trainer.num_nodes
@@ -98,7 +97,7 @@ class TransformersModel(LightningModule):
         """
 
         # fix max number of steps
-        self.hyperparameters.max_steps = self.num_training_steps
+        self.hyperparameters.max_steps = self.num_training_steps()
 
         optimizer = self.get_optimizer()
         scheduler = self.get_scheduler(optimizer)

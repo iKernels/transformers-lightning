@@ -81,13 +81,13 @@ class AdaptersDataModule(SuperDataModule):
         This implementation should be enough for most subclasses.
         """
         if stage == TrainerFn.FITTING.value or stage == TrainerFn.VALIDATING.value:
-            if self.train_adapter is not None:
+            if self.do_train():
                 self.train_dataset = self.get_dataset(self.train_adapter)
-            if self.valid_adapter is not None:
+            if self.do_validation():
                 self.valid_dataset = self.get_dataset(self.valid_adapter)
 
         elif stage == TrainerFn.TESTING.value:
-            if self.test_adapter is not None:
+            if self.do_test():
                 if isinstance(self.test_adapter, SuperAdapter):
                     self.test_adapter = [self.test_adapter]
                 self.test_dataset = [
@@ -95,7 +95,7 @@ class AdaptersDataModule(SuperDataModule):
                 ]
 
         elif stage == TrainerFn.PREDICTING.value:
-            if self.predict_dataset is not None:
+            if self.do_predict():
                 self.predict_adapter = self.get_dataset(self.predict_adapter)
 
     def do_train(self):

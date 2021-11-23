@@ -17,10 +17,10 @@ from tests.datamodules.helpers import do_test_datamodule
 def test_datamodule_gpu(num_workers, batch_size, accumulate_grad_batches, iterable):
 
     do_test_datamodule(
-        num_workers=num_workers,
-        batch_size=batch_size,
-        accumulate_grad_batches=accumulate_grad_batches,
-        accelerator=None,
-        gpus=1,
-        iterable=iterable,
+        num_workers,
+        batch_size,
+        accumulate_grad_batches,
+        iterable,
+        devices=1,
+        accelerator='gpu',
     )

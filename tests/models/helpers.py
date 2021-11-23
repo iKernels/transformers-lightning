@@ -15,14 +15,14 @@ def do_test_fix_max_steps(max_epochs, accumulate_grad_batches, batch_size, **kwa
         accumulate_grad_batches=accumulate_grad_batches,
         num_workers=2,
         max_epochs=max_epochs,
-        max_steps=None,
+        max_steps=-1,
         iterable=False,
         **standard_args,
         **kwargs
     )
 
-    if hasattr(hyperparameters, "gpus"):
-        hyperparameters.gpus = get_random_gpus_list(hyperparameters.gpus)
+    if hasattr(hyperparameters, "devices"):
+        hyperparameters.devices = get_random_gpus_list(hyperparameters.devices)
 
     # instantiate PL trainer
     trainer = Trainer.from_argparse_args(hyperparameters)

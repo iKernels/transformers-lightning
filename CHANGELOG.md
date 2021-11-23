@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 
+## 0.7.7
+
+- Removed update `TransformersModelCheckpointCallback`.
+
+- `TransformersModel.num_training_steps` is not a function and not a property anymore.
+
+- Updated tests to use new `accelerator` and `strategy` signature for defining the training hardware to be used.
+
+
 ## 0.7.6
 
 - Package publication fixed

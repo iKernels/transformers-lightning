@@ -32,7 +32,7 @@ def get_random_gpus_list(number_of_gpus):
         return None
 
     gpus_ids = random.sample(range(torch.cuda.device_count()), k=number_of_gpus)
-    return ", ".join([str(_id) for _id in gpus_ids])
+    return gpus_ids
 
 
 # Adapters
@@ -141,5 +141,5 @@ class DummyTransformerModel(TransformersModel):
 class DummyTransformerModelWithOptim(DummyTransformerModel):
 
     def configure_optimizers(self):
-        self.computed_steps = self.num_training_steps
+        self.computed_steps = self.num_training_steps()
         return AdamW(self.model.parameters())

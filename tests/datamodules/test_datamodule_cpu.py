@@ -12,10 +12,10 @@ from tests.datamodules.helpers import do_test_datamodule
 def test_datamodule_cpu(num_workers, batch_size, accumulate_grad_batches, iterable):
 
     do_test_datamodule(
-        num_workers=num_workers,
-        batch_size=batch_size,
-        accumulate_grad_batches=accumulate_grad_batches,
+        num_workers,
+        batch_size,
+        accumulate_grad_batches,
+        iterable,
         accelerator="cpu",
-        iterable=iterable,
-        gpus=0,
+        devices=0,
     )
