@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 
+## 0.7.7
+
+- Completely removed metrics package, now all metrics available in `torchmetrics` library.
+
+
 ## 0.7.6
 
 - Package publication fixed
