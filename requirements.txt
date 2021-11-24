@@ -1,4 +1,4 @@
 pytorch-lightning>=1.5.2
-transformers>=4.10.3,<5
+transformers>=4.12.5,<5
 torch>=1.9.1
 compressed-dictionary>=1.2.1

@@ -119,14 +119,14 @@ def test_schedulers(scheduler_class, parameters, expected_lrs):
                 }
             }
 
-    tokenizer = BertTokenizer.from_pretrained("bert-base-cased")
+    tokenizer = BertTokenizer('tests/data/vocab.txt')
 
     # instantiate PL trainer and model
     trainer = pl.Trainer.from_argparse_args(hyperparameters)
     model = SchedulerModel(hyperparameters)
 
     # Datasets and Fit
-    datamodule = DummyDataModule(hyperparameters, train_number=2, tokenizer=tokenizer)
+    datamodule = DummyDataModule(hyperparameters, length_train=96, tokenizer=tokenizer)
     trainer.fit(model, datamodule=datamodule)
 
     assert torch.allclose(

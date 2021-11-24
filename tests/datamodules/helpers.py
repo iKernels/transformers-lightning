@@ -24,13 +24,13 @@ def do_test_datamodule(num_workers, batch_size, accumulate_grad_batches, iterabl
     if hasattr(hyperparameters, "devices"):
         hyperparameters.devices = get_random_gpus_list(hyperparameters.devices)
 
-    tokenizer = BertTokenizer.from_pretrained("bert-base-cased")
+    tokenizer = BertTokenizer('tests/data/vocab.txt')
 
     # instantiate PL trainer and model
     trainer = pl.Trainer.from_argparse_args(hyperparameters)
     model = DummyTransformerModelWithOptim(hyperparameters, check_ids=True)
 
     # Datasets
-    datamodule = DummyDataModule(hyperparameters, train_number=2, valid_number=2, test_number=2, tokenizer=tokenizer)
+    datamodule = DummyDataModule(hyperparameters, length_train=96, length_valid=96, length_test=96, tokenizer=tokenizer)
     model.datamodule = datamodule
     trainer.fit(model, datamodule=datamodule)

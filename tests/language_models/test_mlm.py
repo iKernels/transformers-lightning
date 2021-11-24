@@ -6,30 +6,30 @@ from transformers import BertTokenizer
 from transformers_lightning.language_modeling.masked_language_modeling import IGNORE_IDX, MaskedLanguageModeling
 from transformers_lightning.language_modeling.utils import whole_word_tails_mask
 
-tok = BertTokenizer.from_pretrained('bert-base-cased')
+tok = BertTokenizer('tests/data/vocab.txt')
 mlm = MaskedLanguageModeling(tok, whole_word_masking=True)
 
 
 @pytest.mark.parametrize(
     ["seed", "sentence", "masking"], [
-        [0, "how are you man?", [IGNORE_IDX, IGNORE_IDX, 1132, 1128, IGNORE_IDX, IGNORE_IDX, IGNORE_IDX]],
+        [0, "how are you man?", [IGNORE_IDX, IGNORE_IDX, 1030, 1023, IGNORE_IDX, IGNORE_IDX, IGNORE_IDX]],
         [
             1, "The quick brown fox jumps over the lazy dog",
-            [
-                IGNORE_IDX, IGNORE_IDX, IGNORE_IDX, IGNORE_IDX, 17594, IGNORE_IDX, IGNORE_IDX, IGNORE_IDX, IGNORE_IDX,
-                IGNORE_IDX, IGNORE_IDX
-            ]
+            [IGNORE_IDX] * 22
         ],
         [
             8, "Be or not to be a superstar",
             [
-                IGNORE_IDX, IGNORE_IDX, IGNORE_IDX, IGNORE_IDX, IGNORE_IDX, IGNORE_IDX, IGNORE_IDX, 7688, 10058,
+                IGNORE_IDX, IGNORE_IDX, IGNORE_IDX, IGNORE_IDX, IGNORE_IDX, IGNORE_IDX, IGNORE_IDX, 2571, 2373, 1912,
                 IGNORE_IDX
             ]
         ], [3, "", [IGNORE_IDX, IGNORE_IDX]],
         [
             4, "share silence or say what you think?",
-            [IGNORE_IDX, IGNORE_IDX, 3747, IGNORE_IDX, 1474, 1184, IGNORE_IDX, IGNORE_IDX, IGNORE_IDX, IGNORE_IDX]
+            [
+                IGNORE_IDX, IGNORE_IDX, 61, 1078, 1577, 1084, 2407, IGNORE_IDX, IGNORE_IDX, IGNORE_IDX, IGNORE_IDX,
+                IGNORE_IDX, IGNORE_IDX, IGNORE_IDX
+            ]
         ]
     ]
 )

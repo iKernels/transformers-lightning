@@ -1,5 +1,6 @@
 import random
 from argparse import Namespace
+from typing import Iterable
 
 import torch
 from pytorch_lightning.utilities.data import has_len
@@ -8,7 +9,7 @@ from transformers import BertConfig, BertForSequenceClassification
 from transformers.optimization import AdamW
 from transformers.tokenization_utils import PreTrainedTokenizerBase
 
-from transformers_lightning.adapters import CSVAdapter
+from transformers_lightning.adapters import SuperAdapter
 from transformers_lightning.datamodules import AdaptersDataModule
 from transformers_lightning.language_modeling.utils import whole_word_tails_mask
 from transformers_lightning.models import TransformersModel
@@ -35,47 +36,64 @@ def get_random_gpus_list(number_of_gpus):
     return gpus_ids
 
 
-# Adapters
-class DummyCSVAdapter(CSVAdapter):
-    """ Only preprocess a line by splitting and doing types conversion. """
-
-    def preprocess_line(self, line: list) -> list:
-        return [int(line[0]), int(line[1]), int(line[2]), line[3], line[4], eval(line[5])]
-
-
-class DummyTransformersAdapter(CSVAdapter):
+class DummyTransformersAdapter(SuperAdapter):
     """ Tokenizer a sentence and compute word tails. """
 
-    def __init__(self, hyperparameters: Namespace, filepath: str, tokenizer: PreTrainedTokenizerBase, **kwargs):
-        super().__init__(hyperparameters, filepath, **kwargs)
+    def __init__(self, hyperparameters: Namespace, length: int, tokenizer: PreTrainedTokenizerBase):
+        super().__init__(hyperparameters)
+        self.length = length
         self.tokenizer = tokenizer
 
+    def __iter__(self) -> Iterable:
+        r"""
+        Return a generator of parsed lines.
+        """
+        for i in range(self.length):
+            yield (
+                i,
+                random.randint(0, 10000),
+                random.randint(0, 10000),
+                f"This is a question {i}",
+                f"This is an answer {i}",
+                False
+            )
+
     def preprocess_line(self, line: list) -> list:
-        results = self.tokenizer.encode_plus(
+        results = self.tokenizer(
             line[3],
             line[4],
             padding=self.hyperparameters.padding,
+            max_length=self.hyperparameters.max_length,
+            truncation=True,
         )
         results['words_tails'] = whole_word_tails_mask(results['input_ids'], tokenizer=self.tokenizer)
-        results['ids'] = int(line[0])
-        results['labels'] = (line[5].lower().strip() == "true")
+        results['ids'] = line[0]
+        results['labels'] = line[5]
         return results
 
 
 # DataModules
 class DummyDataModule(AdaptersDataModule):
 
-    def __init__(self, hyperparameters, trainer=None, train_number=1, valid_number=1, test_number=1, tokenizer=None):
+    def __init__(
+        self,
+        hyperparameters,
+        trainer=None,
+        length_train=17,
+        length_valid=96,
+        length_test=40,
+        tokenizer=None
+    ):
         super().__init__(hyperparameters, trainer)
         self.train_adapter = DummyTransformersAdapter(
-            self.hyperparameters, f"tests/data/file-{train_number}.tsv", delimiter="\t", tokenizer=tokenizer
+            self.hyperparameters, length=length_train, tokenizer=tokenizer
         )
         self.valid_adapter = DummyTransformersAdapter(
-            self.hyperparameters, f"tests/data/file-{valid_number}.tsv", delimiter="\t", tokenizer=tokenizer
+            self.hyperparameters, length=length_valid, tokenizer=tokenizer
         )
         self.test_adapter = [
             DummyTransformersAdapter(
-                self.hyperparameters, f"tests/data/file-{test_number}.tsv", delimiter="\t", tokenizer=tokenizer
+                self.hyperparameters, length=length_test, tokenizer=tokenizer
             ) for _ in range(2)
         ]
 
@@ -104,6 +122,7 @@ class DummyTransformerModel(TransformersModel):
 
     def training_epoch_end(self, outputs):
         ids = torch.cat([o['ids'] for o in outputs], dim=0)
+
         # in distributed mode collect ids from every process (gpu)
         if distributed_available():
             gather_ids = [torch.zeros_like(ids) for _ in range(torch.distributed.get_world_size())]

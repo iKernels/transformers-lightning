@@ -27,12 +27,12 @@ def do_test_fix_max_steps(max_epochs, accumulate_grad_batches, batch_size, **kwa
     # instantiate PL trainer
     trainer = Trainer.from_argparse_args(hyperparameters)
 
-    tokenizer = BertTokenizer.from_pretrained("bert-base-cased")
+    tokenizer = BertTokenizer('tests/data/vocab.txt')
     # not checking ids because sometimes the sampler will duplicate elements to fill all gpus
     model = DummyTransformerModelWithOptim(hyperparameters)
 
     # Datasets
-    datamodule = DummyDataModule(hyperparameters, train_number=3, test_number=3, valid_number=3, tokenizer=tokenizer)
+    datamodule = DummyDataModule(hyperparameters, length_train=40, length_test=40, length_valid=40, tokenizer=tokenizer)
     trainer.fit(model, datamodule=datamodule)
 
     assert trainer.global_step == model.computed_steps, (

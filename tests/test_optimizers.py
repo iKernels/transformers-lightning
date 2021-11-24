@@ -31,7 +31,7 @@ def test_optimizers(optimizer_class, batch_size):
         batch_size=batch_size,
         val_batch_size=1,
         test_batch_size=1,
-        num_workers=2,
+        num_workers=0,
         max_epochs=1,
         max_steps=20,
         accelerator='cpu',
@@ -52,12 +52,12 @@ def test_optimizers(optimizer_class, batch_size):
 
     hyperparameters.optimizer_class = optimizer_class
 
-    tokenizer = BertTokenizer.from_pretrained("bert-base-cased")
+    tokenizer = BertTokenizer('tests/data/vocab.txt')
 
     # instantiate PL trainer and model
     trainer = pl.Trainer.from_argparse_args(hyperparameters)
     model = OptimModel(hyperparameters)
 
     # Datasets and Fit
-    datamodule = DummyDataModule(hyperparameters, train_number=2, tokenizer=tokenizer)
+    datamodule = DummyDataModule(hyperparameters, length_train=96, tokenizer=tokenizer)
     trainer.fit(model, datamodule=datamodule)

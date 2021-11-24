@@ -58,7 +58,7 @@ def test_model_checkpointing_callback(
         **standard_args,
     )
 
-    tokenizer = BertTokenizer.from_pretrained("bert-base-cased")
+    tokenizer = BertTokenizer('tests/data/vocab.txt')
     callback = TransformersModelCheckpointCallback(hyperparameters)
 
     # instantiate PL trainer
@@ -73,7 +73,7 @@ def test_model_checkpointing_callback(
     model = DummyTransformerModelWithOptim(hyperparameters)
 
     # Datasets
-    datamodule = DummyDataModule(hyperparameters, train_number=2, valid_number=2, test_number=2, tokenizer=tokenizer)
+    datamodule = DummyDataModule(hyperparameters, length_train=96, length_valid=96, length_test=96, tokenizer=tokenizer)
 
     model.datamodule = datamodule
     trainer.fit(model, datamodule=datamodule)
