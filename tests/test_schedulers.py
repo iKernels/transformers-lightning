@@ -79,7 +79,7 @@ def test_schedulers(scheduler_class, parameters, expected_lrs):
         max_steps=20,
         scheduler_last_epoch=-1,
         scheduler_verbose=False,
-        gpus=0,
+        accelerator='cpu',
         iterable=False,
         log_every_n_steps=1,
         accumulate_grad_batches=1,

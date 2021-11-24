@@ -34,7 +34,7 @@ def test_optimizers(optimizer_class, batch_size):
         num_workers=2,
         max_epochs=1,
         max_steps=20,
-        gpus=0,
+        accelerator='cpu',
         iterable=False,
         log_every_n_steps=1,
         accumulate_grad_batches=1,

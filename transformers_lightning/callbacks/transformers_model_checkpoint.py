@@ -3,7 +3,7 @@ import shutil
 from argparse import ArgumentParser
 
 from pytorch_lightning.callbacks.base import Callback
-from pytorch_lightning.utilities import rank_zero_only, rank_zero_warn
+from pytorch_lightning.utilities import rank_zero_warn
 
 from transformers_lightning.utils import dump_json, is_simple
 
@@ -68,7 +68,6 @@ class TransformersModelCheckpointCallback(Callback):
         if hasattr(pl_module, "tokenizer"):
             pl_module.tokenizer.save_pretrained(filepath)
 
-    @rank_zero_only
     def on_train_start(self, trainer, pl_module):
         r""" Check model can be saved and save hyperparameters to understand what kind of experiment it was. """
         if trainer.global_rank != 0:
@@ -95,8 +94,7 @@ class TransformersModelCheckpointCallback(Callback):
 
         self.save_params()
 
-    @rank_zero_only
-    def on_train_batch_end(self, trainer, pl_module, outputs, batch, batch_idx, dataloader_idx):
+    def on_train_batch_end(self, trainer, pl_module, outputs, batch, batch_idx):
         r"""Called when the training batch ends. """
         # only run on main process
         if trainer.global_rank != 0:
@@ -115,7 +113,6 @@ class TransformersModelCheckpointCallback(Callback):
 
         self.save_model(pl_module, epoch=trainer.current_epoch, step=pl_module.global_step + 1)
 
-    @rank_zero_only
     def on_train_epoch_end(self, trainer, pl_module):
         r"""Called when the train epoch ends."""
         # only run on main process
@@ -128,7 +125,6 @@ class TransformersModelCheckpointCallback(Callback):
 
         self.save_model(pl_module, epoch=trainer.current_epoch, step=pl_module.global_step)
 
-    @rank_zero_only
     def on_train_end(self, trainer, pl_module):
         r"""
         Called when the train ends. Here models trained in the
@@ -140,7 +136,6 @@ class TransformersModelCheckpointCallback(Callback):
 
         self.save_model(pl_module, epoch=trainer.current_epoch, step=pl_module.global_step, final=True)
 
-    @rank_zero_only
     def on_validation_end(self, trainer, pl_module):
         r"""
         Called when the validation ends. Here models trained in the

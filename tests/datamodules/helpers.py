@@ -6,7 +6,7 @@ from transformers import BertTokenizer
 from tests.helpers import DummyDataModule, DummyTransformerModelWithOptim, get_random_gpus_list, standard_args
 
 
-def do_test_datamodule(num_workers, batch_size, accumulate_grad_batches, accelerator, iterable, **kwargs):
+def do_test_datamodule(num_workers, batch_size, accumulate_grad_batches, iterable, **kwargs):
 
     hyperparameters = Namespace(
         batch_size=batch_size,
@@ -15,15 +15,14 @@ def do_test_datamodule(num_workers, batch_size, accumulate_grad_batches, acceler
         accumulate_grad_batches=accumulate_grad_batches,
         num_workers=num_workers,
         max_epochs=1,
-        max_steps=None,
-        accelerator=accelerator,
+        max_steps=-1,
         iterable=iterable,
         **standard_args,
         **kwargs,
     )
 
-    if hasattr(hyperparameters, "gpus"):
-        hyperparameters.gpus = get_random_gpus_list(hyperparameters.gpus)
+    if hasattr(hyperparameters, "devices"):
+        hyperparameters.devices = get_random_gpus_list(hyperparameters.devices)
 
     tokenizer = BertTokenizer.from_pretrained("bert-base-cased")
 
