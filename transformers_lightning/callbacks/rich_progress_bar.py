@@ -1,5 +1,6 @@
 from pytorch_lightning.callbacks import RichProgressBar as _RichProgressBar
 
+
 class RichProgressBar(_RichProgressBar):
 
     def _update_metrics(self, trainer, pl_module) -> None:
