@@ -1,9 +1,9 @@
-import abc
+from abc import abstractmethod, ABC
 from argparse import ArgumentParser, Namespace
 from typing import Iterable
 
 
-class SuperAdapter:
+class SuperAdapter(ABC):
     r"""
     The Adapter task is to provide a simple interface to read and prepare a dataset
     for the training phase. An Adapter should read some input data in the correct
@@ -18,7 +18,7 @@ class SuperAdapter:
         """
         self.hyperparameters = hyperparameters
 
-    @abc.abstractmethod
+    @abstractmethod
     def __iter__(self) -> Iterable:
         r"""
         This function should use the arguments in `hyperparameters` to read the file
@@ -30,7 +30,6 @@ class SuperAdapter:
         >>>         yield line
         """
 
-    @abc.abstractmethod
     def preprocess_line(self, line: list) -> list:
         r"""
         Process a line. The structure of each line is exactly
@@ -46,6 +45,7 @@ class SuperAdapter:
                                                          max_length=128)
         >>> return results
         """
+        return line
 
     @staticmethod
     def add_adapter_specific_args(parser: ArgumentParser) -> ArgumentParser:
