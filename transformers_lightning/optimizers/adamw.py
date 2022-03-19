@@ -1,7 +1,7 @@
 from argparse import ArgumentParser, Namespace
 from typing import Generator
 
-from transformers.optimization import AdamW
+from torch.optim import AdamW
 
 from transformers_lightning.optimizers.super_optimizer import SuperOptimizer
 from transformers_lightning.optimizers.utils import get_parameters_grouped_for_weight_decay
@@ -11,9 +11,12 @@ class AdamWOptimizer(SuperOptimizer, AdamW):
 
     def __init__(self, hyperparameters: Namespace, named_parameters: Generator):
         r""" First hyperparameters argument to SuperOptimizer, other args for AdamW. """
+        grouped_parameters = get_parameters_grouped_for_weight_decay(
+            named_parameters, weight_decay=hyperparameters.weight_decay
+        )
         super().__init__(
             hyperparameters,
-            get_parameters_grouped_for_weight_decay(named_parameters, weight_decay=hyperparameters.weight_decay),
+            grouped_parameters,
             lr=hyperparameters.learning_rate,
             eps=hyperparameters.adam_epsilon,
             betas=hyperparameters.adam_betas

@@ -39,8 +39,9 @@ class ElectraAdamW(AdamW):
     """
 
     def __init__(self, params, lr=1e-3, betas=(0.9, 0.999), eps=1e-6, weight_decay=1e-2, amsgrad=False):
-        super(ElectraAdamW,
-              self).__init__(params, lr=lr, betas=betas, eps=eps, weight_decay=weight_decay, amsgrad=amsgrad)
+        super(ElectraAdamW, self).__init__(
+            params, lr=lr, betas=betas, eps=eps, weight_decay=weight_decay, amsgrad=amsgrad
+        )
 
     @torch.no_grad()
     def step(self, closure=None):
