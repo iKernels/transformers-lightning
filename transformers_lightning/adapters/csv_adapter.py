@@ -9,19 +9,12 @@ from transformers_lightning.utils import strip_lines
 class CSVAdapter(FileAdapter):
     r"""
     An Adapter to load data from a CSV file. Only adds a `filepath` parameter.
+    Use kwargs to pass parameters directly to the csv reader, like `delimiter` or `quotechar`.
     """
 
-    def __init__(
-        self,
-        hyperparameters: Namespace,
-        filepath: str,
-        delimiter="\t",
-        quoting=csv.QUOTE_MINIMAL,
-        quotechar='"',
-        **kwargs
-    ):
+    def __init__(self, hyperparameters: Namespace, filepath: str, **kwargs):
         super().__init__(hyperparameters, filepath)
-        self.csv_kwargs = {'delimiter': delimiter, 'quoting': quoting, 'quotechar': quotechar, **kwargs}
+        self.csv_kwargs = kwargs
 
     def __iter__(self) -> Iterable:
         r"""

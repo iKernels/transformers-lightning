@@ -125,9 +125,7 @@ class DummyTransformerModel(TransformersModel):
 
         # in distributed mode collect ids from every process (gpu)
         if distributed_available():
-            gather_ids = [torch.zeros_like(ids) for _ in range(torch.distributed.get_world_size())]
-            torch.distributed.all_gather(gather_ids, ids)
-            ids = torch.cat(gather_ids, dim=0)
+            ids = self.all_gather(ids).view(-1)
 
         if has_len(self.trainer.datamodule.train_dataset):
             received = torch.zeros(len(self.trainer.datamodule.train_dataset)).to(dtype=bool)

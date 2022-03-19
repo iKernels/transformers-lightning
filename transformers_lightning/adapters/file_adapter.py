@@ -16,7 +16,6 @@ class FileAdapter(SuperAdapter):
             filepath: path of the file that should be loaded
         """
         super().__init__(hyperparameters)
-
         assert isinstance(filepath, str), "Argument `filepath` must be of type `str`"
         assert os.path.isfile(filepath), f"{filepath} is not a correct path to a file"
         self.filepath = filepath

@@ -1,3 +1,5 @@
+from argparse import Namespace
+
 from pytorch_lightning import Trainer
 
 from transformers_lightning.adapters.super_adapter import SuperAdapter
@@ -10,9 +12,21 @@ class TransformersMapDataset(SuperDataset):
     Dataset is completely read into memory.
     """
 
-    def __init__(self, hyperparameters, adapter: SuperAdapter, trainer: Trainer):
-        super().__init__(hyperparameters, adapter=adapter, trainer=trainer)
-        self.data = list(iter(self.adapter))
+    def __init__(
+        self,
+        hyperparameters: Namespace,
+        adapter: SuperAdapter,
+        trainer: Trainer,
+        do_preprocessing: bool = True,
+        keep_in_memory: bool = True,
+    ):
+        super().__init__(hyperparameters, adapter=adapter, trainer=trainer, do_preprocessing=do_preprocessing)
+        if keep_in_memory:
+            self.data = list(iter(self.adapter))
+        else:
+            # the adapter may already implement some kind of indexing without loading
+            # everything into memory
+            self.data = self.adapter
 
     def __len__(self):
         return len(self.data)
