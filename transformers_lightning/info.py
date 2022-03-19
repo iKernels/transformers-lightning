@@ -1,4 +1,4 @@
-__version__ = '0.7.7'
+__version__ = '0.7.8'
 __author__ = 'Luca Di Liello and Matteo Gabburo'
 __author_email__ = 'luca.diliello@unitn.it'
 __license__ = 'GNU GENERAL PUBLIC LICENSE v2'

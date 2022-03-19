@@ -9,7 +9,13 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 - Fixed `TransformersMapDataset` parameters and adapter loading.
 
-- Removed `CompressedDataModule`
+- Removed `CompressedDataModule`.
+
+- Added `RichProgressBar` with `global_step` logging.
+
+- Fixed deprecated `transformers` `AdamW` inside optimizers to `torch` implementation.
+
+- Fixed typos.
 
 
 ## 0.7.7
