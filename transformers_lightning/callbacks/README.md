@@ -32,3 +32,8 @@ This callbacks searches for 3 attributes of the LightningModule to do a checkpoi
 - `pl_module.tokenizer`: if this attribute is present, the actual tokenizer is saved;
 
 By default, checkpoints will be save to the `outputs/pre_trained_models/<name>` folder.
+
+
+## RichProgressBar
+
+Identical to original `RichProgressBar` in `pytorch-lightning` but prints also the `global_step` along with the other metrics.
