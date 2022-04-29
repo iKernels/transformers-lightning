@@ -1,6 +1,6 @@
 # transformers-lightning
 
-A collection of `adapters`, `callbacks`, `datamodules`, `datasets`, `language-modeling`, `models`, `schedulers` and `optimizers` to better integrate the [PyTorch Lightning](https://pytorch-lightning.readthedocs.io/en/stable/lightning-module.html) and the [Transformers](https://huggingface.co/transformers/) libraries.
+A collection of `adapters`, `callbacks`, `datamodules`, `datasets`, `language-modeling`, `loggers`, `models`, `schedulers` and `optimizers` to better integrate [PyTorch Lightning](https://pytorch-lightning.readthedocs.io/en/stable/lightning-module.html) and [Transformers](https://huggingface.co/transformers/).
 
 I'm happy to announce that all the `metrics` contained in this package has been successfully integrated into [torchmetrics](https://github.com/PyTorchLightning/metrics/tree/master/torchmetrics/retrieval).
 
@@ -15,8 +15,9 @@ I'm happy to announce that all the `metrics` contained in this package has been 
   * [2.4. Callbacks](transformers_lightning/callbacks)
   * [2.5. Models](transformers_lightning/models)
   * [2.6. Language modeling](transformers_lightning/language_modeling)
-  * [2.7. Schedulers](transformers_lightning/schedulers)
-  * [2.8. Optimizers](transformers_lightning/optimizers)
+  * [2.7. Loggers](transformers_lightning/loggers)
+  * [2.8. Schedulers](transformers_lightning/schedulers)
+  * [2.9. Optimizers](transformers_lightning/optimizers)
 
 **[3. Main file](#main)**
 
