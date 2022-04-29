@@ -1,6 +1,5 @@
-import json
-
 import setuptools
+from transformers_lightning.info import __version__
 
 
 def load_long_description():
@@ -19,17 +18,9 @@ def load_requirements():
     return requirements
 
 
-def get_version():
-    # get semver version [major.minor.patch]
-    json_version = {}
-    with open('.version.json', 'r') as f:
-        json_version = json.load(f)
-    return '.'.join(str(w) for w in [json_version['major'], json_version['minor'], json_version['patch']])
-
-
 setuptools.setup(
     name='transformers_lightning',
-    version=get_version(),
+    version=__version__,
     description='Easily deploy Transformers models over Lightning',
     long_description=load_long_description(),
     long_description_content_type="text/markdown",

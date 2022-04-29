@@ -23,4 +23,5 @@ def test_datamodule_gpu(num_workers, batch_size, accumulate_grad_batches, iterab
         iterable,
         devices=1,
         accelerator='gpu',
+        num_sanity_val_steps=0,
     )

@@ -12,6 +12,5 @@ def test_fix_max_steps_cpu(max_epochs, accumulate_grad_batches, batch_size):
         max_epochs,
         accumulate_grad_batches,
         batch_size,
-        devices=0,
         accelerator="cpu",
     )

@@ -2,8 +2,12 @@ import math
 from argparse import ArgumentParser, Namespace
 
 from pytorch_lightning import LightningModule
-from pytorch_lightning.utilities import rank_zero_warn
+from pytorch_lightning.utilities.rank_zero import rank_zero_warn
 from pytorch_lightning.utilities.data import has_len
+from pytorch_lightning.strategies import (
+    DDP2Strategy,
+    DataParallelStrategy,
+)
 from transformers.configuration_utils import PretrainedConfig
 from transformers.modeling_utils import PreTrainedModel
 from transformers.tokenization_utils_base import PreTrainedTokenizerBase
@@ -60,12 +64,11 @@ class TransformersModel(LightningModule):
         train_samples = len(self.trainer.datamodule.train_dataset)
 
         # number of training devices
-        if self.trainer._accelerator_connector.use_dp:
-            total_devices = 1    # with dp, a single batch is divided across many gpus
-        elif self.trainer._accelerator_connector.use_ddp2:
+        is_dataparallel = isinstance(self.trainer.strategy, (DataParallelStrategy, DDP2Strategy))
+        if is_dataparallel:
             total_devices = self.trainer.num_nodes
         else:
-            total_devices = self.trainer.num_processes * self.trainer.num_nodes
+            total_devices = self.trainer.num_devices * self.trainer.num_nodes
 
         # the number of training samples may be modified in distributed training
         # to be divisible by the number of GPUs...

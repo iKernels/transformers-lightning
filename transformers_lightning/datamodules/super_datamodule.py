@@ -5,7 +5,7 @@ from typing import Callable
 
 import pytorch_lightning as pl
 from pytorch_lightning.trainer import Trainer
-from pytorch_lightning.utilities import rank_zero_warn
+from pytorch_lightning.utilities.rank_zero import rank_zero_warn
 from torch.utils.data import DataLoader, Dataset
 
 from transformers_lightning.utils.functional import collate_single_fn
@@ -59,7 +59,7 @@ class SuperDataModule(pl.LightningDataModule, ABC):
 
         if 'sampler' in kwargs and kwargs['sampler'] is not None:
             rank_zero_warn(
-                "Using a custom sampler may change the total number of steps, check model.num_training_steps()"
+                "Using a custom sampler may change the total number of steps, check model.num_training_steps"
             )
             if self.hyperparameters.replace_sampler_ddp is True:
                 rank_zero_warn(

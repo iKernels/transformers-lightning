@@ -29,8 +29,8 @@ def random_name():
         [
             1, 2, 5, 6, False,
             [
-                "hyperparameters.json", "ckpt_epoch_0_step_3", "ckpt_epoch_0_step_5", "ckpt_epoch_0_step_6",
-                "ckpt_epoch_0_step_8", "ckpt_epoch_0_step_10_final"
+                "hyperparameters.json", "ckpt_epoch_0_step_2", "ckpt_epoch_0_step_5", "ckpt_epoch_0_step_6",
+                "ckpt_epoch_0_step_7", "ckpt_epoch_0_step_10_final"
             ]
         ],
     )
@@ -81,4 +81,4 @@ def test_model_checkpointing_callback(
     folder = os.path.join(hyperparameters.output_dir, hyperparameters.pre_trained_dir, hyperparameters.name)
     listing = os.listdir(folder)
     shutil.rmtree(folder)
-    assert set(listing) == set(expected_results), f"{listing} vs {set(expected_results)}"
+    assert set(listing) == set(expected_results), f"{sorted(listing)} vs {sorted(expected_results)}"

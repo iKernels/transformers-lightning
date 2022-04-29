@@ -3,7 +3,7 @@ import shutil
 from argparse import ArgumentParser
 
 from pytorch_lightning.callbacks.base import Callback
-from pytorch_lightning.utilities import rank_zero_warn
+from pytorch_lightning.utilities.rank_zero import rank_zero_warn
 
 from transformers_lightning.utils import dump_json, is_simple
 
@@ -49,6 +49,7 @@ class TransformersModelCheckpointCallback(Callback):
             basename += f"_step_{step}"
 
             temporary_path = os.path.join(self.destination, basename)
+            # it may happen that both step and epoch end try to save the same ckpt
             if os.path.isdir(temporary_path):
                 shutil.rmtree(temporary_path)
         if final:
@@ -107,11 +108,11 @@ class TransformersModelCheckpointCallback(Callback):
         # save only when global step is multiple of checkpoint_interval
         if (
             (self.hyperparameters.checkpoint_interval is None)
-            or ((pl_module.global_step + 1) % self.hyperparameters.checkpoint_interval) != 0
+            or (trainer.global_step % self.hyperparameters.checkpoint_interval) != 0
         ):
             return
 
-        self.save_model(pl_module, epoch=trainer.current_epoch, step=pl_module.global_step + 1)
+        self.save_model(pl_module, epoch=trainer.current_epoch, step=trainer.global_step)
 
     def on_train_epoch_end(self, trainer, pl_module):
         r"""Called when the train epoch ends."""
@@ -123,7 +124,7 @@ class TransformersModelCheckpointCallback(Callback):
         if self.hyperparameters.no_epoch_checkpointing:
             return
 
-        self.save_model(pl_module, epoch=trainer.current_epoch, step=pl_module.global_step)
+        self.save_model(pl_module, epoch=trainer.current_epoch, step=trainer.global_step)
 
     def on_train_end(self, trainer, pl_module):
         r"""
@@ -134,7 +135,7 @@ class TransformersModelCheckpointCallback(Callback):
         if trainer.global_rank != 0:
             return
 
-        self.save_model(pl_module, epoch=trainer.current_epoch, step=pl_module.global_step, final=True)
+        self.save_model(pl_module, epoch=trainer.current_epoch - 1, step=trainer.global_step, final=True)
 
     def on_validation_end(self, trainer, pl_module):
         r"""
@@ -146,14 +147,14 @@ class TransformersModelCheckpointCallback(Callback):
             return
 
         # this probably was val_check control loop
-        if pl_module.global_step == 0:
+        if trainer.global_step == 0:
             return
 
         # not validation checkpointing if it is disabled
         if self.hyperparameters.no_val_checkpointing:
             return
 
-        self.save_model(pl_module, epoch=trainer.current_epoch, step=pl_module.global_step + 1)
+        self.save_model(pl_module, epoch=trainer.current_epoch, step=trainer.global_step)
 
     @staticmethod
     def add_callback_specific_args(parser: ArgumentParser):
