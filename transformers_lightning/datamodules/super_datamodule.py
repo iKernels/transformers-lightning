@@ -5,7 +5,7 @@ from typing import Callable
 
 import pytorch_lightning as pl
 from pytorch_lightning.trainer import Trainer
-from pytorch_lightning.utilities import rank_zero_warn
+from pytorch_lightning.utilities.rank_zero import rank_zero_warn
 from torch.utils.data import DataLoader, Dataset
 
 from transformers_lightning.utils.functional import collate_single_fn

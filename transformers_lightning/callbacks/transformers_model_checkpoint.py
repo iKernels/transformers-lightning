@@ -3,7 +3,7 @@ import shutil
 from argparse import ArgumentParser
 
 from pytorch_lightning.callbacks.base import Callback
-from pytorch_lightning.utilities import rank_zero_warn
+from pytorch_lightning.utilities.rank_zero import rank_zero_warn
 
 from transformers_lightning.utils import dump_json, is_simple
 

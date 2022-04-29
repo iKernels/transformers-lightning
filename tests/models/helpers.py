@@ -32,6 +32,7 @@ def do_test_fix_max_steps(max_epochs, accumulate_grad_batches, batch_size, **kwa
     datamodule = DummyDataModule(hyperparameters, length_train=40, length_test=40, length_valid=40, tokenizer=tokenizer)
     trainer.fit(model, datamodule=datamodule)
 
-    assert trainer.global_step == model.computed_steps, (
+    compare_fn = kwargs['compare_fn'] if 'compare_fn' in kwargs else lambda a, b: a == b
+    assert compare_fn(trainer.global_step, model.computed_steps), (
         f"global {trainer.global_step} steps but computed {model.computed_steps}"
     )

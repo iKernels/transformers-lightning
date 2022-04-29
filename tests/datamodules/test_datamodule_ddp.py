@@ -1,5 +1,4 @@
 import multiprocessing
-from time import sleep
 
 import pytest
 import torch
@@ -31,4 +30,3 @@ def test_datamodule_gpu_ddp(num_workers, batch_size, accumulate_grad_batches, de
     )
 
     torch.distributed.destroy_process_group()
-    sleep(5)

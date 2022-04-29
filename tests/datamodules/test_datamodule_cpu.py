@@ -17,6 +17,5 @@ def test_datamodule_cpu(num_workers, batch_size, accumulate_grad_batches, iterab
         accumulate_grad_batches,
         iterable,
         accelerator="cpu",
-        devices=0,
         num_sanity_val_steps=0,
     )
