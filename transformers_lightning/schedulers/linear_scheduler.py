@@ -1,4 +1,4 @@
-from pytorch_lightning.utilities import rank_zero_warn
+from pytorch_lightning.utilities.rank_zero import rank_zero_warn
 
 from transformers_lightning.schedulers.super_scheduler import SuperScheduler
 

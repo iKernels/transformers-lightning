@@ -26,4 +26,5 @@ def test_datamodule_gpu_dp(num_workers, batch_size, accumulate_grad_batches, dev
         strategy='dp',
         accelerator='gpu',
         devices=devices,
+        num_sanity_val_steps=0,
     )
