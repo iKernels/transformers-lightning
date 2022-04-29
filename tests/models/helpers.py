@@ -3,7 +3,7 @@ from argparse import Namespace
 from pytorch_lightning import Trainer
 from transformers import BertTokenizer
 
-from tests.helpers import DummyDataModule, DummyTransformerModelWithOptim, get_random_gpus_list, standard_args
+from tests.helpers import DummyDataModule, DummyTransformerModelWithOptim, standard_args
 
 
 def do_test_fix_max_steps(max_epochs, accumulate_grad_batches, batch_size, **kwargs):
@@ -20,9 +20,6 @@ def do_test_fix_max_steps(max_epochs, accumulate_grad_batches, batch_size, **kwa
         **standard_args,
         **kwargs
     )
-
-    if hasattr(hyperparameters, "devices"):
-        hyperparameters.devices = get_random_gpus_list(hyperparameters.devices)
 
     # instantiate PL trainer
     trainer = Trainer.from_argparse_args(hyperparameters)
