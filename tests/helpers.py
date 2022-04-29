@@ -1,3 +1,4 @@
+import logging
 import random
 from argparse import Namespace
 from typing import Iterable
@@ -6,6 +7,7 @@ import torch
 from pytorch_lightning.utilities.data import has_len
 from pytorch_lightning.utilities.distributed import distributed_available
 from transformers import BertConfig, BertForSequenceClassification
+import transformers
 from transformers.optimization import AdamW
 from transformers.tokenization_utils import PreTrainedTokenizerBase
 
@@ -13,6 +15,11 @@ from transformers_lightning.adapters import SuperAdapter
 from transformers_lightning.datamodules import AdaptersDataModule
 from transformers_lightning.language_modeling.utils import whole_word_tails_mask
 from transformers_lightning.models import TransformersModel
+
+
+transformers.logging.set_verbosity_error()
+logging.getLogger("pytorch_pretrained_bert.tokenization").setLevel(logging.ERROR)
+
 
 standard_args = dict(
     output_dir='/tmp/output',

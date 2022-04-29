@@ -59,7 +59,7 @@ class SuperDataModule(pl.LightningDataModule, ABC):
 
         if 'sampler' in kwargs and kwargs['sampler'] is not None:
             rank_zero_warn(
-                "Using a custom sampler may change the total number of steps, check model.num_training_steps()"
+                "Using a custom sampler may change the total number of steps, check model.num_training_steps"
             )
             if self.hyperparameters.replace_sampler_ddp is True:
                 rank_zero_warn(

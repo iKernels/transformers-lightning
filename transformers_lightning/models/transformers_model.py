@@ -60,12 +60,10 @@ class TransformersModel(LightningModule):
         train_samples = len(self.trainer.datamodule.train_dataset)
 
         # number of training devices
-        if self.trainer._accelerator_connector.use_dp:
-            total_devices = 1    # with dp, a single batch is divided across many gpus
-        elif self.trainer._accelerator_connector.use_ddp2:
-            total_devices = self.trainer.num_nodes
+        if self.hyperparameters.strategy != "dp":
+            total_devices = self.trainer.num_devices * self.trainer.num_nodes
         else:
-            total_devices = self.trainer.num_processes * self.trainer.num_nodes
+            total_devices = self.trainer.num_nodes
 
         # the number of training samples may be modified in distributed training
         # to be divisible by the number of GPUs...

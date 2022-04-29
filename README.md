@@ -43,7 +43,7 @@ The documentation of each component is described in the relative folder.
 <a name="main"></a>
 ## Main file
 
-We encourage you at structuring your main file like:
+We encourage you to structure your main file like:
 
 ```python
 
