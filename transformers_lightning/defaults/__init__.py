@@ -4,14 +4,9 @@ from argparse import ArgumentParser
 class DefaultConfig:
     r"""
     Keeping all default values together improves readability and editability.
-    Do not touch this tfile unless you want to add something. Possibly subclass this class
+    Do not touch this file unless you want to add something. Possibly subclass this class
     if you want to add some parameters.
     """
-
-    output_dir: str = "outputs"
-    pre_trained_dir: str = "pre_trained_models"
-    tensorboard_dir: str = "tensorboard"
-    checkpoints_dir: str = "checkpoints"
 
     @staticmethod
     def add_defaults_args(parser: ArgumentParser):
@@ -19,27 +14,20 @@ class DefaultConfig:
             '--output_dir',
             type=str,
             required=False,
-            default=DefaultConfig.output_dir,
+            default="outputs",
             help='Specify a different output folder'
-        )
-        parser.add_argument(
-            '--pre_trained_dir',
-            type=str,
-            required=False,
-            default=DefaultConfig.pre_trained_dir,
-            help="Default path to save transformer models to"
         )
         parser.add_argument(
             '--tensorboard_dir',
             type=str,
             required=False,
-            default=DefaultConfig.tensorboard_dir,
+            default="tensorboard",
             help="Where tensorboard logs should be saved"
         )
         parser.add_argument(
             '--checkpoints_dir',
             type=str,
             required=False,
-            default=DefaultConfig.checkpoints_dir,
+            default="checkpoints",
             help="Where checkpoints should be saved"
         )

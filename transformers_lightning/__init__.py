@@ -4,6 +4,7 @@ import transformers_lightning.datamodules  # noqa: F401
 import transformers_lightning.datasets  # noqa: F401
 import transformers_lightning.defaults  # noqa: F401
 import transformers_lightning.language_modeling  # noqa: F401
+import transformers_lightning.loggers  # noqa: F401
 import transformers_lightning.models  # noqa: F401
 import transformers_lightning.optimizers  # noqa: F401
 import transformers_lightning.schedulers  # noqa: F401

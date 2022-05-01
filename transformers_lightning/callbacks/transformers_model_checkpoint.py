@@ -176,3 +176,10 @@ class TransformersModelCheckpointCallback(Callback):
             action="store_true",
             help="Disable transformers checkpointing at the end of each epoch."
         )
+        parser.add_argument(
+            '--pre_trained_dir',
+            type=str,
+            required=False,
+            default='pre_trained_models',
+            help="Default path to save transformer models to."
+        )
