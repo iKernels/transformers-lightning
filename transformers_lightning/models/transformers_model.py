@@ -2,12 +2,9 @@ import math
 from argparse import ArgumentParser, Namespace
 
 from pytorch_lightning import LightningModule
-from pytorch_lightning.utilities.rank_zero import rank_zero_warn
+from pytorch_lightning.strategies import DataParallelStrategy, DDP2Strategy
 from pytorch_lightning.utilities.data import has_len
-from pytorch_lightning.strategies import (
-    DDP2Strategy,
-    DataParallelStrategy,
-)
+from pytorch_lightning.utilities.rank_zero import rank_zero_warn
 from transformers.configuration_utils import PretrainedConfig
 from transformers.modeling_utils import PreTrainedModel
 from transformers.tokenization_utils_base import PreTrainedTokenizerBase
@@ -34,6 +31,7 @@ class TransformersModel(LightningModule):
     def __init__(self, hyperparameters):
         super().__init__()
         self.hyperparameters = hyperparameters
+        self.save_hyperparameters()
 
     def forward(self, *args, **kwargs):
         r"""

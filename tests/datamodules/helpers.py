@@ -2,10 +2,10 @@ from argparse import Namespace
 
 import pytorch_lightning as pl
 import torch
+from pytorch_lightning.utilities.distributed import distributed_available
 from transformers import BertTokenizer
 
 from tests.helpers import DummyDataModule, DummyTransformerModelWithOptim, standard_args
-from pytorch_lightning.utilities.distributed import distributed_available
 
 
 class DummyTransformersModelIDCheck(DummyTransformerModelWithOptim):

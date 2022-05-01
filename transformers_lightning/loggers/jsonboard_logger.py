@@ -1,7 +1,7 @@
 import json
 import logging
 import os
-from argparse import Namespace
+from argparse import ArgumentParser, Namespace
 from io import TextIOWrapper
 from typing import Any, Dict, Optional, Union
 
@@ -10,7 +10,8 @@ import torch
 from pytorch_lightning.loggers.base import LightningLoggerBase, rank_zero_experiment
 from pytorch_lightning.utilities import rank_zero_only
 from pytorch_lightning.utilities.cloud_io import get_filesystem
-
+from pytorch_lightning.utilities.logger import _add_prefix, _convert_params, _flatten_dict
+from pytorch_lightning.utilities.logger import _sanitize_params as _utils_sanitize_params
 
 logger = logging.getLogger(__name__)
 
@@ -19,7 +20,7 @@ class JsonBoardLogger(LightningLoggerBase):
     r"""
     Log to local file system in `JsonBoard <https://github.com/lucadiliello/jsonboard>`_ format.
 
-    Logs are saved to ``os.path.join(save_dir, name, version)``. This is the default logger in `transformers_framework`,
+    Logs are saved to ``os.path.join(save_dir, name, version)``.,
 
     Example:
 
@@ -32,10 +33,7 @@ class JsonBoardLogger(LightningLoggerBase):
         trainer = Trainer(logger=logger)
 
     Args:
-        save_dir: Save directory
-        name: Experiment name. Defaults to ``'default'``. If it is the empty string then no per-experiment
-            subdirectory is used.
-        prefix: A string to put at the beginning of metric keys.
+        hyperparameters: Namespace with training hyperparameters.
 
     """
 
@@ -43,17 +41,12 @@ class JsonBoardLogger(LightningLoggerBase):
     NAME_HPARAMS_FILE = "hparams.json"
     NAME_METADATA_FILE = "meta.json"
 
-    def __init__(self, save_dir: str, name: str, prefix: str = ""):
+    def __init__(self, hyperparameters: Namespace):
         super().__init__()
-
-        if not name:
-            raise ValueError(f"JsonBoard name {name} must be a non empty string")
-
-        self._save_dir = save_dir
-        self._name = name
+        self.hyperparameters = hyperparameters
+        self._name = hyperparameters.name
         self._version = None
-        self._prefix = prefix
-        self._fs = get_filesystem(save_dir)
+        self._fs = get_filesystem(hyperparameters.jsonboard_dir)
         self._experiment = None
         self.hparams = {}
         self.meta = {}
@@ -69,7 +62,7 @@ class JsonBoardLogger(LightningLoggerBase):
         If the experiment name parameter is ``None`` or the empty string, no experiment subdirectory is used and the
         checkpoint will be saved in "save_dir/version_dir"
         """
-        return os.path.join(self.save_dir, self.name)
+        return os.path.join(self.save_dir, self.hyperparameters.name)
 
     @property
     def log_dir(self) -> str:
@@ -91,7 +84,7 @@ class JsonBoardLogger(LightningLoggerBase):
         Returns:
             The local path to the save directory where the JsonBoard experiments are saved.
         """
-        return self._save_dir
+        return os.path.join(self.hyperparameters.output_dir, self.hyperparameters.jsonboard_dir)
 
     @property
     @rank_zero_experiment
@@ -127,13 +120,13 @@ class JsonBoardLogger(LightningLoggerBase):
 
         assert rank_zero_only.rank == 0, "tried to init log dirs in non global_rank=0"
 
-        params = self._convert_params(params)
+        params = _convert_params(params)
 
         # store params to output
         self.hparams.update(params)
 
         # format params into the suitable for tensorboard
-        params = self._flatten_dict(params)
+        params = _flatten_dict(params)
         params = self._sanitize_params(params)
 
         if self.log_dir:
@@ -158,13 +151,13 @@ class JsonBoardLogger(LightningLoggerBase):
 
         assert rank_zero_only.rank == 0, "tried to init log dirs in non global_rank=0"
 
-        metadata = self._convert_params(metadata)
+        metadata = _convert_params(metadata)
 
         # store params to output
         self.meta.update(metadata)
 
         # format params into the suitable for tensorboard
-        metadata = self._flatten_dict(metadata)
+        metadata = _flatten_dict(metadata)
         metadata = self._sanitize_params(metadata)
 
         if self.log_dir:
@@ -183,7 +176,7 @@ class JsonBoardLogger(LightningLoggerBase):
     def log_metrics(self, metrics: Dict[str, float], step: Optional[int] = None) -> None:
         r""" Just write the metrics to disk. """
         assert rank_zero_only.rank == 0, "experiment tried to log from global_rank != 0"
-        metrics = self._add_prefix(metrics)
+        metrics = _add_prefix(metrics)
         if metrics:
             try:
                 self._sanitize_and_write_metrics(metrics, step + 1)
@@ -243,7 +236,7 @@ class JsonBoardLogger(LightningLoggerBase):
 
     @staticmethod
     def _sanitize_params(params: Dict[str, Any]) -> Dict[str, Any]:
-        params = LightningLoggerBase._sanitize_params(params)
+        params = _utils_sanitize_params(params)
         # logging of arrays with dimension > 1 is not supported, sanitize as string
         return {k: str(v) if isinstance(v, (torch.Tensor, np.ndarray)) and v.ndim > 1 else v for k, v in params.items()}
 
@@ -264,3 +257,10 @@ class JsonBoardLogger(LightningLoggerBase):
         del state["_experiment"]
         self._experiment = None
         self.__dict__.update(state)
+
+    @staticmethod
+    def add_logger_specific_args(parser: ArgumentParser):
+        r""" Add callback_specific arguments to parser. """
+        parser.add_argument(
+            '--jsonboard_dir', type=str, required=False, default='jsonboard', help="Where to save logs."
+        )
