@@ -44,12 +44,9 @@ class JsonBoardLogger(LightningLoggerBase):
     def __init__(self, hyperparameters: Namespace):
         super().__init__()
         self.hyperparameters = hyperparameters
-        self._name = hyperparameters.name
         self._version = None
         self._fs = get_filesystem(hyperparameters.jsonboard_dir)
         self._experiment = None
-        self.hparams = {}
-        self.meta = {}
 
     def reset(self):
         r""" Reset experiment. """
@@ -119,11 +116,7 @@ class JsonBoardLogger(LightningLoggerBase):
         """
 
         assert rank_zero_only.rank == 0, "tried to init log dirs in non global_rank=0"
-
         params = _convert_params(params)
-
-        # store params to output
-        self.hparams.update(params)
 
         # format params into the suitable for tensorboard
         params = _flatten_dict(params)
@@ -150,11 +143,7 @@ class JsonBoardLogger(LightningLoggerBase):
         """
 
         assert rank_zero_only.rank == 0, "tried to init log dirs in non global_rank=0"
-
         metadata = _convert_params(metadata)
-
-        # store params to output
-        self.meta.update(metadata)
 
         # format params into the suitable for tensorboard
         metadata = _flatten_dict(metadata)
@@ -176,7 +165,6 @@ class JsonBoardLogger(LightningLoggerBase):
     def log_metrics(self, metrics: Dict[str, float], step: Optional[int] = None) -> None:
         r""" Just write the metrics to disk. """
         assert rank_zero_only.rank == 0, "experiment tried to log from global_rank != 0"
-        metrics = _add_prefix(metrics)
         if metrics:
             try:
                 self._sanitize_and_write_metrics(metrics, step + 1)
@@ -200,7 +188,7 @@ class JsonBoardLogger(LightningLoggerBase):
         Returns:
             The name of the experiment.
         """
-        return self._name
+        return self.hyperparameters.name
 
     @property
     def version(self) -> int:

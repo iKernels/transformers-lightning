@@ -3,7 +3,7 @@ from argparse import Namespace
 from pytorch_lightning import Trainer
 from transformers import BertTokenizer
 
-from tests.helpers import DummyDataModule, DummyTransformerModelWithOptim, standard_args
+from tests.helpers import DummyDataModule, DummyTransformerModel, standard_args
 
 
 def do_test_fix_max_steps(max_epochs, accumulate_grad_batches, batch_size, **kwargs):
@@ -26,7 +26,7 @@ def do_test_fix_max_steps(max_epochs, accumulate_grad_batches, batch_size, **kwa
 
     tokenizer = BertTokenizer('tests/data/vocab.txt')
     # not checking ids because sometimes the sampler will duplicate elements to fill all gpus
-    model = DummyTransformerModelWithOptim(hyperparameters)
+    model = DummyTransformerModel(hyperparameters)
 
     # Datasets
     datamodule = DummyDataModule(hyperparameters, length_train=40, length_test=40, length_valid=40, tokenizer=tokenizer)

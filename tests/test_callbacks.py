@@ -8,7 +8,7 @@ import pytest
 import pytorch_lightning as pl
 from transformers import BertTokenizer
 
-from tests.helpers import DummyDataModule, DummyTransformerModelWithOptim, standard_args
+from tests.helpers import DummyDataModule, DummyTransformerModel, standard_args
 from transformers_lightning.callbacks.transformers_model_checkpoint import TransformersModelCheckpointCallback
 
 
@@ -70,7 +70,7 @@ def test_model_checkpointing_callback(
     )
 
     # instantiate PL model
-    model = DummyTransformerModelWithOptim(hyperparameters)
+    model = DummyTransformerModel(hyperparameters)
 
     # Datasets
     datamodule = DummyDataModule(hyperparameters, length_train=96, length_valid=96, length_test=96, tokenizer=tokenizer)

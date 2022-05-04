@@ -7,12 +7,30 @@ from argparse import Namespace
 import pytorch_lightning as pl
 from transformers import BertTokenizer
 
-from tests.helpers import DummyDataModule, DummyTransformerModelWithOptim, standard_args
+from tests.helpers import DummyDataModule, DummyTransformerModel, standard_args
 from transformers_lightning.loggers.jsonboard_logger import JsonBoardLogger
 
 
 def random_name():
     return ''.join(random.choices(string.ascii_uppercase + string.digits, k=20))
+
+
+class DummyTransformerModelWithLogging(DummyTransformerModel):
+
+    def training_step(self, batch, batch_idx):
+        res = super().training_step(batch, batch_idx)
+        self.log('training/loss', res['loss'], on_step=True)
+        return res
+
+    def validation_step(self, batch, batch_idx):
+        res = super().validation_step(batch, batch_idx)
+        self.log('validation/loss', res['loss'])
+        return res
+
+    def test_step(self, batch, batch_idx):
+        res = super().test_step(batch, batch_idx)
+        self.log('test/loss', res['loss'])
+        return res
 
 
 def test_jsonboard_logger():
@@ -30,6 +48,7 @@ def test_jsonboard_logger():
         jsonboard_dir='jsonboard',
         name=random_name(),
         val_check_interval=0.25,
+        log_every_n_steps=1,
         **standard_args,
     )
 
@@ -39,13 +58,12 @@ def test_jsonboard_logger():
     # instantiate PL trainer
     trainer = pl.Trainer.from_argparse_args(
         hyperparameters,
-        profiler='simple',
-        logger=[logger],
+        logger=logger,
         enable_checkpointing=False
     )
 
     # instantiate PL model
-    model = DummyTransformerModelWithOptim(hyperparameters)
+    model = DummyTransformerModelWithLogging(hyperparameters)
 
     # Datasets
     datamodule = DummyDataModule(hyperparameters, length_train=96, length_valid=96, length_test=96, tokenizer=tokenizer)

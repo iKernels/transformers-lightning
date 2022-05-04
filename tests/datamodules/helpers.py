@@ -5,10 +5,10 @@ import torch
 from pytorch_lightning.utilities.distributed import distributed_available
 from transformers import BertTokenizer
 
-from tests.helpers import DummyDataModule, DummyTransformerModelWithOptim, standard_args
+from tests.helpers import DummyDataModule, DummyTransformerModel, standard_args
 
 
-class DummyTransformersModelIDCheck(DummyTransformerModelWithOptim):
+class DummyTransformersModelIDCheck(DummyTransformerModel):
 
     def __init__(self, hyperparameters, train_len: int, valid_len: int, test_len: int):
         super().__init__(hyperparameters)

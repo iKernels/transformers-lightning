@@ -104,7 +104,6 @@ class DummyTransformerModel(TransformersModel):
         self.model = BertForSequenceClassification(config)
 
     def training_step(self, batch, batch_idx):
-        """ Training step on BertForSequenceClassification. """
         batch['labels'] = batch['labels'].to(dtype=torch.long)
         kwargs = {k: batch[k] for k in ["input_ids", "attention_mask", "token_type_ids", "labels"]}
         results = self(**kwargs)
@@ -121,9 +120,6 @@ class DummyTransformerModel(TransformersModel):
         kwargs = {k: batch[k] for k in ["input_ids", "attention_mask", "token_type_ids", "labels"]}
         results = self(**kwargs)
         return {'loss': results.loss, 'ids': batch['ids']}
-
-
-class DummyTransformerModelWithOptim(DummyTransformerModel):
 
     def configure_optimizers(self):
         self.computed_steps = self.num_training_steps()
