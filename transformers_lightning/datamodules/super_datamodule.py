@@ -76,7 +76,7 @@ class SuperDataModule(pl.LightningDataModule, ABC):
             dataset,
             batch_size=batch_size,
             num_workers=self.hyperparameters.num_workers,
-            pin_memory=True,
+            pin_memory=self.hyperparameters.pin_memory,
             collate_fn=self.collate_fn,
             **kwargs,
         )
@@ -121,6 +121,7 @@ class SuperDataModule(pl.LightningDataModule, ABC):
             type=int,
             help='Number of workers to be used to load datasets'
         )
+        parser.add_argument('--pin_memory', action="store_true", help='Whether to use memory pinning.')
         parser.add_argument('--batch_size', type=int, default=32)
         parser.add_argument('--val_batch_size', type=int, default=256)
         parser.add_argument('--test_batch_size', type=int, default=256)

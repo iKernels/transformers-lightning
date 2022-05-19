@@ -28,6 +28,7 @@ standard_args = dict(
     weight_decay=0.1,
     padding='max_length',
     max_length=128,
+    pin_memory=False,
 )
 
 
