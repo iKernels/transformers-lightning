@@ -72,12 +72,17 @@ class SuperDataModule(pl.LightningDataModule, ABC):
                 "Found shuffle=True while using IterableDataset"
             )
 
+        for kwarg in ("num_workers", "pin_memory", "prefetch_factor"):
+            if kwarg in kwargs:
+                raise ValueError(f"To set {kwarg}, use `--{kwarg}` from the CLI")
+
         return DataLoader(
             dataset,
             batch_size=batch_size,
             num_workers=self.hyperparameters.num_workers,
             pin_memory=self.hyperparameters.pin_memory,
             collate_fn=self.collate_fn,
+            prefetch_factor=self.hyperparameters.prefetch_factor,
             **kwargs,
         )
 
@@ -127,3 +132,6 @@ class SuperDataModule(pl.LightningDataModule, ABC):
         parser.add_argument('--test_batch_size', type=int, default=256)
         parser.add_argument('--predict_batch_size', type=int, default=256)
         parser.add_argument('--iterable', action="store_true")
+        parser.add_argument(
+            '--prefetch_factor', default=2, type=int, required=False, help='Number of examples to prepare in advance.'
+        )
