@@ -62,11 +62,12 @@ class TransformersModel(LightningModule):
         train_samples = len(self.trainer.datamodule.train_dataset)
 
         # number of training devices
-        is_dataparallel = isinstance(self.trainer.strategy, (DataParallelStrategy, DDP2Strategy))
-        if is_dataparallel:
+        if isinstance(self.trainer.strategy, (DataParallelStrategy, DDP2Strategy)):
             total_devices = self.trainer.num_nodes
         else:
             total_devices = self.trainer.num_devices * self.trainer.num_nodes
+
+        rank_zero_warn(f"Number of training devices is {total_devices}")
 
         # the number of training samples may be modified in distributed training
         # to be divisible by the number of GPUs...
