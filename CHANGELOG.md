@@ -5,11 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 
-## 0.8.0
+## 0.7.12
 
 - Fixed `num_training_steps` for lightning 1.7.
 
-- 
+- Changed all static methods `add_*_args` to standard form `add_argparse_args`.
+
+- Deprecated strategies based on DataParallel as in `pytorch-lightning` and added MPS accelerator.
 
 
 ## 0.7.10
@@ -74,7 +76,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 - Added `SwappingLanguageModeling` technique and tests.
 
-- Added `add_adapter_specific_args` method to `SuperAdapter` to allow adding parameters to the CLI.
+- Added `add_argparse_args` method to `SuperAdapter` to allow adding parameters to the CLI.
 
 - Fixed typo with which `AdapterDataModule` was not receiving `collate_fn` argument.
 

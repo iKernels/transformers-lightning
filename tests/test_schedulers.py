@@ -3,7 +3,8 @@ from argparse import ArgumentParser, Namespace
 import pytest
 import pytorch_lightning as pl
 import torch
-from transformers import AdamW, BertTokenizer
+from torch.optim import AdamW
+from transformers import BertTokenizer
 
 from tests.helpers import DummyDataModule, DummyTransformerModel, standard_args
 from transformers_lightning.schedulers import (
@@ -87,7 +88,7 @@ def test_schedulers(scheduler_class, parameters, expected_lrs):
         **parameters,
     )
 
-    scheduler_class.add_scheduler_specific_args(ArgumentParser())
+    scheduler_class.add_argparse_args(ArgumentParser())
 
     class SchedulerModel(DummyTransformerModel):
 

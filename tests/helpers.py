@@ -29,6 +29,7 @@ standard_args = dict(
     padding='max_length',
     max_length=128,
     pin_memory=False,
+    prefetch_factor=2,
 )
 
 

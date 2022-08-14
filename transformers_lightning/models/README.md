@@ -5,12 +5,12 @@ This package containts two high-level models that can be used to inherit some us
 
 ## TransfomersModel
 
-`TransformersModel` only overrides `configure_optimizers` by returning a better optimizer and the relative scheduler and finally provides a `add_model_specific_args` to automatically add the parameters of the optimizer to the global parser.
+`TransformersModel` only overrides `configure_optimizers` by returning a better optimizer and the relative scheduler and finally provides a `add_argparse_args` to automatically add the parameters of the optimizer to the global parser.
 
 Example:
 ```python
 >>> parser = ArgumentParser()
->>> TransformerModel.add_model_specific_args(parser)
+>>> TransformerModel.add_argparse_args(parser)
 >>> save_transformers_callback = callbacks.TransformersModelCheckpointCallback(hyperparameters)
 >>> hyperparameters = parser.parse_args()
 ```

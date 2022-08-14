@@ -2,7 +2,6 @@ import math
 from argparse import ArgumentParser, Namespace
 
 from pytorch_lightning import LightningModule
-from pytorch_lightning.strategies import DataParallelStrategy, DDP2Strategy
 from pytorch_lightning.utilities.data import has_len
 from pytorch_lightning.utilities.rank_zero import rank_zero_warn
 from transformers.configuration_utils import PretrainedConfig
@@ -100,14 +99,14 @@ class TransformersModel(LightningModule):
             'optimizer': optimizer,
             'lr_scheduler':
                 {
-                    'scheduler': scheduler,    # The LR schduler
-                    'interval': self.hyperparameters.scheduler_interval,    # The unit of the scheduler's step size
-                    'frequency': self.hyperparameters.scheduler_frequency,    # The frequency of the scheduler
+                    'scheduler': scheduler,  # The LR schduler
+                    'interval': self.hyperparameters.scheduler_interval,  # The unit of the scheduler's step size
+                    'frequency': self.hyperparameters.scheduler_frequency,  # The frequency of the scheduler
                 }
         }
 
     @staticmethod
-    def add_model_specific_args(parser: ArgumentParser):
+    def add_argparse_args(parser: ArgumentParser):
         parser.add_argument('--optimizer_class', type=str, default='AdamWOptimizer', choices=all_optimizers.keys())
         parser.add_argument(
             '--scheduler_class', type=str, default='LinearSchedulerWithWarmup', choices=all_schedulers.keys()
@@ -123,5 +122,5 @@ class TransformersModel(LightningModule):
         sched_class = all_schedulers[tmp_params.scheduler_class]
 
         # add optimizer and scheduler specific args
-        optim_class.add_optimizer_specific_args(parser)
-        sched_class.add_scheduler_specific_args(parser)
+        optim_class.add_argparse_args(parser)
+        sched_class.add_argparse_args(parser)

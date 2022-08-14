@@ -247,7 +247,7 @@ class JsonBoardLogger(LightningLoggerBase):
         self.__dict__.update(state)
 
     @staticmethod
-    def add_logger_specific_args(parser: ArgumentParser):
+    def add_argparse_args(parser: ArgumentParser):
         r""" Add callback_specific arguments to parser. """
         parser.add_argument(
             '--jsonboard_dir', type=str, required=False, default='jsonboard', help="Where to save logs."

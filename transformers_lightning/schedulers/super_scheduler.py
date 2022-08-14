@@ -21,7 +21,7 @@ class SuperScheduler(_LRScheduler):
             raise ValueError(f'scheduler {self.__class__.__name__} needs `max_steps` to be defined')
 
     @staticmethod
-    def add_scheduler_specific_args(parser: ArgumentParser):
+    def add_argparse_args(parser: ArgumentParser):
         r""" Add here the hyperparameters specific of the scheduler like the number of warmup steps. """
         parser.add_argument('--scheduler_last_epoch', type=int, default=-1)
         parser.add_argument('--scheduler_verbose', action='store_true')

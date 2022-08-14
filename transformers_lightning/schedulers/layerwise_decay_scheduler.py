@@ -122,11 +122,11 @@ class PolynomialLayerwiseDecaySchedulerWithWarmup(SuperScheduler):
         return lrs
 
     @staticmethod
-    def add_scheduler_specific_args(parser: ArgumentError):
+    def add_argparse_args(parser: ArgumentError):
         r""" Add here the hyperparameters specific of the scheduler like the number of warmup steps. """
         super(
             PolynomialLayerwiseDecaySchedulerWithWarmup, PolynomialLayerwiseDecaySchedulerWithWarmup
-        ).add_scheduler_specific_args(parser)
+        ).add_argparse_args(parser)
         parser.add_argument('--num_warmup_steps', type=int, default=0)
         parser.add_argument('--end_learning_rate', type=float, default=0.0001)
         parser.add_argument('--lr_decay_power', type=float, default=1.0)

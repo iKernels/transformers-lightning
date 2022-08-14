@@ -157,7 +157,7 @@ class TransformersModelCheckpointCallback(Callback):
         self.save_model(pl_module, epoch=trainer.current_epoch, step=trainer.global_step)
 
     @staticmethod
-    def add_callback_specific_args(parser: ArgumentParser):
+    def add_argparse_args(parser: ArgumentParser):
         r""" Add callback_specific arguments to parser. """
         parser.add_argument(
             '--checkpoint_interval',

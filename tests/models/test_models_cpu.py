@@ -14,3 +14,12 @@ def test_fix_max_steps_cpu(max_epochs, accumulate_grad_batches, batch_size):
         batch_size,
         accelerator="cpu",
     )
+
+    do_test_fix_max_steps(
+        max_epochs,
+        accumulate_grad_batches,
+        batch_size,
+        accelerator="cpu",
+        strategy="ddp",
+        devices=10,
+    )

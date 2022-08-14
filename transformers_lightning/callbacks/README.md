@@ -13,7 +13,7 @@ This callback can be used to save a checkpoint after every `k` steps, after ever
 >>> parser = ArgumentParser()
 >>> ...
 >>> # add callback / logger specific parameters
->>> callbacks.TransformersModelCheckpointCallback.add_callback_specific_args(parser)
+>>> callbacks.TransformersModelCheckpointCallback.add_argparse_args(parser)
 >>> ...
 >>> hyperparameters = parser.parse_args()
 ```

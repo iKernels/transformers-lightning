@@ -108,14 +108,14 @@ if __name__ == '__main__':
     parser.add_argument('--name', type=str, required=True, help='Name of the experiment, well be used to correctly retrieve checkpoints and logs')
 
     # I/O folders
-    DefaultConfig.add_defaults_args(parser)
+    DefaultConfig.add_argparse_args(parser)
 
     # add model specific cli arguments
-    TransformerModel.add_model_specific_args(parser)
-    YourDataModule.add_datamodule_specific_args(parser)
+    TransformerModel.add_argparse_args(parser)
+    YourDataModule.add_argparse_args(parser)
 
     # add callback / logger specific cli arguments
-    callbacks.TransformersModelCheckpointCallback.add_callback_specific_args(parser)
+    callbacks.TransformersModelCheckpointCallback.add_argparse_args(parser)
 
     # add all the available trainer options to argparse
     # ie: now --gpus --num_nodes ... --fast_dev_run all work in the cli
