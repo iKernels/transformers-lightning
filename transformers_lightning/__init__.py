@@ -9,3 +9,4 @@ import transformers_lightning.models  # noqa: F401
 import transformers_lightning.optimizers  # noqa: F401
 import transformers_lightning.schedulers  # noqa: F401
 import transformers_lightning.utils  # noqa: F401
+import transformers_lightning.info  # noqa: F401
