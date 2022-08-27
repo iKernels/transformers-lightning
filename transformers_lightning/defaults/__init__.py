@@ -9,7 +9,7 @@ class DefaultConfig:
     """
 
     @staticmethod
-    def add_defaults_args(parser: ArgumentParser):
+    def add_argparse_args(parser: ArgumentParser):
         parser.add_argument(
             '--output_dir',
             type=str,

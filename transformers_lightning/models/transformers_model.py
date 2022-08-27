@@ -2,7 +2,6 @@ import math
 from argparse import ArgumentParser, Namespace
 
 from pytorch_lightning import LightningModule
-from pytorch_lightning.strategies import DataParallelStrategy, DDP2Strategy
 from pytorch_lightning.utilities.data import has_len
 from pytorch_lightning.utilities.rank_zero import rank_zero_warn
 from transformers.configuration_utils import PretrainedConfig
@@ -19,9 +18,7 @@ all_schedulers = get_classes_from_module(schedulers)
 
 
 class TransformersModel(LightningModule):
-    r"""
-    `TransformersModel` add a ready-to-be-used optimizer and scheduler functions.
-    """
+    r""" `TransformersModel` adds ready-to-be-used optimizer and scheduler functions. """
 
     model: PreTrainedModel
     tokenizer: PreTrainedTokenizerBase
@@ -31,12 +28,10 @@ class TransformersModel(LightningModule):
     def __init__(self, hyperparameters):
         super().__init__()
         self.hyperparameters = hyperparameters
-        self.save_hyperparameters()
+        self.save_hyperparameters(hyperparameters)
 
     def forward(self, *args, **kwargs):
-        r"""
-        Simply call the `model` attribute with the given args and kwargs
-        """
+        r""" Simply call the `model` attribute with the given args and kwargs """
         return self.model(*args, **kwargs)
 
     def get_optimizer(self) -> SuperOptimizer:
@@ -50,7 +45,7 @@ class TransformersModel(LightningModule):
         return sched_class(self.hyperparameters, optimizer)
 
     def num_training_steps(self) -> int:
-        r""" Total training steps inferred from datasets length, nodes and devices. """
+        r""" Total training steps inferred from datasets length, number of nodes and devices. """
         if self.trainer.max_steps is not None and self.trainer.max_steps >= 0:
             return self.trainer.max_steps
 
@@ -62,11 +57,7 @@ class TransformersModel(LightningModule):
         train_samples = len(self.trainer.datamodule.train_dataset)
 
         # number of training devices
-        if isinstance(self.trainer.strategy, (DataParallelStrategy, DDP2Strategy)):
-            total_devices = self.trainer.num_nodes
-        else:
-            total_devices = self.trainer.num_devices * self.trainer.num_nodes
-
+        total_devices = self.trainer.num_devices * self.trainer.num_nodes
         rank_zero_warn(f"Number of training devices is {total_devices}")
 
         # the number of training samples may be modified in distributed training
@@ -108,14 +99,14 @@ class TransformersModel(LightningModule):
             'optimizer': optimizer,
             'lr_scheduler':
                 {
-                    'scheduler': scheduler,    # The LR schduler
-                    'interval': self.hyperparameters.scheduler_interval,    # The unit of the scheduler's step size
-                    'frequency': self.hyperparameters.scheduler_frequency,    # The frequency of the scheduler
+                    'scheduler': scheduler,  # The LR schduler
+                    'interval': self.hyperparameters.scheduler_interval,  # The unit of the scheduler's step size
+                    'frequency': self.hyperparameters.scheduler_frequency,  # The frequency of the scheduler
                 }
         }
 
     @staticmethod
-    def add_model_specific_args(parser: ArgumentParser):
+    def add_argparse_args(parser: ArgumentParser):
         parser.add_argument('--optimizer_class', type=str, default='AdamWOptimizer', choices=all_optimizers.keys())
         parser.add_argument(
             '--scheduler_class', type=str, default='LinearSchedulerWithWarmup', choices=all_schedulers.keys()
@@ -131,5 +122,5 @@ class TransformersModel(LightningModule):
         sched_class = all_schedulers[tmp_params.scheduler_class]
 
         # add optimizer and scheduler specific args
-        optim_class.add_optimizer_specific_args(parser)
-        sched_class.add_scheduler_specific_args(parser)
+        optim_class.add_argparse_args(parser)
+        sched_class.add_argparse_args(parser)

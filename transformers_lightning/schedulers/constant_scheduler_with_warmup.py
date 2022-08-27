@@ -1,7 +1,7 @@
 from argparse import ArgumentParser, Namespace
 
 import torch
-from pytorch_lightning.utilities.warnings import rank_zero_warn
+from pytorch_lightning.utilities.rank_zero import rank_zero_warn
 
 from transformers_lightning.schedulers.super_scheduler import SuperScheduler
 
@@ -50,7 +50,7 @@ class ConstantSchedulerWithWarmup(SuperScheduler):
         return [base_lr * self.lr_lambda(self.last_epoch) for base_lr in self.base_lrs]
 
     @staticmethod
-    def add_scheduler_specific_args(parser: ArgumentParser):
+    def add_argparse_args(parser: ArgumentParser):
         r""" Add here the hyperparameters specific of the scheduler like the number of warmup steps. """
-        super(ConstantSchedulerWithWarmup, ConstantSchedulerWithWarmup).add_scheduler_specific_args(parser)
+        super(ConstantSchedulerWithWarmup, ConstantSchedulerWithWarmup).add_argparse_args(parser)
         parser.add_argument('--num_warmup_steps', type=int, default=0)

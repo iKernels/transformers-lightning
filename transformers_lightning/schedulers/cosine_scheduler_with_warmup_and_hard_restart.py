@@ -57,10 +57,10 @@ class CosineSchedulerWithWarmupAndHardRestart(SuperScheduler):
         return [base_lr * self.lr_lambda(self.last_epoch) for base_lr in self.base_lrs]
 
     @staticmethod
-    def add_scheduler_specific_args(parser: ArgumentParser):
+    def add_argparse_args(parser: ArgumentParser):
         r""" Add here the hyperparameters specific of the scheduler like the number of warmup steps. """
         super(
             CosineSchedulerWithWarmupAndHardRestart, CosineSchedulerWithWarmupAndHardRestart
-        ).add_scheduler_specific_args(parser)
+        ).add_argparse_args(parser)
         parser.add_argument('--num_warmup_steps', type=int, default=0)
         parser.add_argument('--num_cycles', type=float, default=1.0)

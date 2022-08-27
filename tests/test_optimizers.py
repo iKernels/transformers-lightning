@@ -47,7 +47,7 @@ def test_optimizers(optimizer_class, batch_size):
     )
 
     parser = ArgumentParser()
-    optimizer_class.add_optimizer_specific_args(parser)
+    optimizer_class.add_argparse_args(parser)
     hyperparameters = Namespace(**vars(hyperparameters), **vars(parser.parse_args("")))
 
     hyperparameters.optimizer_class = optimizer_class

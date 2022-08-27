@@ -118,7 +118,7 @@ class SuperDataModule(pl.LightningDataModule, ABC):
         return None
 
     @staticmethod
-    def add_datamodule_specific_args(parser: ArgumentParser):
+    def add_argparse_args(parser: ArgumentParser):
         parser.add_argument(
             '--num_workers',
             required=False,

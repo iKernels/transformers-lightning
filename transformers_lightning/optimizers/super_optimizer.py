@@ -12,5 +12,5 @@ class SuperOptimizer:
         self.hyperparameters = hyperparameters
 
     @staticmethod
-    def add_optimizer_specific_args(parser: ArgumentParser):
+    def add_argparse_args(parser: ArgumentParser):
         r""" Add here the hyperparameters used by your optimizer. """

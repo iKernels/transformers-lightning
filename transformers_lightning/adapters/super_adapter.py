@@ -48,5 +48,5 @@ class SuperAdapter(ABC):
         return line
 
     @staticmethod
-    def add_adapter_specific_args(parser: ArgumentParser) -> ArgumentParser:
+    def add_argparse_args(parser: ArgumentParser) -> ArgumentParser:
         r""" Add here arguments that will be available from the command line. """
