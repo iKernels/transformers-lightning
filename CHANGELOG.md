@@ -13,6 +13,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 - Deprecated strategies based on DataParallel as in `pytorch-lightning` and added MPS accelerator.
 
+- Fixed deprecated classes in lightning 1.7.
+
 
 ## 0.7.10
 
