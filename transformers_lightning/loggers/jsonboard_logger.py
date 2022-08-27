@@ -8,10 +8,10 @@ from typing import Any, Dict, Optional, Union
 import numpy as np
 import torch
 from pytorch_lightning.loggers.logger import Logger, rank_zero_experiment
-from pytorch_lightning.utilities.rank_zero import rank_zero_only
 from pytorch_lightning.utilities.cloud_io import get_filesystem
 from pytorch_lightning.utilities.logger import _convert_params, _flatten_dict
 from pytorch_lightning.utilities.logger import _sanitize_params as _utils_sanitize_params
+from pytorch_lightning.utilities.rank_zero import rank_zero_only
 
 logger = logging.getLogger(__name__)
 
