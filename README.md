@@ -1,6 +1,10 @@
 # transformers-lightning
 
-A collection of `adapters`, `callbacks`, `datamodules`, `datasets`, `language-modeling`, `loggers`, `models`, `schedulers` and `optimizers` to better integrate [PyTorch Lightning](https://pytorch-lightning.readthedocs.io/en/stable/lightning-module.html) and [Transformers](https://huggingface.co/transformers/).
+###########################################
+### The project has been moved to [transformers-framework](https://github.com/lucadiliello/transformers-framework). This library is not updated anymore.
+############################################
+
+Transformers-Lightning was a collection of `adapters`, `callbacks`, `datamodules`, `datasets`, `language-modeling`, `loggers`, `models`, `schedulers` and `optimizers` to better integrate [PyTorch Lightning](https://pytorch-lightning.readthedocs.io/en/stable/lightning-module.html) and [Transformers](https://huggingface.co/transformers/).
 
 I'm happy to announce that all the `metrics` contained in this package has been successfully integrated into [torchmetrics](https://github.com/PyTorchLightning/metrics/tree/master/torchmetrics/retrieval).
 
